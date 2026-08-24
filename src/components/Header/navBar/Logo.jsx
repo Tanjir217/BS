@@ -5,12 +5,18 @@ function Logo() {
         <div
         
         >
+            <Link
             
+            to={'/'}
+            className='no-underline'
+            >
             <h1
-            className='text-4xl font-semibold font-mono tracking-wider'
+            className='text-4xl no-underline font-semibold font-mono tracking-wider'
             >
                 BAYZID SHOES
             </h1>
+            </Link>
+            
             
             
             
