@@ -4,7 +4,16 @@ import MegaMenuColumn from "./MegaMenuColumn";
 function MegaMenu({ data, onClose }) {
   return (
     <div
-      className="absolute left-0 right-0 top-full z-50 border-t border-gray-200 bg-white"
+    className="
+    absolute
+    left-0
+    top-full
+    z-50
+    w-full
+    border-t
+    border-gray-200
+    bg-white
+  "
       onMouseEnter={() => {}}
     >
       <div className="mx-auto max-w-360 px-10 py-6">
