@@ -5,7 +5,7 @@ function Logo() {
     return (
         <Link
         to="/"
-        className="text-4xl font-semibold font-mono tracking-wider no-underline text-black hover:text-black hover:no-underline"
+        className="text-4xl font-bold text-red-500 underline"
         >
         BAYZID SHOES
         </Link>
