@@ -3,20 +3,13 @@ import { navigation } from "../../../../data/navigation";
 
 function DesktopNavigation({ onMenuChange }) {
   return (
-    <nav
-      aria-label="Main navigation"
-      className="flex items-center gap-8"
-    >
+    <nav aria-label="Main navigation" className="flex items-center gap-8">
       {navigation.map((item) => (
         <Link
           key={item.id}
           to={item.href}
-          onMouseEnter={() =>
-            onMenuChange(item.megaMenu ? item.id : null)
-          }
-          onFocus={() =>
-            onMenuChange(item.megaMenu ? item.id : null)
-          }
+          onMouseEnter={() => onMenuChange(item.megaMenu ? item.id : null)}
+          onFocus={() => onMenuChange(item.megaMenu ? item.id : null)}
           className="text-[13px] tracking-[0.08em] text-gray-900 no-underline transition-opacity hover:opacity-60"
         >
           {item.label}

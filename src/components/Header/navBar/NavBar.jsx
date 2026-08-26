@@ -12,9 +12,7 @@ import SearchButton from "./shared/SearchButton";
 function NavBar() {
   const [activeMenu, setActiveMenu] = useState(null);
 
-  const activeItem = navigation.find(
-    (item) => item.id === activeMenu
-  );
+  const activeItem = navigation.find((item) => item.id === activeMenu);
 
   const closeMenu = () => {
     setActiveMenu(null);
@@ -26,7 +24,6 @@ function NavBar() {
       onMouseLeave={closeMenu}
     >
       <div className="flex h-15 items-center justify-between px-4 md:px-8">
-
         {/* Mobile menu */}
         <div className="md:hidden">
           <MobileMenu />
@@ -69,7 +66,7 @@ function NavBar() {
       {activeItem?.megaMenu && (
         <MegaMenu
           data={activeItem.megaMenu}
-          isOpen = {Boolean(activeItem?.megaMenu)}
+          isOpen={Boolean(activeItem?.megaMenu)}
           onClose={closeMenu}
         />
       )}

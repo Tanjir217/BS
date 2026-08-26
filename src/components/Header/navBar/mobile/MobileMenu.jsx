@@ -21,9 +21,7 @@ function MobileMenu() {
     setExpandedSection(null);
   };
 
-  const activeItem = navigation.find(
-    (item) => item.id === activeCategory
-  );
+  const activeItem = navigation.find((item) => item.id === activeCategory);
 
   const openCategory = (item) => {
     if (!item.megaMenu) {
@@ -50,10 +48,7 @@ function MobileMenu() {
 
       {/* Overlay */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-90 bg-black/50"
-          onClick={closeMenu}
-        />
+        <div className="fixed inset-0 z-90 bg-black/50" onClick={closeMenu} />
       )}
 
       {/* Drawer */}
@@ -65,7 +60,6 @@ function MobileMenu() {
       >
         {/* Header */}
         <div className="flex h-14 items-center justify-between border-b border-gray-200 px-4">
-
           {activeCategory ? (
             <button
               type="button"
@@ -104,9 +98,7 @@ function MobileMenu() {
               >
                 <span>{item.label}</span>
 
-                {item.megaMenu && (
-                  <span className="text-lg font-light">›</span>
-                )}
+                {item.megaMenu && <span className="text-lg font-light">›</span>}
               </button>
             ))}
 
@@ -133,7 +125,6 @@ function MobileMenu() {
         {/* Category submenu */}
         {activeCategory && activeItem?.megaMenu && (
           <div className="h-[calc(100dvh-56px)] overflow-y-auto px-4">
-
             {activeItem.megaMenu.columns.map((column) => {
               const isExpanded = expandedSection === column.id;
 
@@ -142,9 +133,7 @@ function MobileMenu() {
                   <button
                     type="button"
                     onClick={() =>
-                      setExpandedSection(
-                        isExpanded ? null : column.id
-                      )
+                      setExpandedSection(isExpanded ? null : column.id)
                     }
                     className="flex w-full items-center justify-between border-b border-gray-300 py-4 text-left text-[12px] tracking-[0.04em]"
                   >
@@ -211,7 +200,6 @@ function MobileMenu() {
                 </Link>
               ))}
             </div>
-
           </div>
         )}
       </aside>
