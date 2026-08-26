@@ -1,8 +1,13 @@
 import React from 'react'
-
+import { Link } from 'react-router-dom'
 function Logo() {
   return (
-    <div>Logo</div>
+    <Link
+    to={"/"}
+    className='text-sm sm:text-xl md:text-2xl lg:text-4xl tracking-widest font-semibold'
+    >
+      BAYZID SHOES
+    </Link>
   )
 }
 

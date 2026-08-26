@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { navigation } from "../../../../data/navigation";
 
-function DesktopNavigation({ activeMenu, onMenuChange }) {
+function DesktopNavigation({ onMenuChange }) {
   return (
     <nav
       aria-label="Main navigation"
@@ -11,17 +11,13 @@ function DesktopNavigation({ activeMenu, onMenuChange }) {
         <Link
           key={item.id}
           to={item.href}
-          onMouseEnter={() => {
-            onMenuChange(
-              item.megaMenu ? item.id : null
-            );
-          }}
-          onFocus={() => {
-            onMenuChange(
-              item.megaMenu ? item.id : null
-            );
-          }}
-          className="text-[13px] tracking-[0.08em] text-gray-900 no-underline hover:opacity-60"
+          onMouseEnter={() =>
+            onMenuChange(item.megaMenu ? item.id : null)
+          }
+          onFocus={() =>
+            onMenuChange(item.megaMenu ? item.id : null)
+          }
+          className="text-[13px] tracking-[0.08em] text-gray-900 no-underline transition-opacity hover:opacity-60"
         >
           {item.label}
         </Link>

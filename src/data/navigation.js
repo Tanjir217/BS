@@ -136,12 +136,14 @@ export const navigation = [
           image: "/images/navigation/wedding.jpg",
           label: "SHOP WEDDING",
           href: "/wedding",
+          url: "https://i.pinimg.com/736x/e7/0e/c5/e70ec54106dc4c1204e94de70e804bd9.jpg"
         },
         {
           id: "new-collection",
           image: "/images/navigation/new-collection.jpg",
           label: "SHOP NEW COLLECTION",
           href: "/collections/new",
+          url:"https://i.pinimg.com/1200x/fe/75/09/fe7509e6b9dc5063055486cc4fa3109e.jpg"
         },
       ],
     },

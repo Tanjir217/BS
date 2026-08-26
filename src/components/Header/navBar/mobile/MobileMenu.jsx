@@ -200,9 +200,9 @@ function MobileMenu() {
                   className="block no-underline"
                 >
                   <img
-                    src={promo.image}
+                    src={promo.url}
                     alt={promo.label}
-                    className="aspect-4/5 w-full object-cover"
+                    className="aspect-4/5 w-full object-cover rounded-md"
                   />
 
                   <span className="mt-2 block text-[10px] underline underline-offset-2">
