@@ -10,7 +10,7 @@ function DesktopNavigation({ onMenuChange }) {
           to={item.href}
           onMouseEnter={() => onMenuChange(item.megaMenu ? item.id : null)}
           onFocus={() => onMenuChange(item.megaMenu ? item.id : null)}
-          className="text-[13px] tracking-[0.08em] text-gray-900 no-underline transition-opacity hover:opacity-60"
+          className="text-md tracking-wide text-gray-900 no-underline transition-opacity hover:opacity-60"
         >
           {item.label}
         </Link>

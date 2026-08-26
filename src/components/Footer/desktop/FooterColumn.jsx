@@ -12,7 +12,7 @@ function FooterColumn({ column }) {
             <li key={link.label}>
                 <Link
                 to={link.href}
-                className="text-[12px] tracking-[0.04em] text-gray-700 no-underline transition-opacity duration-200 hover:opacity-50"
+                className="text-md tracking-wide text-gray-700 no-underline transition-all duration-200 hover:underline hover:underline-offset-5"
                 >
                 {link.label}
                 </Link>

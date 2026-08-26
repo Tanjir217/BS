@@ -1,3 +1,9 @@
+import {
+    faInstagram,
+    faFacebookF,
+    faTiktok,
+    faYoutube,
+  } from "@fortawesome/free-brands-svg-icons";
 export const footerColumns = [
         {
         id: "customer-services",
@@ -96,13 +102,16 @@ export const socialLinks = [
         {
         label: "Instagram",
         href: "#",
+        icon : faInstagram
         },
         {
         label: "Facebook",
         href: "#",
+        icon: faFacebookF
         },
         {
         label: "TikTok",
         href: "#",
+        icon: faTiktok
         },
     ];

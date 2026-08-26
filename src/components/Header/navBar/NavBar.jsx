@@ -38,7 +38,9 @@ function NavBar() {
         </div>
 
         {/* Logo */}
-        <Logo />
+        <Logo 
+        
+        className = ""/>
 
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6">
