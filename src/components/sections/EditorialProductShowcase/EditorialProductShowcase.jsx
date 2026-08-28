@@ -56,7 +56,7 @@ function EditorialProductShowcase({
           <img
             src={editorial.image}
             alt={editorial.alt || ""}
-            className="absolute inset-0 h-full w-full object-center"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         )}
 
@@ -69,12 +69,12 @@ function EditorialProductShowcase({
               left-8
               z-10
               border-b
-              border-white
+              border-black
               pb-1
               text-sm
               font-semibold
               tracking-wide
-              text-white
+              text-black
               transition-opacity
               hover:opacity-70
             "

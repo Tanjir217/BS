@@ -1,7 +1,9 @@
 import EditorialProductShowcase from "../../components/sections/EditorialProductShowcase";
 import { editorialShowcaseData } from "../../data/home/editorialShowcase";
 import { collectionSceneProducts } from "../../data/home/collectionScene";
-import NewCollectionHero from "../../components/sections/NewCollectionHero/NewCollectionHero";
+import NewCollectionHero from "../../components/sections/NewCollectionHero";
+import InspiredProductSlider from "../../components/sections/InspiredProductSlider";
+import { inspiredProducts } from "../../data/home/inspiredProductSlider";
 function Home() {
   const {
     title,
@@ -21,6 +23,7 @@ function Home() {
         editorial={editorial}
         products={products}
       />
+      <InspiredProductSlider products={inspiredProducts} />
     </main>
   );
 }
