@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import useAutoAdvance from "../../../hooks/useAutoAdvance";
+import useHorizontalSwipe from "../../../hooks/useHorizontalSwipe";
 
 function InspiredProductSlider({ products = [] }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -24,11 +25,15 @@ function InspiredProductSlider({ products = [] }) {
   }, [products.length]);
 
   const advance = useCallback(() => move(1), [move]);
+  const swipeHandlers = useHorizontalSwipe({
+    onSwipeLeft: () => move(1),
+    onSwipeRight: () => move(-1),
+  });
 
   useAutoAdvance({
     enabled: products.length > 1,
     isPaused,
-    interval: 3000,
+    interval: 4500,
     onAdvance: advance,
   });
 
@@ -46,7 +51,7 @@ function InspiredProductSlider({ products = [] }) {
       onMouseLeave={() => setIsPaused(false)}
     >
       <h2 id="inspired-products-title" className="inspired-slider__title">Get inspired</h2>
-      <div className="inspired-slider__viewport">
+      <div className="inspired-slider__viewport" {...swipeHandlers}>
         <button aria-label="Previous products" className="inspired-slider__arrow inspired-slider__arrow--previous" onClick={() => move(-1)} type="button">
           <ChevronLeft aria-hidden="true" size={28} strokeWidth={1} />
         </button>

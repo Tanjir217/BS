@@ -4,6 +4,7 @@ import useAutoAdvance from "../../../hooks/useAutoAdvance";
 import ShowcaseProduct from "./ShowcaseProduct";
 import ShowcaseNavigation from "./ShowcaseNavigation";
 import { Link } from "react-router-dom";
+import useHorizontalSwipe from "../../../hooks/useHorizontalSwipe";
 
 function EditorialProductShowcase({
   title = "",
@@ -18,19 +19,19 @@ function EditorialProductShowcase({
 
   const handleNext = useCallback(() => {
     setActiveIndex((currentIndex) =>
-      currentIndex === productCount - 1
-        ? 0
-        : currentIndex + 1
+      currentIndex === productCount - 1 ? 0 : currentIndex + 1,
     );
   }, [productCount]);
 
   const handlePrevious = useCallback(() => {
     setActiveIndex((currentIndex) =>
-      currentIndex === 0
-        ? productCount - 1
-        : currentIndex - 1
+      currentIndex === 0 ? productCount - 1 : currentIndex - 1,
     );
   }, [productCount]);
+  const swipeHandlers = useHorizontalSwipe({
+    onSwipeLeft: handleNext,
+    onSwipeRight: handlePrevious,
+  });
 
   useAutoAdvance({
     enabled: productCount > 1,
@@ -69,12 +70,12 @@ function EditorialProductShowcase({
               left-8
               z-10
               border-b
-              border-black
+              border-white
               pb-1
               text-sm
               font-semibold
               tracking-wide
-              text-black
+              text-white
               transition-opacity
               hover:opacity-70
             "
@@ -85,9 +86,7 @@ function EditorialProductShowcase({
       </div>
 
       {/* Product Side */}
-      <div
-        className="relative flex min-h-150 flex-col items-center justify-between bg-white px-8 py-12 lg:min-h-180 lg:px-16"
-      >
+      <div className="relative flex min-h-150 flex-col items-center justify-between bg-white px-8 py-12 lg:min-h-180 lg:px-16">
         {/* Heading */}
         <div className="text-center">
           <h2
@@ -98,14 +97,13 @@ function EditorialProductShowcase({
           </h2>
 
           {subtitle && (
-            <p className="mt-4 text-sm text-neutral-700">
-              {subtitle}
-            </p>
+            <p className="mt-4 text-sm text-neutral-700">{subtitle}</p>
           )}
         </div>
 
         {/* Product */}
         <div
+          {...swipeHandlers}
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
           onFocus={() => setIsPaused(true)}
