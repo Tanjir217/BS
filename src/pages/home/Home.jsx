@@ -1,12 +1,26 @@
-import React from 'react'
+import EditorialProductShowcase from "../../components/sections/EditorialProductShowcase";
+import { editorialShowcaseData } from "../../data/home/editorialShowcase";
 
 function Home() {
+  const {
+    title,
+    subtitle,
+    editorial,
+    products,
+  } = editorialShowcaseData;
+
   return (
-    <>
-    <div>Home</div>
-    </>
-    
-  )
+    <main 
+    className=""
+    >
+      <EditorialProductShowcase
+        title={title}
+        subtitle={subtitle}
+        editorial={editorial}
+        products={products}
+      />
+    </main>
+  );
 }
 
-export default Home
+export default Home;

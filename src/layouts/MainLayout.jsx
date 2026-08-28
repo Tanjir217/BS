@@ -7,7 +7,9 @@ function MainLayout() {
     return (
         <>
         <Header/>
-        <main>
+        <main
+        className='px-10'
+        >
             <Outlet/>
         </main>
         <Footer/>
