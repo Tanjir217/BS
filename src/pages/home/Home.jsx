@@ -1,6 +1,7 @@
 import EditorialProductShowcase from "../../components/sections/EditorialProductShowcase";
 import { editorialShowcaseData } from "../../data/home/editorialShowcase";
-
+import { collectionSceneProducts } from "../../data/home/collectionScene";
+import NewCollectionHero from "../../components/sections/NewCollectionHero/NewCollectionHero";
 function Home() {
   const {
     title,
@@ -13,6 +14,7 @@ function Home() {
     <main 
     className=""
     >
+      <NewCollectionHero products={collectionSceneProducts} />
       <EditorialProductShowcase
         title={title}
         subtitle={subtitle}
