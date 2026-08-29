@@ -23,7 +23,15 @@ function Home() {
         editorial={editorial}
         products={products}
       />
+      <EditorialProductShowcase
+        title={title}
+        subtitle={subtitle}
+        editorial={editorial}
+        products={products}
+        className={"flex flex-col-reverse"}
+      />
       <InspiredProductSlider products={inspiredProducts} />
+
     </main>
   );
 }

@@ -2,7 +2,9 @@ import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import useAutoAdvance from "../../../hooks/useAutoAdvance";
 
-const scenes = [[0, 1], [2], [3, 4]];
+const scenes = [
+  [0, 1], [2], [3, 4]
+];
 
 function NewCollectionHero({ products = [] }) {
   const [activeScene, setActiveScene] = useState(0);
@@ -16,7 +18,7 @@ function NewCollectionHero({ products = [] }) {
   }, []);
 
   useAutoAdvance({
-    enabled: products.length >= 5,
+    enabled: products.length > 0,
     isPaused,
     onAdvance: advance,
     interval: 3000,
@@ -27,7 +29,7 @@ function NewCollectionHero({ products = [] }) {
   return (
     <section
       aria-labelledby="new-collection-title"
-      className="collection-scene relative isolate min-h-136 overflow-hidden bg-[#fafaf8] sm:min-h-160 lg:min-h-184"
+      className="collection-scene relative isolate min-h-136 overflow-hidden bg-white sm:min-h-160 lg:min-h-184"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
@@ -41,16 +43,16 @@ function NewCollectionHero({ products = [] }) {
             <Link aria-label={`View ${product.name}`} to="/collections/new">
               <img
                 alt={product.name}
-                className="h-full w-full object-contain"
+                className="h-full w-full object-contain bg-transparent"
                 decoding="async"
                 fetchPriority={activeScene === 0 && index === 0 ? "high" : "auto"}
                 src={product.image}
               />
             </Link>
-            <div className="collection-scene__details">
+            {/* <div className="collection-scene__details">
               <p>{product.name}</p>
               <p>{product.currency}{new Intl.NumberFormat("en-US").format(product.price)}</p>
-            </div>
+            </div> */}
           </article>
         ))}
       </div>

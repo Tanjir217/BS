@@ -11,6 +11,7 @@ function EditorialProductShowcase({
   subtitle = "",
   editorial = {},
   products = [],
+  className,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -49,10 +50,10 @@ function EditorialProductShowcase({
   return (
     <section
       aria-labelledby="editorial-product-showcase-title"
-      className="grid w-full grid-cols-1 lg:grid-cols-2"
+      className={`grid w-full grid-cols-1 lg:grid-cols-2 ${className}`}
     >
       {/* Editorial Side */}
-      <div className="relative min-h-150 overflow-hidden bg-neutral-100 lg:min-h-180">
+      <div className="relative min-h-150 overflow-hidden bg-white lg:min-h-180">
         {editorial.image && (
           <img
             src={editorial.image}
@@ -70,12 +71,12 @@ function EditorialProductShowcase({
               left-8
               z-10
               border-b
-              border-white
+              border-black
               pb-1
               text-sm
               font-semibold
               tracking-wide
-              text-white
+              text-black
               transition-opacity
               hover:opacity-70
             "
