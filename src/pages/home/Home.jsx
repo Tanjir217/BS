@@ -1,5 +1,5 @@
 import EditorialProductShowcase from "../../components/sections/EditorialProductShowcase";
-import { editorialShowcaseData } from "../../data/home/editorialShowcase";
+import  {editorialShowcaseData}  from "../../data/home/editorialShowcase";
 import { collectionSceneProducts } from "../../data/home/collectionScene";
 import NewCollectionHero from "../../components/sections/NewCollectionHero";
 import InspiredProductSlider from "../../components/sections/InspiredProductSlider";
@@ -28,7 +28,7 @@ function Home() {
         subtitle={subtitle}
         editorial={editorial}
         products={products}
-        className={"flex flex-col-reverse"}
+        reverse
       />
       <InspiredProductSlider products={inspiredProducts} />
 

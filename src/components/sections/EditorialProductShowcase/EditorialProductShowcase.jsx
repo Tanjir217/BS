@@ -11,7 +11,7 @@ function EditorialProductShowcase({
   subtitle = "",
   editorial = {},
   products = [],
-  className,
+  reverse = false
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -50,10 +50,11 @@ function EditorialProductShowcase({
   return (
     <section
       aria-labelledby="editorial-product-showcase-title"
-      className={`grid w-full grid-cols-1 lg:grid-cols-2 ${className}`}
+      className={"grid w-full grid-cols-1 lg:grid-cols-2"}
     >
       {/* Editorial Side */}
-      <div className="relative min-h-150 overflow-hidden bg-white lg:min-h-180">
+      <div className={`relative min-h-150 overflow-hidden bg-white lg:min-h-180 
+        ${reverse ? "lg:order-2": "lg:order-1"}`}>
         {editorial.image && (
           <img
             src={editorial.image}
@@ -87,7 +88,9 @@ function EditorialProductShowcase({
       </div>
 
       {/* Product Side */}
-      <div className="relative flex min-h-150 flex-col items-center justify-between bg-white px-8 py-12 lg:min-h-180 lg:px-16">
+      <div className={`relative flex min-h-150 flex-col items-center justify-between bg-white px-8 py-12 lg:min-h-180 lg:px-16
+        ${reverse ? "lg:order-1": "lg:order-2"}
+        `}>
         {/* Heading */}
         <div className="text-center">
           <h2
