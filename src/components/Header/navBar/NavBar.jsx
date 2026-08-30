@@ -20,7 +20,7 @@ function NavBar() {
 
   return (
     <header
-      className=" z-50 border-b border-gray-200 bg-white"
+      className="relative z-50 border-b border-gray-200 bg-white"
       onMouseLeave={closeMenu}
     >
       <div className="flex h-15 items-center justify-between px-10 md:px-8">

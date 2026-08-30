@@ -5,7 +5,7 @@ function MegaMenu({ data, isOpen, onClose }) {
   return (
     <div
       className={`
-        absolute left-0 top-full z-50 w-full
+        relative left-0 top-full z-50 w-full
         border-t border-gray-200 bg-white
         transition-all duration-300 ease-out
         ${
