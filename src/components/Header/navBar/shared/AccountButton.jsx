@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 function AccountButton() {
     return (
         <Link>
-        <User/>
+        <User
+        color='#5A1020'
+        />
         </Link>
     )
 }

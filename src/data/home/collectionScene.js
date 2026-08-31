@@ -8,7 +8,7 @@ export const collectionSceneProducts = [
     price: 890,
     currency: "€",
     image:
-      "https://freepngimg.com/thumb/sandal/28078-7-ladies-sandal-transparent-background.png",
+      "https://i.pinimg.com/736x/e4/f8/c6/e4f8c60db7f0872fdac1e8fab6196365.jpg",
   },
   {
     id: "scene-shoe-2",
@@ -17,7 +17,7 @@ export const collectionSceneProducts = [
     price: 795,
     currency: "€",
     image:
-      "https://www.pngall.com/wp-content/uploads/5/Black-High-Heel-Shoes-PNG-Image.png",
+      "https://i.pinimg.com/1200x/10/77/5c/10775cb617fb1914e3fbf58fe54abcb8.jpg",
   },
   {
     id: "scene-shoe-3",

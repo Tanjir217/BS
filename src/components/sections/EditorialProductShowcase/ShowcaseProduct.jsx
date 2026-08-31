@@ -27,6 +27,7 @@ function ShowcaseProduct({ product }) {
                   transition-transform
                   duration-500
                   group-hover:scale-[1.03]
+                  rounded-md
                 "
               />
             ) : (
@@ -38,11 +39,11 @@ function ShowcaseProduct({ product }) {
           </div>
   
           <div className="mt-6">
-            <h3 className="text-sm font-semibold">
+            <h3 className="text-sm font-semibold text-[#1C1C1C] transition-colors hover:text-[#7A1F32]">
               {product.name}
             </h3>
   
-            <p className="mt-3 text-sm">
+            <p className="mt-3 text-sm text-[#7A1F32]">
               {product.currency || "৳"}
               {formattedPrice}
             </p>

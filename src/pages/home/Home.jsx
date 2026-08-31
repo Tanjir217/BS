@@ -1,35 +1,36 @@
 import EditorialProductShowcase from "../../components/sections/EditorialProductShowcase";
-import  {editorialShowcaseData}  from "../../data/home/editorialShowcase";
+// import  {editorialShowcases}  from "../../data/home/editorialShowcase";
 import { collectionSceneProducts } from "../../data/home/collectionScene";
 import NewCollectionHero from "../../components/sections/NewCollectionHero";
 import InspiredProductSlider from "../../components/sections/InspiredProductSlider";
 import { inspiredProducts } from "../../data/home/inspiredProductSlider";
 function Home() {
-  const {
-    title,
-    subtitle,
-    editorial,
-    products,
-  } = editorialShowcaseData;
+  // const {
+  //   title,
+  //   subtitle,
+  //   editorial,
+  //   products,
+  // } = editorialShowcaseData;
 
   return (
     <main 
     className=""
     >
       <NewCollectionHero products={collectionSceneProducts} />
-      <EditorialProductShowcase
+      {/* <EditorialProductShowcase
         title={title}
         subtitle={subtitle}
         editorial={editorial}
         products={products}
-      />
-      <EditorialProductShowcase
+      /> */}
+      {/* <EditorialProductShowcase
         title={title}
         subtitle={subtitle}
         editorial={editorial}
         products={products}
-        reverse
-      />
+        reverse = {true}
+      /> */}
+      <EditorialProductShowcase/>
       <InspiredProductSlider products={inspiredProducts} />
 
     </main>

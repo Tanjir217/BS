@@ -5,7 +5,10 @@ import { Link } from 'react-router-dom'
 function SearchButton() {
     return (
         <Link>
-        <Search/>
+        <Search
+        className=''
+        color='#5A1020'
+        />
         </Link>
     )
 }

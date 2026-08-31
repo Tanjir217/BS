@@ -47,19 +47,22 @@ function NavBar() {
           <SearchButton
             type="button"
             aria-label="Search"
-            className="text-gray-900"
+            className=""
+            color = "#5A1020"
           />
 
           <AccountButton
+            color = "#5A1020"
             type="button"
             aria-label="Account"
-            className="text-gray-900"
+            className=""
           />
 
           <CartButton
             type="button"
             aria-label="Shopping bag"
-            className="text-gray-900"
+            className=""
+            color="#5A1020"
           />
         </div>
       </div>
