@@ -30,7 +30,7 @@ function NavBar() {
         </div>
 
         {/* Desktop navigation */}
-        <div className="hidden md:block">
+        <div className="hidden md:block order-2">
           <DesktopNavigation
             activeMenu={activeMenu}
             onMenuChange={setActiveMenu}
@@ -40,10 +40,10 @@ function NavBar() {
         {/* Logo */}
         <Logo 
         
-        className = ""/>
+        className = "order-1"/>
 
         {/* Right side */}
-        <div className="flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6 order-3">
           <SearchButton
             type="button"
             aria-label="Search"

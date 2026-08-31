@@ -38,7 +38,7 @@ export const editorialShowcases = [
         image:
           "https://i.pinimg.com/736x/32/36/87/3236875a761ea60fb1d9e532b4c8945d.jpg",
         alt: "Caly Over The Knee 85",
-        href: "/products/caly-over-knee",
+        href: "/products/caly-over-the-knee-85",
       },
 
       {

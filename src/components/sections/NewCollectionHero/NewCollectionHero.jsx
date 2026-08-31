@@ -43,7 +43,7 @@ function NewCollectionHero({ products = [] }) {
       >
         {sceneProducts.map((product, index) => (
           <article className="collection-scene__product" key={product.id}>
-            <Link aria-label={`View ${product.name}`} to="/collections/new">
+            <Link aria-label={`View ${product.name}`} to={product.href}>
               <img
                 alt={product.name}
                 className="h-full w-full object-contain bg-transparent"
@@ -54,7 +54,7 @@ function NewCollectionHero({ products = [] }) {
                 src={product.image}
               />
             </Link>
-            {/* <div className="collection-scene__details">
+            {/* <div className="collection-scene__details block lg:hidden">
               <p>{product.name}</p>
               <p>{product.currency}{new Intl.NumberFormat("en-US").format(product.price)}</p>
             </div> */}
