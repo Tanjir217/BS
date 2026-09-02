@@ -1,16 +1,25 @@
-import React from 'react'
-import Button from '../../components/common/Button'
+import { useEffect } from "react";
+import { getProducts } from "../../services/productServices";
 function Admin() {
+    useEffect(() => {
+        async function testAppwrite() {
+          try {
+            const products = await getProducts();
+    
+            console.log("APPWRITE PRODUCTS:", products);
+          } catch (error) {
+            console.error("APPWRITE ERROR:", error);
+          }
+        }
+    
+        testAppwrite();
+      }, []);
     function handleClick() {
         console.log("Button clicked!");
     }
     return (
         <>
-        <Button
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        message = "admin"
-        onClick={handleClick}  
-        />
+        testing products
         </>
     )
 }

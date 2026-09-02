@@ -11,7 +11,7 @@ function Home() {
   //   editorial,
   //   products,
   // } = editorialShowcaseData;
-
+  console.log(import.meta.env.VITE_APPWRITE_ENDPOINT)
   return (
     <main 
     className=""
