@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import NotFound from '../NotFound'
+import NotFound from "../NotFound";
 import { getProductBySlug } from "../../services/productServices";
 
 import ProductGallery from "../../components/product/ProductGallery";
@@ -19,7 +19,8 @@ function ProductDetail() {
         setError(null);
 
         const data = await getProductBySlug(slug);
-
+        console.log("PRODUCT:", data);
+        console.log("PRODUCT IMAGES:", data?.images);
         setProduct(data);
       } catch (err) {
         console.error("Failed to load product:", err);
@@ -33,23 +34,20 @@ function ProductDetail() {
   }, [slug]);
 
   if (loading) {
-    return <div
-    className="mx-auto grid min-h-[50vh] max-w-xl place-items-center px-6 py-20 text-center">
-    Loading product...
-    
-    </div>;
+    return (
+      <div className="mx-auto grid min-h-[50vh] max-w-xl place-items-center px-6 py-20 text-center">
+        Loading product...
+      </div>
+    );
   }
 
   if (error || !product) {
-    return <NotFound/>;
+    return <NotFound />;
   }
 
   return (
     <main>
-      <ProductGallery
-        images={product.images}
-        productName={product.name}
-      />
+      <ProductGallery images={product.images} productName={product.name} />
 
       <ProductInfo product={product} />
     </main>
