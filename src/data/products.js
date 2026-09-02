@@ -3,7 +3,7 @@ import { editorialShowcases } from "./home/editorialShowcase";
 import { inspiredProducts } from "./home/inspiredProductSlider";
 
 const defaultSizes = [34, 35, 36, 37, 38, 39, 40, 41];
-
+const productImage = []
 const detailedProducts = {
   "": {
     sku: "",

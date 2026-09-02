@@ -38,13 +38,13 @@ function ProductInfo({ product }) {
       <div className="product-info__choice">
         <div className="product-info__choice-header">
           <span>
-            Colour: <strong>{product.colour}</strong>
+            Colour: <strong>{product.color}</strong>
           </span>
         </div>
         <button
-          className="product-info__colour"
+          className="product-info__color"
           type="button"
-          aria-label={`Colour: ${product.colour}`}
+          aria-label={`Color: ${product.color}`}
         >
           <span style={{ backgroundColor: product.colourHex }} />
         </button>

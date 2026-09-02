@@ -40,7 +40,7 @@ function MegaMenu({ data, isOpen, onClose }) {
                     <img
                       src={promo.url}
                       alt={promo.label}
-                      className="aspect-4/5 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] rounded-md"
+                      className="aspect-4/5 w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] rounded-md"
                     />
                   </div>
 

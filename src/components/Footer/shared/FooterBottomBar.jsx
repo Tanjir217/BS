@@ -11,7 +11,7 @@ function FooterBottomBar() {
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           {footerLegalLinks.map((link) => (
             <Link
-              key={link.label}
+              key={link.id}
               to={link.href}
               className="text-md tracking-wide text-gray-600 no-underline transition-opacity hover:opacity-50"
             >
