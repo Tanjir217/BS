@@ -49,7 +49,7 @@ function ProductDetail() {
     <main>
       <ProductGallery images={product.images} productName={product.name} />
 
-      <ProductInfo product={product} />
+      {/* <ProductInfo product={product} /> */}
     </main>
   );
 }
