@@ -22,7 +22,7 @@ function NewCollectionHero({ products = [] }) {
     interval: 3000,
   });
 
-  if (products.length < 5) return null;
+  if (products.length === 0) return null;
 
   return (
     <section

@@ -1,7 +1,7 @@
 import { Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
-import { getProductBySlug } from "./productServices";
 import { getProductById } from "./productServices";
+import { getProductImages } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
@@ -10,7 +10,6 @@ const HOME_SECTIONS_TABLE_ID =
 
 const HOME_SECTIONS_PRODUCTS_TABLE_ID =
   import.meta.env.VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID;
-
 
 export async function getNewCollection() {
   // 1. Get the new_collection section
@@ -30,7 +29,6 @@ export async function getNewCollection() {
     return null;
   }
 
-
   // 2. Get products belonging to this section
   const productsResponse = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -42,23 +40,39 @@ export async function getNewCollection() {
     ],
   });
 
-
-  // 3. Get the actual product data
+  // 3. Get product data + images
   const products = await Promise.all(
     productsResponse.rows.map(async (sectionProduct) => {
-        const product = await getProductById(sectionProduct.product_ID);
+      const product = await getProductById(sectionProduct.product_ID);
 
       if (!product) {
+        console.log(
+            "PRODUCT NOT FOUND OR INACTIVE:",
+            sectionProduct.product_ID
+          );
+        return null;
+      }
+
+      const images = await getProductImages(product.$id);
+
+      const primaryImage =
+        images.find((image) => image.isPrimary) ?? images[0];
+
+      if (!primaryImage) {
         return null;
       }
 
       return {
-        ...product,
+        id: product.$id,
+        name: product.name,
+        price: product.price,
+        currency: product.currency,
+        href: `/products/${product.slug}`,
+        image: primaryImage.url,
         scene: sectionProduct.scene,
       };
     })
   );
-
 
   return {
     ...section,
