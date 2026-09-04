@@ -27,7 +27,7 @@ function NewCollectionHero({ products = [] }) {
   return (
     <section
       aria-labelledby="new-collection-title"
-      className="collection-scene relative isolate min-h-136 overflow-hidden bg-white sm:min-h-160 lg:min-h-184"
+      className="collection-scene relative isolate min-h-126 overflow-hidden bg-white sm:min-h-140 lg:min-h-164"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
@@ -62,7 +62,7 @@ function NewCollectionHero({ products = [] }) {
         ))}
       </div>
 
-      <Link className="collection-scene__cta" to="/category/new-collection">
+      <Link className="collection-scene__cta" to="/collection/new-collection">
         Shop New Collections
       </Link>
       <div aria-label="Collection scenes" className="collection-scene__dots">
