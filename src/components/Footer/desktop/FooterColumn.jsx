@@ -9,7 +9,9 @@ function FooterColumn({ column }) {
 
         <ul className="space-y-3">
             {column.links.map((link) => (
-            <li key={link.label}>
+            <li 
+            key={link.label}
+            >
                 <Link
                 to={link.href}
                 className="text-md tracking-wide text-gray-700 no-underline transition-all duration-200 hover:underline hover:underline-offset-5"

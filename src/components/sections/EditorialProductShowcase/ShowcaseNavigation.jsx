@@ -18,7 +18,7 @@ function ShowcaseNavigation({
         type="button"
         onClick={onPrevious}
         aria-label="Previous product"
-        className="p-2 transition-opacity hover:opacity-50"
+        className="p-2 text-[#5A1020] transition-all hover:text-[#7A1F32]"
       >
         <ChevronLeft size={18} strokeWidth={1.5} />
       </button>
@@ -41,8 +41,8 @@ function ShowcaseNavigation({
                 duration-300
                 ${
                   isActive
-                    ? "w-5 bg-black"
-                    : "w-4 bg-neutral-300"
+                    ? "w-5 bg-[#7A1F32]"
+                    : "w-4 bg-[#D9C4C9]"
                 }
               `}
             />
@@ -55,7 +55,7 @@ function ShowcaseNavigation({
         type="button"
         onClick={onNext}
         aria-label="Next product"
-        className="p-2 transition-opacity hover:opacity-50"
+        className="p-2 text-[#5A1020] transition-all hover:text-[#7A1F32]"
       >
         <ChevronRight size={18} strokeWidth={1.5} />
       </button>

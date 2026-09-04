@@ -4,7 +4,7 @@ function useAutoAdvance({
   enabled = true,
   isPaused = false,
   onAdvance,
-  interval = 4000,
+  interval = 3000,
 }) {
   useEffect(() => {
     if (!enabled || isPaused) {

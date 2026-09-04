@@ -8,11 +8,12 @@ function MainLayout() {
         <>
         <Header/>
         <main
-        className='px-10'
+        className=''
         >
             <Outlet/>
         </main>
         <Footer/>
+        
         </>
     )
 }

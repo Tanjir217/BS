@@ -20,7 +20,7 @@ function NavBar() {
 
   return (
     <header
-      className=" z-50 border-b border-gray-200 bg-white"
+      className="relative z-50 border-b border-gray-200 bg-white"
       onMouseLeave={closeMenu}
     >
       <div className="flex h-15 items-center justify-between px-10 md:px-8">
@@ -30,7 +30,7 @@ function NavBar() {
         </div>
 
         {/* Desktop navigation */}
-        <div className="hidden md:block">
+        <div className="hidden md:block order-2">
           <DesktopNavigation
             activeMenu={activeMenu}
             onMenuChange={setActiveMenu}
@@ -40,26 +40,29 @@ function NavBar() {
         {/* Logo */}
         <Logo 
         
-        className = ""/>
+        className = "order-1"/>
 
         {/* Right side */}
-        <div className="flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6 order-3">
           <SearchButton
             type="button"
             aria-label="Search"
-            className="text-gray-900"
+            className=""
+            color = "#5A1020"
           />
 
           <AccountButton
+            color = "#5A1020"
             type="button"
             aria-label="Account"
-            className="text-gray-900"
+            className=""
           />
 
           <CartButton
             type="button"
             aria-label="Shopping bag"
-            className="text-gray-900"
+            className=""
+            color="#5A1020"
           />
         </div>
       </div>

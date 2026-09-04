@@ -4,7 +4,7 @@ function Logo() {
   return (
     <Link
     to={"/"}
-    className={`text-sm sm:text-xl md:text-2xl tracking-widest font-semibold`}
+    className={`text-sm text-[#5A1020] sm:text-xl md:text-2xl tracking-widest font-semibold`}
     >
       BAYZID SHOES
     </Link>

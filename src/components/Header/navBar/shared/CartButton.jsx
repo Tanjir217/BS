@@ -5,7 +5,9 @@ import { Link } from 'react-router-dom'
 function CartButton() {
     return (
         <Link>
-        <ShoppingCart/>
+        <ShoppingCart
+        color='#5A1020'
+        />
         </Link>
     )
 }

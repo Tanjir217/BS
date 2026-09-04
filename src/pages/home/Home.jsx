@@ -1,24 +1,39 @@
+import { useEffect, useState } from "react";
+
 import EditorialProductShowcase from "../../components/sections/EditorialProductShowcase";
-import { editorialShowcaseData } from "../../data/home/editorialShowcase";
+
+import NewCollectionHero from "../../components/sections/NewCollectionHero";
+
+import InspiredProductSlider from "../../components/sections/InspiredProductSlider";
+
+import { inspiredProducts } from "../../data/home/inspiredProductSlider";
+
+import { getNewCollection } from "../../services/homeServices";
 
 function Home() {
-  const {
-    title,
-    subtitle,
-    editorial,
-    products,
-  } = editorialShowcaseData;
+  const [newCollection, setNewCollection] = useState(null);
+
+  useEffect(() => {
+    async function loadNewCollection() {
+      const data = await getNewCollection();
+
+      console.log("NEW COLLECTION:", data);
+      console.log("NEW COLLECTION PRODUCTS:", data?.products);
+      console.log("PRODUCT COUNT:", data?.products?.length);
+
+      setNewCollection(data);
+    }
+
+    loadNewCollection();
+  }, []);
 
   return (
-    <main 
-    className=""
-    >
-      <EditorialProductShowcase
-        title={title}
-        subtitle={subtitle}
-        editorial={editorial}
-        products={products}
-      />
+    <main>
+      <NewCollectionHero products={newCollection?.products ?? []} />
+
+      <EditorialProductShowcase />
+
+      <InspiredProductSlider products={inspiredProducts} />
     </main>
   );
 }

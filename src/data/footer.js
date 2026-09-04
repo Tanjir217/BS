@@ -85,14 +85,17 @@ export const footerColumns = [
     
 export const footerLegalLinks = [
         {
+            id: "privacy-policy",
         label: "Privacy Policy",
         href: "/privacy-policy",
         },
         {
+            id: "terms-conditions",
         label: "Terms & Conditions",
         href: "/terms",
         },
         {
+            id: "cookie-policy",
         label: "Cookie Policy",
         href: "/cookie-policy",
         },
