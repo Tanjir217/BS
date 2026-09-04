@@ -62,7 +62,7 @@ function NewCollectionHero({ products = [] }) {
         ))}
       </div>
 
-      <Link className="collection-scene__cta" to="/collections/new">
+      <Link className="collection-scene__cta" to="/category/new-collection">
         Shop New Collections
       </Link>
       <div aria-label="Collection scenes" className="collection-scene__dots">

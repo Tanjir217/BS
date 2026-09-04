@@ -5,11 +5,11 @@ import { getProductImages } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const HOME_SECTIONS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_HOME_SECTIONS_TABLE_ID;
+const HOME_SECTIONS_TABLE_ID = import.meta.env
+  .VITE_APPWRITE_HOME_SECTIONS_TABLE_ID;
 
-const HOME_SECTIONS_PRODUCTS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID;
+const HOME_SECTIONS_PRODUCTS_TABLE_ID = import.meta.env
+  .VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID;
 
 export async function getNewCollection() {
   // 1. Get the new_collection section
@@ -47,18 +47,25 @@ export async function getNewCollection() {
 
       if (!product) {
         console.log(
-            "PRODUCT NOT FOUND OR INACTIVE:",
-            sectionProduct.product_ID
-          );
+          "PRODUCT NOT FOUND OR INACTIVE:",
+          sectionProduct.product_ID,
+        );
         return null;
       }
 
       const images = await getProductImages(product.$id);
+      console.log("HOME PRODUCT:", product.name);
+      console.log("HOME PRODUCT ID:", product.$id);
+      console.log("HOME PRODUCT IMAGES:", images);
 
-      const primaryImage =
-        images.find((image) => image.isPrimary) ?? images[0];
+      const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
 
       if (!primaryImage) {
+        console.log(
+          "NO IMAGE FOUND FOR HOME PRODUCT:",
+          product.name,
+          product.$id,
+        );
         return null;
       }
 
@@ -71,7 +78,7 @@ export async function getNewCollection() {
         image: primaryImage.url,
         scene: sectionProduct.scene,
       };
-    })
+    }),
   );
 
   return {
