@@ -18,8 +18,8 @@ export async function getNewCollection() {
     databaseId: DATABASE_ID,
     tableId: HOME_SECTIONS_TABLE_ID,
     queries: [
-      Query.equal("sectionKey", "new_collection"),
-      Query.equal("isActive", true),
+      Query.equal("section_key", "new_collection"),
+      Query.equal("is_Active", true),
       Query.limit(1),
     ],
   });
@@ -37,8 +37,8 @@ export async function getNewCollection() {
     tableId: HOME_SECTIONS_PRODUCTS_TABLE_ID,
     queries: [
       Query.equal("section_ID", section.$id),
-      Query.equal("isActive", true),
-      Query.orderAsc("sortOrder"),
+      Query.equal("is_Active", true),
+      Query.orderAsc("sort_Order"),
     ],
   });
 
