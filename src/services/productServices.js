@@ -42,3 +42,16 @@ export async function getProductBySlug(slug) {
       images,
   };
 }
+export async function getProductById(productId) {
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries: [
+      Query.equal("$id", productId),
+      Query.equal("isActive", true),
+      Query.limit(1),
+    ],
+  });
+
+  return response.rows[0] ?? null;
+}
