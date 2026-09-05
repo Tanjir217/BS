@@ -14,10 +14,7 @@ const HOME_SECTIONS_TABLE_ID = import.meta.env
 const HOME_SECTIONS_PRODUCTS_TABLE_ID = import.meta.env
   .VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID;
 
-const STORAGE_BUCKET_ID =
-  import.meta.env.VITE_APPWRITE_BUCKET_ID;
-
-
+const STORAGE_BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
 
 export async function getNewCollection() {
   // 1. Get the new_collection section
@@ -36,7 +33,6 @@ export async function getNewCollection() {
   if (!section) {
     return null;
   }
-  
 
   // 2. Get products belonging to this section
   const productsResponse = await tablesDB.listRows({
@@ -96,8 +92,6 @@ export async function getNewCollection() {
   };
 }
 
-
-
 export async function getEditorialSections() {
   // 1. Get all active editorial sections
   const sectionsResponse = await tablesDB.listRows({
@@ -127,9 +121,7 @@ export async function getEditorialSections() {
       // Get product information + product images
       const products = await Promise.all(
         productsResponse.rows.map(async (sectionProduct) => {
-          const product = await getProductById(
-            sectionProduct.product_ID
-          );
+          const product = await getProductById(sectionProduct.product_ID);
 
           if (!product) {
             return null;
@@ -149,16 +141,16 @@ export async function getEditorialSections() {
             image: primaryImage?.url ?? null,
             alt: primaryImage?.alt || product.name,
           };
-        })
+        }),
       );
 
       // Get the editorial image from Appwrite Storage
       let editorialImage = null;
 
-      if (section.editorial_file_ID) {
+      if (section.editorial_File_ID) {
         editorialImage = storage.getFileView({
           bucketId: STORAGE_BUCKET_ID,
-          fileId: section.editorial_file_ID,
+          fileId: section.editorial_File_ID,
         });
       }
 
@@ -179,8 +171,7 @@ export async function getEditorialSections() {
 
         products: products.filter(Boolean),
       };
-    })
+    }),
   );
-
   return sections;
 }
