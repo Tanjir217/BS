@@ -8,30 +8,36 @@ import InspiredProductSlider from "../../components/sections/InspiredProductSlid
 
 import { inspiredProducts } from "../../data/home/inspiredProductSlider";
 
-import { getNewCollection } from "../../services/homeServices";
+import {
+  getNewCollection,
+  getEditorialSections,
+} from "../../services/homeServices";
 
 function Home() {
   const [newCollection, setNewCollection] = useState(null);
+  const [editorialSections, setEditorialSections] = useState([]);
 
   useEffect(() => {
-    async function loadNewCollection() {
-      const data = await getNewCollection();
+    async function loadHomeContent() {
+      const newCollectionData = await getNewCollection();
 
-      console.log("NEW COLLECTION:", data);
-      console.log("NEW COLLECTION PRODUCTS:", data?.products);
-      console.log("PRODUCT COUNT:", data?.products?.length);
+      const editorialData = await getEditorialSections();
 
-      setNewCollection(data);
+      console.log("NEW COLLECTION:", newCollectionData);
+      console.log("EDITORIAL SECTIONS:", editorialData);
+
+      setNewCollection(newCollectionData);
+      setEditorialSections(editorialData);
     }
 
-    loadNewCollection();
+    loadHomeContent();
   }, []);
 
   return (
     <main>
       <NewCollectionHero products={newCollection?.products ?? []} />
 
-      <EditorialProductShowcase />
+      <EditorialProductShowcase sections={editorialSections} />
 
       <InspiredProductSlider products={inspiredProducts} />
     </main>

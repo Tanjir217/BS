@@ -155,11 +155,10 @@ function EditorialProductShowcaseItem({
 | This component controls ALL editorial showcase sections.
 |--------------------------------------------------------------------------
 */
-
-function EditorialProductShowcase() {
+function EditorialProductShowcase({ sections = [] }) {
   return (
     <>
-      {editorialShowcases.map((section, index) => (
+      {sections.map((section, index) => (
         <EditorialProductShowcaseItem
           key={section.id}
           {...section}
