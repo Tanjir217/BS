@@ -124,3 +124,85 @@ export async function setPrimaryProductImage(
 
   return getProductImages(productId);
 }
+export async function getPrimaryProductImage(productId) {
+    const response = await tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCT_IMAGES_TABLE_ID,
+      queries: [
+        Query.equal("product_ID", productId),
+        Query.equal("isPrimary", true),
+        Query.limit(1),
+      ],
+    });
+  
+    const image = response.rows[0];
+  
+    if (!image) {
+      return null;
+    }
+  
+    return {
+      id: image.$id,
+      fileID: image.fileID,
+      alt: image.alt,
+      sortOrder: image.sortOrder,
+      isPrimary: image.isPrimary,
+      url: storage.getFileView({
+        bucketId: STORAGE_BUCKET_ID,
+        fileId: image.fileID,
+      }),
+    };
+  }
+
+  export async function reorderProductImage(
+    productId,
+    imageId,
+    direction
+  ) {
+    const images = await getProductImages(productId);
+  
+    const currentIndex = images.findIndex(
+      (image) => image.id === imageId
+    );
+  
+    if (currentIndex === -1) {
+      return images;
+    }
+  
+    const targetIndex =
+      direction === "up"
+        ? currentIndex - 1
+        : currentIndex + 1;
+  
+    if (
+      targetIndex < 0 ||
+      targetIndex >= images.length
+    ) {
+      return images;
+    }
+  
+    const currentImage = images[currentIndex];
+    const targetImage = images[targetIndex];
+  
+    await Promise.all([
+      tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: PRODUCT_IMAGES_TABLE_ID,
+        rowId: currentImage.id,
+        data: {
+          sortOrder: targetImage.sortOrder,
+        },
+      }),
+  
+      tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: PRODUCT_IMAGES_TABLE_ID,
+        rowId: targetImage.id,
+        data: {
+          sortOrder: currentImage.sortOrder,
+        },
+      }),
+    ]);
+  
+    return getProductImages(productId);
+  }

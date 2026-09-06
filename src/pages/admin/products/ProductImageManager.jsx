@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  ChevronDown,
+  ChevronUp,
   ImagePlus,
   Star,
   Trash2,
@@ -9,6 +11,7 @@ import {
 import {
   deleteProductImage,
   getProductImages,
+  reorderProductImage,
   setPrimaryProductImage,
   uploadProductImage,
 } from "../../../services/productImageServices";
@@ -51,9 +54,7 @@ function ProductImageManager({
 
     if (files.length === 0) return;
 
-    const imageFiles = files.filter((file) =>
-      file.type.startsWith("image/")
-    );
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
 
     const newFiles = imageFiles.map((file) => ({
       file,
@@ -79,9 +80,7 @@ function ProductImageManager({
         URL.revokeObjectURL(file.preview);
       }
 
-      const updated = current.filter(
-        (_, fileIndex) => fileIndex !== index
-      );
+      const updated = current.filter((_, fileIndex) => fileIndex !== index);
 
       onPendingFilesChange?.(updated);
 
@@ -107,8 +106,7 @@ function ProductImageManager({
           file: item.file,
           alt: item.file.name,
           sortOrder: startingSortOrder + index,
-          isPrimary:
-            currentImages.length === 0 && index === 0,
+          isPrimary: currentImages.length === 0 && index === 0,
         });
       }
 
@@ -130,17 +128,12 @@ function ProductImageManager({
   }
 
   async function handleDelete(image) {
-    const confirmed = window.confirm(
-      "Delete this product image?"
-    );
+    const confirmed = window.confirm("Delete this product image?");
 
     if (!confirmed) return;
 
     try {
-      await deleteProductImage(
-        image.id,
-        image.fileID
-      );
+      await deleteProductImage(image.id, image.fileID);
 
       await loadImages();
     } catch (error) {
@@ -150,29 +143,33 @@ function ProductImageManager({
 
   async function handleSetPrimary(image) {
     try {
-      const updatedImages =
-        await setPrimaryProductImage(
-          productId,
-          image.id
-        );
+      const updatedImages = await setPrimaryProductImage(productId, image.id);
 
       setImages(updatedImages);
       onImagesChange?.(updatedImages);
     } catch (error) {
-      console.error(
-        "Failed to set primary image:",
-        error
-      );
+      console.error("Failed to set primary image:", error);
     }
   }
+  async function handleReorder(image, direction) {
+    try {
+      const updatedImages = await reorderProductImage(
+        productId,
+        image.id,
+        direction,
+      );
 
+      setImages(updatedImages);
+      onImagesChange?.(updatedImages);
+    } catch (error) {
+      console.error("Failed to reorder product image:", error);
+    }
+  }
   if (!productId) {
     return (
       <section className="mt-8 border-t border-black/8 pt-6">
         <div className="mb-4">
-          <h3 className="text-sm font-semibold">
-            Product Images
-          </h3>
+          <h3 className="text-sm font-semibold">Product Images</h3>
 
           <p className="mt-1 text-xs text-black/40">
             Save the product first, then you can upload images.
@@ -186,9 +183,7 @@ function ProductImageManager({
     <section className="mt-8 border-t border-black/8 pt-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold">
-            Product Images
-          </h3>
+          <h3 className="text-sm font-semibold">Product Images</h3>
 
           <p className="mt-1 text-xs text-black/40">
             Add product photos and choose a primary image.
@@ -236,21 +231,38 @@ function ProductImageManager({
 
                     {image.isPrimary && (
                       <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-medium shadow-sm">
-                        <Star
-                          size={12}
-                          fill="currentColor"
-                        />
+                        <Star size={12} fill="currentColor" />
                         Primary
                       </span>
                     )}
 
                     <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                      {images.indexOf(image) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleReorder(image, "up")}
+                          className="rounded-lg bg-white p-2 shadow-sm"
+                          title="Move image up"
+                        >
+                          <ChevronUp size={15} />
+                        </button>
+                      )}
+
+                      {images.indexOf(image) < images.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleReorder(image, "down")}
+                          className="rounded-lg bg-white p-2 shadow-sm"
+                          title="Move image down"
+                        >
+                          <ChevronDown size={15} />
+                        </button>
+                      )}
+
                       {!image.isPrimary && (
                         <button
                           type="button"
-                          onClick={() =>
-                            handleSetPrimary(image)
-                          }
+                          onClick={() => handleSetPrimary(image)}
                           className="rounded-lg bg-white p-2 shadow-sm"
                           title="Set as primary"
                         >
@@ -260,9 +272,7 @@ function ProductImageManager({
 
                       <button
                         type="button"
-                        onClick={() =>
-                          handleDelete(image)
-                        }
+                        onClick={() => handleDelete(image)}
                         className="rounded-lg bg-white p-2 text-red-600 shadow-sm"
                         title="Delete image"
                       >
@@ -284,9 +294,7 @@ function ProductImageManager({
           {pendingFiles.length > 0 && (
             <div className="mt-5">
               <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-medium">
-                  Ready to upload
-                </h4>
+                <h4 className="text-sm font-medium">Ready to upload</h4>
 
                 <button
                   type="button"
@@ -296,9 +304,7 @@ function ProductImageManager({
                 >
                   <Upload size={15} />
 
-                  {isUploading
-                    ? "Uploading..."
-                    : "Upload Images"}
+                  {isUploading ? "Uploading..." : "Upload Images"}
                 </button>
               </div>
 
@@ -318,9 +324,7 @@ function ProductImageManager({
 
                     <button
                       type="button"
-                      onClick={() =>
-                        removePendingFile(index)
-                      }
+                      onClick={() => removePendingFile(index)}
                       className="absolute right-2 top-2 rounded-lg bg-white p-2 text-red-600 shadow-sm"
                       title="Remove from upload queue"
                     >
@@ -336,23 +340,17 @@ function ProductImageManager({
             </div>
           )}
 
-          {images.length === 0 &&
-            pendingFiles.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-black/10 px-6 py-12 text-center">
-                <ImagePlus
-                  size={28}
-                  className="mx-auto text-black/25"
-                />
+          {images.length === 0 && pendingFiles.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-black/10 px-6 py-12 text-center">
+              <ImagePlus size={28} className="mx-auto text-black/25" />
 
-                <p className="mt-3 text-sm font-medium">
-                  No product images
-                </p>
+              <p className="mt-3 text-sm font-medium">No product images</p>
 
-                <p className="mt-1 text-xs text-black/40">
-                  Add one or more images for this product.
-                </p>
-              </div>
-            )}
+              <p className="mt-1 text-xs text-black/40">
+                Add one or more images for this product.
+              </p>
+            </div>
+          )}
         </>
       )}
     </section>

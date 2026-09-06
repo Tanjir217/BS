@@ -1,25 +1,16 @@
 import { Pencil, Trash2, Star } from "lucide-react";
 import ProductStatusBadge from "./ProductStatusBadge";
 
-function ProductRow({
-  product,
-  categories,
-  onEdit,
-  onDelete,
-}) {
-  const category = categories.find(
-    (item) => item.$id === product.categoryID
-  );
+function ProductRow({ product, categories, onEdit, onDelete }) {
+  const category = categories.find((item) => item.$id === product.categoryID);
 
   const hasDiscount =
-    product.compareAtPrice &&
-    product.compareAtPrice > product.price;
+    product.compareAtPrice && product.compareAtPrice > product.price;
 
   const discountPercent = hasDiscount
     ? Math.round(
-        ((product.compareAtPrice - product.price) /
-          product.compareAtPrice) *
-          100
+        ((product.compareAtPrice - product.price) / product.compareAtPrice) *
+          100,
       )
     : 0;
 
@@ -36,15 +27,21 @@ function ProductRow({
       {/* Product */}
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-black/5 text-xs text-black/35">
-            BS
-          </div>
+          {product.primaryImage?.url ? (
+            <img
+              src={product.primaryImage.url}
+              alt={product.primaryImage.alt || product.name}
+              className="h-11 w-11 shrink-0 rounded-xl object-cover"
+            />
+          ) : (
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-black/5 text-xs text-black/35">
+              BS
+            </div>
+          )}
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="max-w-[220px] truncate font-medium">
-                {product.name}
-              </p>
+              <p className="max-w-55 truncate font-medium">{product.name}</p>
 
               {product.isFeatured && (
                 <Star
@@ -63,9 +60,7 @@ function ProductRow({
       </td>
 
       {/* SKU */}
-      <td className="px-6 py-4 text-sm text-black/55">
-        {product.sku}
-      </td>
+      <td className="px-6 py-4 text-sm text-black/55">{product.sku}</td>
 
       {/* Category */}
       <td className="px-6 py-4 text-sm text-black/55">
@@ -74,9 +69,7 @@ function ProductRow({
 
       {/* Price */}
       <td className="px-6 py-4">
-        <div className="text-sm font-medium">
-          {formatPrice(product.price)}
-        </div>
+        <div className="text-sm font-medium">{formatPrice(product.price)}</div>
 
         {hasDiscount && (
           <div className="text-xs text-black/35 line-through">

@@ -1,6 +1,9 @@
 import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
-import { getProductImages } from "./productImageServices";
+import {
+  getProductImages,
+  getPrimaryProductImage,
+} from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID;
@@ -57,10 +60,25 @@ export async function getProductsForAdmin() {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,
-    queries: [Query.orderDesc("$createdAt"), Query.limit(100)],
+    queries: [
+      Query.orderDesc("$createdAt"),
+      Query.limit(100),
+    ],
   });
 
-  return response.rows;
+  const productsWithImages = await Promise.all(
+    response.rows.map(async (product) => {
+      const primaryImage =
+        await getPrimaryProductImage(product.$id);
+
+      return {
+        ...product,
+        primaryImage,
+      };
+    })
+  );
+
+  return productsWithImages;
 }
 
 // Get a product by ID for admin
