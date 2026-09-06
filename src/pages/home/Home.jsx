@@ -6,28 +6,31 @@ import NewCollectionHero from "../../components/sections/NewCollectionHero";
 
 import InspiredProductSlider from "../../components/sections/InspiredProductSlider";
 
-import { inspiredProducts } from "../../data/home/inspiredProductSlider";
-
 import {
   getNewCollection,
   getEditorialSections,
+  getInspiredProducts,
 } from "../../services/homeServices";
 
 function Home() {
   const [newCollection, setNewCollection] = useState(null);
   const [editorialSections, setEditorialSections] = useState([]);
+  const [inspiredProducts, setInspiredProducts] = useState([]);
 
   useEffect(() => {
     async function loadHomeContent() {
       const newCollectionData = await getNewCollection();
 
       const editorialData = await getEditorialSections();
+      const inspiredData = await getInspiredProducts();
 
       console.log("NEW COLLECTION:", newCollectionData);
       console.log("EDITORIAL SECTIONS:", editorialData);
+      console.log("INSPIRED PRODUCTS:", inspiredData);
 
       setNewCollection(newCollectionData);
       setEditorialSections(editorialData);
+      setInspiredProducts(inspiredData);
     }
 
     loadHomeContent();

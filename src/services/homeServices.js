@@ -175,3 +175,68 @@ export async function getEditorialSections() {
   );
   return sections;
 }
+
+
+export async function getInspiredProducts() {
+  // 1. Get the inspired section
+  const sectionResponse = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: HOME_SECTIONS_TABLE_ID,
+    queries: [
+      Query.equal("section_key", "inspired"),
+      Query.equal("is_Active", true),
+      Query.limit(1),
+    ],
+  });
+
+  const section = sectionResponse.rows[0];
+
+  if (!section) {
+    return [];
+  }
+
+  // 2. Get products belonging to the inspired section
+  const productsResponse = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: HOME_SECTIONS_PRODUCTS_TABLE_ID,
+    queries: [
+      Query.equal("section_ID", section.$id),
+      Query.equal("is_Active", true),
+      Query.orderAsc("sort_Order"),
+    ],
+  });
+
+  // 3. Get actual product data + images
+  const products = await Promise.all(
+    productsResponse.rows.map(async (sectionProduct) => {
+      const product = await getProductById(
+        sectionProduct.product_ID
+      );
+
+      if (!product) {
+        return null;
+      }
+
+      const images = await getProductImages(product.$id);
+
+      const primaryImage =
+        images.find((image) => image.isPrimary) ?? images[0];
+
+      if (!primaryImage) {
+        return null;
+      }
+
+      return {
+        id: product.$id,
+        name: product.name,
+        price: product.price,
+        currency: product.currency,
+        href: `/products/${product.slug}`,
+        image: primaryImage.url,
+        alt: primaryImage.alt || product.name,
+      };
+    })
+  );
+
+  return products.filter(Boolean);
+}
