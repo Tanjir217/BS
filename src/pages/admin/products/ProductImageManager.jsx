@@ -13,6 +13,7 @@ import {
   getProductImages,
   reorderProductImage,
   setPrimaryProductImage,
+  updateProductImage,
   uploadProductImage,
 } from "../../../services/productImageServices";
 
@@ -27,6 +28,8 @@ function ProductImageManager({
   const [pendingFiles, setPendingFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [editingAltId, setEditingAltId] = useState(null);
+  const [altValue, setAltValue] = useState("");
 
   async function loadImages() {
     if (!productId) return;
@@ -165,6 +168,22 @@ function ProductImageManager({
       console.error("Failed to reorder product image:", error);
     }
   }
+  async function handleSaveAlt(image) {
+    try {
+      await updateProductImage(image.id, {
+        alt: altValue,
+        sortOrder: image.sortOrder,
+        isPrimary: image.isPrimary,
+      });
+
+      setEditingAltId(null);
+      setAltValue("");
+
+      await loadImages();
+    } catch (error) {
+      console.error("Failed to update image alt text:", error);
+    }
+  }
   if (!productId) {
     return (
       <section className="mt-8 border-t border-black/8 pt-6">
@@ -281,10 +300,51 @@ function ProductImageManager({
                     </div>
                   </div>
 
-                  <div className="px-3 py-2">
-                    <p className="truncate text-xs text-black/45">
-                      {image.alt || "No alt text"}
-                    </p>
+                  <div className="px-3 py-3">
+                    {editingAltId === image.id ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={altValue}
+                          onChange={(event) => setAltValue(event.target.value)}
+                          placeholder="Image alt text"
+                          className="w-full rounded-lg border border-black/10 px-2.5 py-2 text-xs outline-none focus:border-black"
+                        />
+
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSaveAlt(image)}
+                            className="rounded-lg bg-black px-2.5 py-1.5 text-xs font-medium text-white"
+                          >
+                            Save
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingAltId(null);
+                              setAltValue("");
+                            }}
+                            className="rounded-lg border border-black/10 px-2.5 py-1.5 text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingAltId(image.id);
+                          setAltValue(image.alt || "");
+                        }}
+                        className="w-full truncate text-left text-xs text-black/45 hover:text-black"
+                        title="Edit alt text"
+                      >
+                        {image.alt || "Add alt text"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

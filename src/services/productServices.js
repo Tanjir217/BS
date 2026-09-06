@@ -1,8 +1,9 @@
 import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import {
-  getProductImages,
+  deleteProductImages,
   getPrimaryProductImage,
+  getProductImages,
 } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
@@ -56,20 +57,27 @@ export async function getProductById(productId) {
   return response.rows[0] ?? null;
 }
 // Get all products for admin
-export async function getProductsForAdmin() {
+export async function getProductsForAdmin({
+  page = 1,
+  limit = 10,
+} = {}) {
+  const offset = (page - 1) * limit;
+
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,
     queries: [
       Query.orderDesc("$createdAt"),
-      Query.limit(100),
+      Query.limit(limit),
+      Query.offset(offset),
     ],
   });
 
   const productsWithImages = await Promise.all(
     response.rows.map(async (product) => {
-      const primaryImage =
-        await getPrimaryProductImage(product.$id);
+      const primaryImage = await getPrimaryProductImage(
+        product.$id
+      );
 
       return {
         ...product,
@@ -78,7 +86,13 @@ export async function getProductsForAdmin() {
     })
   );
 
-  return productsWithImages;
+  return {
+    products: productsWithImages,
+    total: response.total,
+    page,
+    limit,
+    totalPages: Math.ceil(response.total / limit),
+  };
 }
 
 // Get a product by ID for admin
@@ -144,16 +158,12 @@ export async function updateProduct(productId, productData) {
     isActive: Boolean(productData.isActive),
   };
 
-  if (
-    (data.compareAtPrice =
-      productData.compareAtPrice === "" ||
-      productData.compareAtPrice === null ||
-      productData.compareAtPrice === undefined
-        ? null
-        : Number(productData.compareAtPrice))
-  ) {
-    data.compareAtPrice = Number(productData.compareAtPrice);
-  }
+  data.compareAtPrice =
+  productData.compareAtPrice === "" ||
+  productData.compareAtPrice === null ||
+  productData.compareAtPrice === undefined
+    ? null
+    : Number(productData.compareAtPrice);
 
   const response = await tablesDB.updateRow({
     databaseId: DATABASE_ID,
@@ -179,8 +189,21 @@ export async function updateProductStatus(productId, isActive) {
   return response;
 }
 
+export async function deleteProductImages(productId) {
+  const images = await getProductImages(productId);
+
+  await Promise.all(
+    images.map((image) =>
+      deleteProductImages(image.id, image.fileID)
+    )
+  );
+
+  return true;
+}
 // Delete a product
 export async function deleteProduct(productId) {
+  await deleteProductImages(productId);
+
   await tablesDB.deleteRow({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,

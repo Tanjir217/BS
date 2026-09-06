@@ -6,7 +6,7 @@ import {
   updateProduct,
 } from "../../../services/productServices";
 import { getCategoriesForAdmin } from "../../../services/categoryServices";
-
+import ProductPagination from "./ProductPagination";
 import ProductFilters from "./ProductFilters";
 import ProductTable from "./ProductTable";
 import ProductForm from "./ProductForm";
@@ -18,6 +18,10 @@ function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const PRODUCTS_PER_PAGE = 10;
 
   const [filters, setFilters] = useState({
     search: "",
@@ -31,15 +35,21 @@ function ProductsPage() {
     try {
       setIsLoading(true);
 
-      const [productData, categoryData] = await Promise.all([
-        getProductsForAdmin(),
+      const [productResult, categoryData] = await Promise.all([
+        getProductsForAdmin({
+          page,
+          limit: PRODUCTS_PER_PAGE,
+        }),
         getCategoriesForAdmin(),
       ]);
 
-      setProducts(productData);
+      setProducts(productResult.products);
+      setTotalPages(productResult.totalPages);
+      setTotalProducts(productResult.total);
+
       setCategories(categoryData);
     } catch (error) {
-      console.error("Failed to load products:", error);
+      console.error("Failed to load admin products:", error);
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +57,16 @@ function ProductsPage() {
 
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [page]);
+  useEffect(() => {
+    setPage(1);
+  }, [
+    filters.search,
+    filters.category,
+    filters.status,
+    filters.stock,
+    filters.discount,
+  ]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -60,8 +79,7 @@ function ProductsPage() {
         product.slug?.toLowerCase().includes(search);
 
       const matchesCategory =
-        filters.category === "all" ||
-        product.categoryID === filters.category;
+        filters.category === "all" || product.categoryID === filters.category;
 
       const matchesStatus =
         filters.status === "all" ||
@@ -77,8 +95,7 @@ function ProductsPage() {
         (filters.stock === "out" && product.stockQuantity <= 0);
 
       const hasDiscount =
-        product.compareAtPrice &&
-        product.compareAtPrice > product.price;
+        product.compareAtPrice && product.compareAtPrice > product.price;
 
       const matchesDiscount =
         filters.discount === "all" ||
@@ -124,7 +141,7 @@ function ProductsPage() {
 
   async function handleDelete(productId) {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this product?"
+      "Are you sure you want to delete this product?",
     );
 
     if (!confirmed) return;
@@ -189,6 +206,12 @@ function ProductsPage() {
         isLoading={isLoading}
         onEdit={handleEditProduct}
         onDelete={handleDelete}
+      />
+      <ProductPagination
+        page={page}
+        totalPages={totalPages}
+        totalProducts={totalProducts}
+        onPageChange={setPage}
       />
     </div>
   );
