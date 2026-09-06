@@ -188,18 +188,6 @@ export async function updateProductStatus(productId, isActive) {
 
   return response;
 }
-
-export async function deleteProductImages(productId) {
-  const images = await getProductImages(productId);
-
-  await Promise.all(
-    images.map((image) =>
-      deleteProductImages(image.id, image.fileID)
-    )
-  );
-
-  return true;
-}
 // Delete a product
 export async function deleteProduct(productId) {
   await deleteProductImages(productId);
