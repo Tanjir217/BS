@@ -214,34 +214,78 @@ export async function updateHomeSectionStatus(
 
   return response;
 }
-export async function swapSectionProductOrder(
-    currentId,
-    currentSortOrder,
-    targetId,
-    targetSortOrder
-  ) {
-    const temporarySortOrder = Date.now();
-  
-    // Step 1:
-    // Move the current item to a temporary position.
-    await updateSectionProduct(currentId, {
-      sortOrder: temporarySortOrder,
-    });
-  
-    // Step 2:
-    // Give the target item the current item's old position.
-    await updateSectionProduct(targetId, {
-      sortOrder: currentSortOrder,
-    });
-  
-    // Step 3:
-    // Give the current item the target's old position.
-    await updateSectionProduct(currentId, {
-      sortOrder: targetSortOrder,
-    });
-  
-    return true;
+export async function moveSectionProduct(
+  sectionId,
+  sectionProductId,
+  direction
+) {
+  const products = await getSectionProducts(sectionId);
+
+  const currentIndex = products.findIndex(
+    (product) => product.$id === sectionProductId
+  );
+
+  if (currentIndex === -1) {
+    throw new Error("Section product not found.");
   }
+
+  const targetIndex =
+    direction === "up"
+      ? currentIndex - 1
+      : currentIndex + 1;
+
+  if (
+    targetIndex < 0 ||
+    targetIndex >= products.length
+  ) {
+    return products;
+  }
+
+  // Move the item in the local array.
+  const reorderedProducts = [...products];
+
+  const [currentProduct] =
+    reorderedProducts.splice(currentIndex, 1);
+
+  reorderedProducts.splice(
+    targetIndex,
+    0,
+    currentProduct
+  );
+
+  /*
+   * First give every row a unique temporary position.
+   * This prevents collisions while updating.
+   */
+  const temporaryBase = Date.now();
+
+  await Promise.all(
+    reorderedProducts.map((product, index) =>
+      updateSectionProduct(product.$id, {
+        sortOrder: temporaryBase + index,
+      })
+    )
+  );
+
+  /*
+   * Now normalize the final order:
+   *
+   * 0
+   * 1
+   * 2
+   * 3
+   * ...
+   */
+  await Promise.all(
+    reorderedProducts.map((product, index) =>
+      updateSectionProduct(product.$id, {
+        sortOrder: index,
+      })
+    )
+  );
+
+  return getSectionProducts(sectionId);
+}
 
   export async function getAvailableProductsForSection(
     sectionId
@@ -279,7 +323,7 @@ export async function swapSectionProductOrder(
         sub_title: data.sub_title || "",
         editorial_Alt: data.editorial_Alt || "",
         cta_Label: data.cta_Label || "",
-        cta_href: data.cta_href || "",
+        cta_Href: data.cta_Href || "",
         is_Active: Boolean(data.is_Active),
       },
     });

@@ -4,7 +4,7 @@ import {
   getSectionProductsWithDetails,
   removeProductFromSection,
   updateSectionProduct,
-  swapSectionProductOrder,
+  moveSectionProduct,
 } from "../../../services/homeAdminServices";
 import AddProductToSection from "./AddProductToSection";
 
@@ -56,29 +56,40 @@ function SectionProductManager({ section, onClose }) {
   }
 
   async function handleMove(index, direction) {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-
-    if (targetIndex < 0 || targetIndex >= products.length) {
+    const current = products[index];
+  
+    if (!current) {
       return;
     }
-
-    const current = products[index];
-    const target = products[targetIndex];
-
+  
+    const targetIndex =
+      direction === "up"
+        ? index - 1
+        : index + 1;
+  
+    if (
+      targetIndex < 0 ||
+      targetIndex >= products.length
+    ) {
+      return;
+    }
+  
     try {
       setError("");
-
-      await swapSectionProductOrder(
+  
+      await moveSectionProduct(
+        section.$id,
         current.$id,
-        current.sort_Order,
-        target.$id,
-        target.sort_Order,
+        direction
       );
-
+  
       await loadProducts();
     } catch (error) {
-      console.error("Failed to reorder products:", error);
-
+      console.error(
+        "Failed to reorder products:",
+        error
+      );
+  
       setError("Failed to reorder products.");
     }
   }

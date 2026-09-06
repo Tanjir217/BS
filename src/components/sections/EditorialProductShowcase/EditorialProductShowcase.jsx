@@ -77,9 +77,9 @@ function EditorialProductShowcaseItem({
           />
         )}
 
-        {editorial.cta?.label && (
+        {editorial.cta?.Label && (
           <Link
-            to={editorial.cta.href || "#"}
+            to={editorial.cta.Href || "#"}
             className={`
               absolute
               border-b
@@ -96,7 +96,7 @@ function EditorialProductShowcaseItem({
               ${reverse? "text-right right-8":"left-8"}
             `}
           >
-            {editorial.cta.label}
+            {editorial.cta.Label}
           </Link>
         )}
       </div>

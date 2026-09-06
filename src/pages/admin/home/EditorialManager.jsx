@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import {
-  updateHomeSection,
-} from "../../../services/homeAdminServices";
+import { updateHomeSection } from "../../../services/homeAdminServices";
 
 function EditorialManager({ section, onClose }) {
   const [form, setForm] = useState({
@@ -35,21 +33,13 @@ function EditorialManager({ section, onClose }) {
       setError("");
       setSuccess("");
 
-      await updateHomeSection(
-        section.$id,
-        form
-      );
+      await updateHomeSection(section.$id, form);
 
       setSuccess("Editorial section updated.");
     } catch (error) {
-      console.error(
-        "Failed to update editorial section:",
-        error
-      );
+      console.error("Failed to update editorial section:", error);
 
-      setError(
-        "Failed to update editorial section."
-      );
+      setError("Failed to update editorial section.");
     } finally {
       setSaving(false);
     }
@@ -59,9 +49,7 @@ function EditorialManager({ section, onClose }) {
     <div className="mt-6 rounded-xl border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b border-gray-200 p-5">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            Editorial
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">Editorial</h2>
 
           <p className="mt-1 text-sm text-gray-500">
             Manage the editorial content displayed on the homepage.
@@ -77,10 +65,7 @@ function EditorialManager({ section, onClose }) {
         </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-5 p-5"
-      >
+      <form onSubmit={handleSubmit} className="space-y-5 p-5">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
             Title
@@ -140,8 +125,8 @@ function EditorialManager({ section, onClose }) {
           </label>
 
           <input
-            name="cta_href"
-            value={form.cta_href}
+            name="cta_Href"
+            value={form.cta_Href}
             onChange={handleChange}
             placeholder="/category/sneakers"
             className="w-full rounded-lg border border-gray-300 px-3 py-2"
@@ -160,22 +145,12 @@ function EditorialManager({ section, onClose }) {
             }
           />
 
-          <span className="text-sm text-gray-700">
-            Active
-          </span>
+          <span className="text-sm text-gray-700">Active</span>
         </label>
 
-        {error && (
-          <p className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {success && (
-          <p className="text-sm text-green-600">
-            {success}
-          </p>
-        )}
+        {success && <p className="text-sm text-green-600">{success}</p>}
 
         <div className="flex justify-end">
           <button
