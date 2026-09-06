@@ -2,6 +2,9 @@ import { ID, Query } from "appwrite";
 
 import { tablesDB } from "../utils/appwrite";
 
+import { getProductByIdAdmin } from "./productServices";
+import { getPrimaryProductImage } from "./productImageServices";
+
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
 const HOME_SECTIONS_TABLE_ID =
@@ -58,7 +61,37 @@ export async function getSectionProducts(sectionId) {
 
   return response.rows;
 }
-
+export async function getSectionProductsWithDetails(sectionId) {
+    const sectionProducts = await getSectionProducts(sectionId);
+  
+    const products = await Promise.all(
+      sectionProducts.map(async (sectionProduct) => {
+        const product = await getProductByIdAdmin(
+          sectionProduct.product_ID
+        );
+  
+        if (!product) {
+          return {
+            ...sectionProduct,
+            product: null,
+            primaryImage: null,
+          };
+        }
+  
+        const primaryImage = await getPrimaryProductImage(
+          product.$id
+        );
+  
+        return {
+          ...sectionProduct,
+          product,
+          primaryImage,
+        };
+      })
+    );
+  
+    return products;
+  }
 /**
  * Add a product to a homepage section.
  */

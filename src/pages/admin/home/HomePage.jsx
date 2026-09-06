@@ -4,11 +4,13 @@ import { getHomeSectionsForAdmin } from "../../../services/homeAdminServices";
 
 import HomeSectionCard from "./HomeSectionCard";
 
+import NewCollectionManager from "./NewCollectionManager";
+
 function HomePage() {
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [selectedSection, setSelectedSection] = useState(null);
   useEffect(() => {
     async function loadSections() {
       try {
@@ -32,9 +34,7 @@ function HomePage() {
   if (loading) {
     return (
       <div className="p-6">
-        <p className="text-sm text-gray-500">
-          Loading homepage sections...
-        </p>
+        <p className="text-sm text-gray-500">Loading homepage sections...</p>
       </div>
     );
   }
@@ -61,9 +61,7 @@ function HomePage() {
 
       {sections.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-          <p className="text-sm text-gray-500">
-            No homepage sections found.
-          </p>
+          <p className="text-sm text-gray-500">No homepage sections found.</p>
         </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
@@ -71,8 +69,17 @@ function HomePage() {
             <HomeSectionCard
               key={section.$id}
               section={section}
+              onManage={() => setSelectedSection(section)}
             />
           ))}
+        </div>
+      )}
+      {selectedSection && (
+        <div className="mt-6">
+          <NewCollectionManager
+            section={selectedSection}
+            onClose={() => setSelectedSection(null)}
+          />
         </div>
       )}
     </div>
