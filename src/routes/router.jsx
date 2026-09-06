@@ -6,6 +6,7 @@ import NotFound from "../pages/NotFound";
 import ProductDetail from "../pages/product/ProductDetail";
 import Admin from "../pages/admin/Admin";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
+import ProductsPage from "../pages/admin/products/ProductsPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: "/admin/categories",
         element: <CategoriesPage />,
+      },
+      {
+        path: "/admin/products",
+        element: <ProductsPage />,
       },
     ],
   },
