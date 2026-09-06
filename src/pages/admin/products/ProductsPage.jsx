@@ -154,7 +154,7 @@ function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6 px-0 sm:px-6 lg:px-8">
+    <div className="space-y-6 py-2 sm:py-4 px-2 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
