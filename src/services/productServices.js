@@ -1,4 +1,4 @@
-import { Query } from "appwrite";
+import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import {getProductImages} from "./productImageServices";
 
@@ -54,4 +54,126 @@ export async function getProductById(productId) {
   });
 
   return response.rows[0] ?? null;
+}
+// Get all products for admin
+export async function getProductsForAdmin() {
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries: [
+      Query.orderDesc("$createdAt"),
+      Query.limit(100),
+    ],
+  });
+
+  return response.rows;
+}
+
+// Get a product by ID for admin
+// Unlike the storefront version, this can return inactive products.
+export async function getProductByIdAdmin(productId) {
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries: [
+      Query.equal("$id", productId),
+      Query.limit(1),
+    ],
+  });
+
+  return response.rows[0] ?? null;
+}
+
+// Create a new product
+export async function createProduct(productData) {
+  const data = {
+    name: productData.name,
+    slug: productData.slug,
+    sku: productData.sku,
+    description: productData.description || "",
+    price: Number(productData.price),
+    categoryID: productData.categoryID || "",
+    color: productData.color || "",
+    colorHEX: productData.colorHEX || "",
+    stockQuantity: Number(productData.stockQuantity),
+    isFeatured: Boolean(productData.isFeatured),
+    isActive: Boolean(productData.isActive),
+  };
+
+  // Only send compareAtPrice when a value exists.
+  if (
+    productData.compareAtPrice !== "" &&
+    productData.compareAtPrice !== null &&
+    productData.compareAtPrice !== undefined
+  ) {
+    data.compareAtPrice = Number(productData.compareAtPrice);
+  }
+
+  const response = await tablesDB.createRow({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    rowId: ID.unique(),
+    data,
+  });
+
+  return response;
+}
+
+// Update an existing product
+export async function updateProduct(productId, productData) {
+  const data = {
+    name: productData.name,
+    slug: productData.slug,
+    sku: productData.sku,
+    description: productData.description || "",
+    price: Number(productData.price),
+    categoryID: productData.categoryID || "",
+    color: productData.color || "",
+    colorHEX: productData.colorHEX || "",
+    stockQuantity: Number(productData.stockQuantity),
+    isFeatured: Boolean(productData.isFeatured),
+    isActive: Boolean(productData.isActive),
+  };
+
+  if (
+    productData.compareAtPrice !== "" &&
+    productData.compareAtPrice !== null &&
+    productData.compareAtPrice !== undefined
+  ) {
+    data.compareAtPrice = Number(productData.compareAtPrice);
+  }
+
+  const response = await tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    rowId: productId,
+    data,
+  });
+
+  return response;
+}
+
+// Update only the active/inactive status
+export async function updateProductStatus(productId, isActive) {
+  const response = await tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    rowId: productId,
+    data: {
+      isActive: Boolean(isActive),
+    },
+  });
+
+  return response;
+}
+
+// Delete a product
+export async function deleteProduct(productId) {
+  await tablesDB.deleteRow({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    rowId: productId,
+  });
+
+  return true;
 }
