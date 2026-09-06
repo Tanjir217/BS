@@ -1,7 +1,7 @@
 import { ID, Query } from "appwrite";
 
 import { tablesDB } from "../utils/appwrite";
-
+import { getProductsForAdmin } from "./productServices";
 import { getProductByIdAdmin } from "./productServices";
 import { getPrimaryProductImage } from "./productImageServices";
 
@@ -96,31 +96,56 @@ export async function getSectionProductsWithDetails(sectionId) {
  * Add a product to a homepage section.
  */
 export async function addProductToSection({
-  sectionId,
-  productId,
-  sortOrder = 0,
-  scene = null,
-}) {
-  const data = {
-    section_ID: sectionId,
-    product_ID: productId,
-    sort_Order: Number(sortOrder),
-    is_Active: true,
-  };
-
-  if (scene !== null && scene !== undefined && scene !== "") {
-    data.scene = Number(scene);
+    sectionId,
+    productId,
+    scene = null,
+  }) {
+    const existingProducts =
+      await getSectionProducts(sectionId);
+  
+    const alreadyExists = existingProducts.some(
+      (item) => item.product_ID === productId
+    );
+  
+    if (alreadyExists) {
+      throw new Error(
+        "This product is already in the section."
+      );
+    }
+  
+    const nextSortOrder =
+      existingProducts.length === 0
+        ? 0
+        : Math.max(
+            ...existingProducts.map(
+              (item) => Number(item.sort_Order)
+            )
+          ) + 1;
+  
+    const data = {
+      section_ID: sectionId,
+      product_ID: productId,
+      sort_Order: nextSortOrder,
+      is_Active: true,
+    };
+  
+    if (
+      scene !== null &&
+      scene !== undefined &&
+      scene !== ""
+    ) {
+      data.scene = Number(scene);
+    }
+  
+    const response = await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: HOME_SECTIONS_PRODUCTS_TABLE_ID,
+      rowId: ID.unique(),
+      data,
+    });
+  
+    return response;
   }
-
-  const response = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: HOME_SECTIONS_PRODUCTS_TABLE_ID,
-    rowId: ID.unique(),
-    data,
-  });
-
-  return response;
-}
 
 /**
  * Remove a product from a homepage section.
@@ -189,3 +214,55 @@ export async function updateHomeSectionStatus(
 
   return response;
 }
+export async function swapSectionProductOrder(
+    currentId,
+    currentSortOrder,
+    targetId,
+    targetSortOrder
+  ) {
+    const temporarySortOrder = Date.now();
+  
+    // Step 1:
+    // Move the current item to a temporary position.
+    await updateSectionProduct(currentId, {
+      sortOrder: temporarySortOrder,
+    });
+  
+    // Step 2:
+    // Give the target item the current item's old position.
+    await updateSectionProduct(targetId, {
+      sortOrder: currentSortOrder,
+    });
+  
+    // Step 3:
+    // Give the current item the target's old position.
+    await updateSectionProduct(currentId, {
+      sortOrder: targetSortOrder,
+    });
+  
+    return true;
+  }
+
+  export async function getAvailableProductsForSection(
+    sectionId
+  ) {
+    const sectionProducts = await getSectionProducts(
+      sectionId
+    );
+  
+    const assignedProductIds = new Set(
+      sectionProducts.map(
+        (item) => item.product_ID
+      )
+    );
+  
+    const { products } = await getProductsForAdmin({
+      page: 1,
+      limit: 100,
+    });
+  
+    return products.filter(
+      (product) =>
+        !assignedProductIds.has(product.$id)
+    );
+  }

@@ -4,28 +4,26 @@ import {
   getSectionProductsWithDetails,
   removeProductFromSection,
   updateSectionProduct,
+  swapSectionProductOrder,
 } from "../../../services/homeAdminServices";
+import AddProductToSection from "./AddProductToSection";
 
 function NewCollectionManager({ section, onClose }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   async function loadProducts() {
     try {
       setLoading(true);
       setError("");
 
-      const data = await getSectionProductsWithDetails(
-        section.$id
-      );
+      const data = await getSectionProductsWithDetails(section.$id);
 
       setProducts(data);
     } catch (error) {
-      console.error(
-        "Failed to load section products:",
-        error
-      );
+      console.error("Failed to load section products:", error);
 
       setError("Failed to load products.");
     } finally {
@@ -39,7 +37,7 @@ function NewCollectionManager({ section, onClose }) {
 
   async function handleRemove(sectionProductId) {
     const confirmed = window.confirm(
-      "Remove this product from New Collection?"
+      "Remove this product from New Collection?",
     );
 
     if (!confirmed) return;
@@ -49,25 +47,16 @@ function NewCollectionManager({ section, onClose }) {
 
       await loadProducts();
     } catch (error) {
-      console.error(
-        "Failed to remove product:",
-        error
-      );
+      console.error("Failed to remove product:", error);
 
       setError("Failed to remove product.");
     }
   }
 
   async function handleMove(index, direction) {
-    const targetIndex =
-      direction === "up"
-        ? index - 1
-        : index + 1;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
 
-    if (
-      targetIndex < 0 ||
-      targetIndex >= products.length
-    ) {
+    if (targetIndex < 0 || targetIndex >= products.length) {
       return;
     }
 
@@ -75,22 +64,15 @@ function NewCollectionManager({ section, onClose }) {
     const target = products[targetIndex];
 
     try {
-      await Promise.all([
-        updateSectionProduct(current.$id, {
-          sortOrder: target.sort_Order,
-        }),
+      setError("");
 
-        updateSectionProduct(target.$id, {
-          sortOrder: current.sort_Order,
-        }),
-      ]);
+      await swapSectionProductOrder(
+        (current.$id, current.sort_Order, target.$id, target.sort_Order),
+      );
 
       await loadProducts();
     } catch (error) {
-      console.error(
-        "Failed to reorder products:",
-        error
-      );
+      console.error("Failed to reorder products:", error);
 
       setError("Failed to reorder products.");
     }
@@ -108,28 +90,30 @@ function NewCollectionManager({ section, onClose }) {
             Manage products in this homepage section.
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm"
-        >
-          Close
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAddProduct(true)}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+          >
+            + Add Product
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm"
+          >
+            Close
+          </button>
+        </div>
       </div>
 
       <div className="p-5">
         {loading && (
-          <p className="text-sm text-gray-500">
-            Loading products...
-          </p>
+          <p className="text-sm text-gray-500">Loading products...</p>
         )}
 
-        {error && (
-          <p className="mb-4 text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
         {!loading && products.length === 0 && (
           <p className="text-sm text-gray-500">
@@ -160,8 +144,7 @@ function NewCollectionManager({ section, onClose }) {
 
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-gray-900">
-                    {item.product?.name ||
-                      "Product not found"}
+                    {item.product?.name || "Product not found"}
                   </p>
 
                   <p className="text-sm text-gray-500">
@@ -177,9 +160,7 @@ function NewCollectionManager({ section, onClose }) {
                   <button
                     type="button"
                     disabled={index === 0}
-                    onClick={() =>
-                      handleMove(index, "up")
-                    }
+                    onClick={() => handleMove(index, "up")}
                     className="rounded-md border px-2 py-1 text-sm disabled:opacity-30"
                   >
                     ↑
@@ -187,12 +168,8 @@ function NewCollectionManager({ section, onClose }) {
 
                   <button
                     type="button"
-                    disabled={
-                      index === products.length - 1
-                    }
-                    onClick={() =>
-                      handleMove(index, "down")
-                    }
+                    disabled={index === products.length - 1}
+                    onClick={() => handleMove(index, "down")}
                     className="rounded-md border px-2 py-1 text-sm disabled:opacity-30"
                   >
                     ↓
@@ -200,9 +177,7 @@ function NewCollectionManager({ section, onClose }) {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      handleRemove(item.$id)
-                    }
+                    onClick={() => handleRemove(item.$id)}
                     className="ml-2 rounded-md border border-red-200 px-3 py-1 text-sm text-red-600"
                   >
                     Remove
@@ -211,6 +186,16 @@ function NewCollectionManager({ section, onClose }) {
               </div>
             ))}
           </div>
+        )}
+        {showAddProduct && (
+          <AddProductToSection
+            section={section}
+            onClose={() => setShowAddProduct(false)}
+            onAdded={async () => {
+              setShowAddProduct(false);
+              await loadProducts();
+            }}
+          />
         )}
       </div>
     </div>
