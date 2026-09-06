@@ -80,11 +80,13 @@ function HomePage() {
         <div className="mt-6">
           {selectedSection.type === "editorial-section" ? (
             <EditorialManager
+              key={selectedSection.$id}
               section={selectedSection}
               onClose={() => setSelectedSection(null)}
             />
           ) : (
             <SectionProductManager
+              key={selectedSection.$id}
               section={selectedSection}
               onClose={() => setSelectedSection(null)}
             />
