@@ -24,9 +24,9 @@ function Home() {
       const editorialData = await getEditorialSections();
       const inspiredData = await getInspiredProducts();
 
-      console.log("NEW COLLECTION:", newCollectionData);
-      console.log("EDITORIAL SECTIONS:", editorialData);
-      console.log("INSPIRED PRODUCTS:", inspiredData);
+      // console.log("NEW COLLECTION:", newCollectionData);
+      // console.log("EDITORIAL SECTIONS:", editorialData);
+      // console.log("INSPIRED PRODUCTS:", inspiredData);
 
       setNewCollection(newCollectionData);
       setEditorialSections(editorialData);

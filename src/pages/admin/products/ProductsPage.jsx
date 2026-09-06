@@ -67,7 +67,6 @@ function ProductsPage() {
     filters.stock,
     filters.discount,
   ]);
-
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const search = filters.search.trim().toLowerCase();

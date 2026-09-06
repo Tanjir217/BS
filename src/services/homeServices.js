@@ -59,9 +59,9 @@ export async function getNewCollection() {
       }
 
       const images = await getProductImages(product.$id);
-      console.log("HOME PRODUCT:", product.name);
-      console.log("HOME PRODUCT ID:", product.$id);
-      console.log("HOME PRODUCT IMAGES:", images);
+      // console.log("HOME PRODUCT:", product.name);
+      // console.log("HOME PRODUCT ID:", product.$id);
+      // console.log("HOME PRODUCT IMAGES:", images);
 
       const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
 
