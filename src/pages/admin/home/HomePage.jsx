@@ -4,7 +4,9 @@ import { getHomeSectionsForAdmin } from "../../../services/homeAdminServices";
 
 import HomeSectionCard from "./HomeSectionCard";
 
-import NewCollectionManager from "./NewCollectionManager";
+import SectionProductManager from "./SectionProductManager.jsx";
+
+import EditorialManager from "./EditorialManager";
 
 function HomePage() {
   const [sections, setSections] = useState([]);
@@ -76,10 +78,17 @@ function HomePage() {
       )}
       {selectedSection && (
         <div className="mt-6">
-          <NewCollectionManager
-            section={selectedSection}
-            onClose={() => setSelectedSection(null)}
-          />
+          {selectedSection.type === "editorial-section" ? (
+            <EditorialManager
+              section={selectedSection}
+              onClose={() => setSelectedSection(null)}
+            />
+          ) : (
+            <SectionProductManager
+              section={selectedSection}
+              onClose={() => setSelectedSection(null)}
+            />
+          )}
         </div>
       )}
     </div>

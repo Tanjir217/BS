@@ -162,10 +162,10 @@ export async function getEditorialSections() {
 
         editorial: {
           image: editorialImage,
-          alt: section.editorial_alt || "",
+          alt: section.editorial_Alt || "",
           cta: {
-            label: section.cta_label || "",
-            href: section.cta_href || "#",
+            Label: section.cta_Label || "",
+            Href: section.cta_Href || "#",
           },
         },
 

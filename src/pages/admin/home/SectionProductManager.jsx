@@ -8,7 +8,7 @@ import {
 } from "../../../services/homeAdminServices";
 import AddProductToSection from "./AddProductToSection";
 
-function NewCollectionManager({ section, onClose }) {
+function SectionProductManager({ section, onClose }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,7 +37,9 @@ function NewCollectionManager({ section, onClose }) {
 
   async function handleRemove(sectionProductId) {
     const confirmed = window.confirm(
-      "Remove this product from New Collection?",
+      `Remove this product from ${(
+        section.title || section.section_key
+      )}?`,
     );
 
     if (!confirmed) return;
@@ -67,7 +69,10 @@ function NewCollectionManager({ section, onClose }) {
       setError("");
 
       await swapSectionProductOrder(
-        (current.$id, current.sort_Order, target.$id, target.sort_Order),
+        current.$id,
+        current.sort_Order,
+        target.$id,
+        target.sort_Order,
       );
 
       await loadProducts();
@@ -202,4 +207,4 @@ function NewCollectionManager({ section, onClose }) {
   );
 }
 
-export default NewCollectionManager;
+export default SectionProductManager;

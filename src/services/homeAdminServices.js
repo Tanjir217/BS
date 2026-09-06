@@ -266,3 +266,23 @@ export async function swapSectionProductOrder(
         !assignedProductIds.has(product.$id)
     );
   }
+  export async function updateHomeSection(
+    sectionId,
+    data
+  ) {
+    const response = await tablesDB.updateRow({
+      databaseId: DATABASE_ID,
+      tableId: HOME_SECTIONS_TABLE_ID,
+      rowId: sectionId,
+      data: {
+        title: data.title || "",
+        sub_title: data.sub_title || "",
+        editorial_Alt: data.editorial_Alt || "",
+        cta_Label: data.cta_Label || "",
+        cta_href: data.cta_href || "",
+        is_Active: Boolean(data.is_Active),
+      },
+    });
+  
+    return response;
+  }
