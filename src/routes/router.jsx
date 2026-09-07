@@ -4,7 +4,8 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/home/Home";
 import NotFound from "../pages/NotFound";
 import ProductDetail from "../pages/product/ProductDetail";
-import Admin from "../pages/admin/Admin";
+import AdminLayout from "../pages/admin/layouts/AdminLayout";
+import AdminDashboard from "../pages/admin/dashboard/AdminDashboard"
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import HomePage from "../pages/admin/home/HomePage"
@@ -27,28 +28,35 @@ const router = createBrowserRouter([
         path: "products/:slug",
         element: <ProductDetail />,
       },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    errorElement: <NotFound />,
+    children: [
       {
-        path: "admin",
-        element: <Admin />,
+        index: true,
+        element: <AdminDashboard />,
       },
       {
-        path: "/admin/categories",
+        path: "categories",
         element: <CategoriesPage />,
       },
       {
-        path: "/admin/products",
+        path: "products",
         element: <ProductsPage />,
       },
       {
-        path : "/admin/homepage",
-        element : <HomePage/>
+        path: "homepage",
+        element: <HomePage />,
       },
       {
-        path: "/admin/orders",
+        path: "orders",
         element: <OrdersPage />,
       },
     ],
-  },
+  }
 ]);
 
 export default router;

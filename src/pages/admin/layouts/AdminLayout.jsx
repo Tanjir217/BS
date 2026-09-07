@@ -1,7 +1,8 @@
+import { Outlet } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
 
-function AdminLayout({ children }) {
+function AdminLayout() {
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
       <div className="flex min-h-screen">
@@ -11,7 +12,7 @@ function AdminLayout({ children }) {
           <AdminHeader />
 
           <main className="px-4 py-6 sm:px-6 lg:px-8">
-            {children}
+            <Outlet />
           </main>
         </div>
       </div>

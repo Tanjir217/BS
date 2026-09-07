@@ -1,0 +1,10 @@
+import ProductsPage from "./ProductsPage";
+import ProductForm from "./ProductForm";
+import ProductTable from "./ProductTable";
+import ProductRow from "./ProductRow";
+import ProductStatusBadge from "./ProductStatusBadge";
+import ProductEmptyState from "./ProductEmptyState";
+import ProductImageManager from "./ProductImageManager";
+import ProductPagination from "./ProductPagination";
+import ProductFilters from "./ProductFilters";
+export default { ProductsPage, ProductForm, ProductTable, ProductRow, ProductStatusBadge, ProductEmptyState, ProductImageManager, ProductPagination, ProductFilters };
