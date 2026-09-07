@@ -374,3 +374,51 @@ export async function getCustomerTierRules() {
 
   return response.rows;
 }
+
+/*
+|--------------------------------------------------------------------------
+| Get customer orders
+|--------------------------------------------------------------------------
+*/
+
+export async function getCustomerOrders({
+  customerId,
+  page = 1,
+  limit = 10,
+} = {}) {
+  if (!customerId) {
+    throw new Error("Customer ID is required.");
+  }
+
+  const safePage = Math.max(1, Number(page) || 1);
+
+  const safeLimit = Math.min(
+    50,
+    Math.max(1, Number(limit) || 10)
+  );
+
+  const offset = (safePage - 1) * safeLimit;
+
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId:
+      import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID,
+    queries: [
+      Query.equal("customer_ID", customerId),
+      Query.orderDesc("$createdAt"),
+      Query.limit(safeLimit),
+      Query.offset(offset),
+    ],
+  });
+
+  return {
+    orders: response.rows,
+    total: response.total,
+    page: safePage,
+    limit: safeLimit,
+    totalPages: Math.max(
+      1,
+      Math.ceil(response.total / safeLimit)
+    ),
+  };
+}
