@@ -8,6 +8,7 @@ import Admin from "../pages/admin/Admin";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import HomePage from "../pages/admin/home/HomePage"
+import OrdersPage from "../pages/admin/orders/OrdersPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -41,7 +42,11 @@ const router = createBrowserRouter([
       {
         path : "/admin/homepage",
         element : <HomePage/>
-      }
+      },
+      {
+        path: "/admin/orders",
+        element: <OrdersPage />,
+      },
     ],
   },
 ]);

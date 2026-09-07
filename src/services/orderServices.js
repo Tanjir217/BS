@@ -4,11 +4,9 @@ import { getProductByIdAdmin } from "./productServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const ORDERS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
+const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
 
-const ORDER_ITEMS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
+const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
 
 /*
 |--------------------------------------------------------------------------
@@ -122,27 +120,19 @@ export async function createOrder({
       const quantity = Number(item.quantity);
 
       if (!Number.isInteger(quantity) || quantity <= 0) {
-        throw new Error(
-          `Invalid quantity for product ${item.productId}.`
-        );
+        throw new Error(`Invalid quantity for product ${item.productId}.`);
       }
 
-      const product = await getProductByIdAdmin(
-        item.productId
-      );
+      const product = await getProductByIdAdmin(item.productId);
 
       if (!product) {
-        throw new Error(
-          `Product ${item.productId} could not be found.`
-        );
+        throw new Error(`Product ${item.productId} could not be found.`);
       }
 
       const unitPrice = Number(product.price);
 
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-        throw new Error(
-          `Invalid price for product ${item.productId}.`
-        );
+        throw new Error(`Invalid price for product ${item.productId}.`);
       }
 
       const lineTotal = unitPrice * quantity;
@@ -156,7 +146,7 @@ export async function createOrder({
         quantity,
         line_Total: lineTotal,
       };
-    })
+    }),
   );
 
   /*
@@ -165,36 +155,24 @@ export async function createOrder({
   |--------------------------------------------------------------------------
   */
 
-  const subtotal = orderItems.reduce(
-    (sum, item) => sum + item.line_Total,
-    0
-  );
+  const subtotal = orderItems.reduce((sum, item) => sum + item.line_Total, 0);
 
   const shippingCostNumber = Number(shipping_Cost);
   const discountNumber = Number(discount);
 
-  if (
-    !Number.isFinite(shippingCostNumber) ||
-    shippingCostNumber < 0
-  ) {
+  if (!Number.isFinite(shippingCostNumber) || shippingCostNumber < 0) {
     throw new Error("Invalid shipping cost.");
   }
 
-  if (
-    !Number.isFinite(discountNumber) ||
-    discountNumber < 0
-  ) {
+  if (!Number.isFinite(discountNumber) || discountNumber < 0) {
     throw new Error("Invalid discount.");
   }
 
   if (discountNumber > subtotal + shippingCostNumber) {
-    throw new Error(
-      "Discount cannot be greater than the order amount."
-    );
+    throw new Error("Discount cannot be greater than the order amount.");
   }
 
-  const total =
-    subtotal + shippingCostNumber - discountNumber;
+  const total = subtotal + shippingCostNumber - discountNumber;
 
   /*
   |--------------------------------------------------------------------------
@@ -238,9 +216,11 @@ export async function createOrder({
   */
 
   try {
-    const createdItems = await Promise.all(
-      orderItems.map((item) =>
-        tablesDB.createRow({
+    const createdItems = [];
+
+    try {
+      for (const item of orderItems) {
+        const createdItem = await tablesDB.createRow({
           databaseId: DATABASE_ID,
           tableId: ORDER_ITEMS_TABLE_ID,
           rowId: ID.unique(),
@@ -254,14 +234,40 @@ export async function createOrder({
             quantity: item.quantity,
             line_Total: item.line_Total,
           },
-        })
-      )
-    );
+        });
 
-    return {
-      order,
-      items: createdItems,
-    };
+        createdItems.push(createdItem);
+      }
+
+      return {
+        order,
+        items: createdItems,
+      };
+    } catch (error) {
+      // Delete any order items that were successfully created
+      await Promise.all(
+        createdItems.map((item) =>
+          tablesDB.deleteRow({
+            databaseId: DATABASE_ID,
+            tableId: ORDER_ITEMS_TABLE_ID,
+            rowId: item.$id,
+          }),
+        ),
+      );
+
+      // Then delete the order
+      try {
+        await tablesDB.deleteRow({
+          databaseId: DATABASE_ID,
+          tableId: ORDERS_TABLE_ID,
+          rowId: order.$id,
+        });
+      } catch (rollbackError) {
+        console.error("Failed to roll back order:", rollbackError);
+      }
+
+      throw error;
+    }
   } catch (error) {
     /*
     |--------------------------------------------------------------------------
@@ -276,10 +282,7 @@ export async function createOrder({
         rowId: order.$id,
       });
     } catch (rollbackError) {
-      console.error(
-        "Failed to roll back order:",
-        rollbackError
-      );
+      console.error("Failed to roll back order:", rollbackError);
     }
 
     throw error;
@@ -292,10 +295,7 @@ export async function createOrder({
 |--------------------------------------------------------------------------
 */
 
-export async function getOrders({
-  page = 1,
-  limit = 20,
-} = {}) {
+export async function getOrders({ page = 1, limit = 20 } = {}) {
   const offset = (page - 1) * limit;
 
   const response = await tablesDB.listRows({
@@ -327,10 +327,7 @@ export async function getOrderById(orderId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: ORDERS_TABLE_ID,
-    queries: [
-      Query.equal("$id", orderId),
-      Query.limit(1),
-    ],
+    queries: [Query.equal("$id", orderId), Query.limit(1)],
   });
 
   return response.rows[0] ?? null;
@@ -346,10 +343,7 @@ export async function getOrderItems(orderId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: ORDER_ITEMS_TABLE_ID,
-    queries: [
-      Query.equal("order_ID", orderId),
-      Query.orderAsc("$createdAt"),
-    ],
+    queries: [Query.equal("order_ID", orderId), Query.orderAsc("$createdAt")],
   });
 
   return response.rows;
@@ -382,16 +376,11 @@ export async function getOrderWithItems(orderId) {
 |--------------------------------------------------------------------------
 */
 
-export async function updateOrderStatus(
-  orderId,
-  orderStatus
-) {
+export async function updateOrderStatus(orderId, orderStatus) {
   const validStatuses = Object.values(ORDER_STATUSES);
 
   if (!validStatuses.includes(orderStatus)) {
-    throw new Error(
-      `Invalid order status: ${orderStatus}`
-    );
+    throw new Error(`Invalid order status: ${orderStatus}`);
   }
 
   const response = await tablesDB.updateRow({
@@ -412,16 +401,11 @@ export async function updateOrderStatus(
 |--------------------------------------------------------------------------
 */
 
-export async function updatePaymentStatus(
-  orderId,
-  paymentStatus
-) {
+export async function updatePaymentStatus(orderId, paymentStatus) {
   const validStatuses = Object.values(PAYMENT_STATUSES);
 
   if (!validStatuses.includes(paymentStatus)) {
-    throw new Error(
-      `Invalid payment status: ${paymentStatus}`
-    );
+    throw new Error(`Invalid payment status: ${paymentStatus}`);
   }
 
   const response = await tablesDB.updateRow({
@@ -442,16 +426,16 @@ export async function updatePaymentStatus(
 |--------------------------------------------------------------------------
 */
 
-export async function updateOrder(orderId, data) {
-  const response = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: ORDERS_TABLE_ID,
-    rowId: orderId,
-    data,
-  });
+// export async function updateOrder(orderId, data) {
+//   const response = await tablesDB.updateRow({
+//     databaseId: DATABASE_ID,
+//     tableId: ORDERS_TABLE_ID,
+//     rowId: orderId,
+//     data,
+//   });
 
-  return response;
-}
+//   return response;
+// }
 
 /*
 |--------------------------------------------------------------------------
@@ -474,8 +458,8 @@ export async function deleteOrder(orderId) {
         databaseId: DATABASE_ID,
         tableId: ORDER_ITEMS_TABLE_ID,
         rowId: item.$id,
-      })
-    )
+      }),
+    ),
   );
 
   /*
