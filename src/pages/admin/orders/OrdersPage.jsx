@@ -1,9 +1,15 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   getOrders,
   ORDER_STATUSES,
   PAYMENT_STATUSES,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
 } from "../../../services/orderServices";
 
 import OrderTable from "./OrderTable";
@@ -17,13 +23,18 @@ function OrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
 
-  const [orderStatus, setOrderStatus] = useState("all");
-  const [paymentStatus, setPaymentStatus] = useState("all");
+  const [orderStatus, setOrderStatus] =
+    useState("all");
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] =
+    useState("all");
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
   const [error, setError] = useState("");
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -31,46 +42,54 @@ function OrdersPage() {
       const result = await getOrders({
         page,
         limit: ORDERS_PER_PAGE,
+        orderStatus,
+        paymentStatus,
       });
 
-      let filteredOrders = result.orders;
-
-      if (orderStatus !== "all") {
-        filteredOrders = filteredOrders.filter(
-          (order) => order.order_Status === orderStatus
-        );
-      }
-
-      if (paymentStatus !== "all") {
-        filteredOrders = filteredOrders.filter(
-          (order) =>
-            order.payment_Status === paymentStatus
-        );
-      }
-
-      setOrders(filteredOrders);
+      setOrders(result.orders);
       setTotalPages(result.totalPages);
       setTotalOrders(result.total);
     } catch (error) {
-      console.error("Failed to load orders:", error);
-      setError("Failed to load orders.");
+      console.error(
+        "Failed to load orders:",
+        error
+      );
+
+      setError(
+        "Failed to load orders. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [
+    page,
+    orderStatus,
+    paymentStatus,
+  ]);
 
   useEffect(() => {
     loadOrders();
-  }, [page, orderStatus, paymentStatus]);
+  }, [loadOrders]);
 
-  // useEffect(() => {
-  //   setPage(1);
-  // }, [orderStatus, paymentStatus]);
+  function handleOrderStatusChange(event) {
+    setOrderStatus(event.target.value);
+    setPage(1);
+  }
+
+  function handlePaymentStatusChange(event) {
+    setPaymentStatus(event.target.value);
+    setPage(1);
+  }
+
+  const hasActiveFilters =
+    orderStatus !== "all" ||
+    paymentStatus !== "all";
 
   return (
     <div className="space-y-6 py-2 sm:py-4">
+
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm text-black/45">
             Sales
@@ -88,22 +107,23 @@ function OrdersPage() {
         <button
           type="button"
           onClick={loadOrders}
-          className="rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-black/5"
+          disabled={isLoading}
+          className="rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Refresh
+          {isLoading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/8 bg-white p-4 sm:flex-row">
+      <div className="flex flex-col gap-3 rounded-2xl border border-black/8 bg-white p-4 sm:flex-row sm:items-center">
         <select
           value={orderStatus}
-          onChange={(event) =>
-            setOrderStatus(event.target.value)
-          }
-          className="rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none"
+          onChange={handleOrderStatusChange}
+          className="rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm text-black outline-none transition focus:border-black/25"
         >
-          <option value="all">All order statuses</option>
+          <option value="all">
+            All order statuses
+          </option>
 
           {Object.values(ORDER_STATUSES).map(
             (status) => (
@@ -111,7 +131,7 @@ function OrdersPage() {
                 key={status}
                 value={status}
               >
-                {status}
+                {ORDER_STATUS_LABELS[status]}
               </option>
             )
           )}
@@ -119,10 +139,8 @@ function OrdersPage() {
 
         <select
           value={paymentStatus}
-          onChange={(event) =>
-            setPaymentStatus(event.target.value)
-          }
-          className="rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none"
+          onChange={handlePaymentStatusChange}
+          className="rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm text-black outline-none transition focus:border-black/25"
         >
           <option value="all">
             All payment statuses
@@ -134,17 +152,39 @@ function OrdersPage() {
                 key={status}
                 value={status}
               >
-                {status}
+                {PAYMENT_STATUS_LABELS[status]}
               </option>
             )
           )}
         </select>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={() => {
+              setOrderStatus("all");
+              setPaymentStatus("all");
+              setPage(1);
+            }}
+            className="self-start rounded-xl px-3 py-2.5 text-sm font-medium text-black/55 transition hover:bg-black/5 hover:text-black sm:self-auto"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          {error}
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          <span>{error}</span>
+
+          <button
+            type="button"
+            onClick={loadOrders}
+            className="font-medium underline underline-offset-2"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -152,28 +192,34 @@ function OrdersPage() {
       <OrderTable
         orders={orders}
         isLoading={isLoading}
+        hasActiveFilters={hasActiveFilters}
       />
 
-      {/* Footer / Pagination */}
-      {!isLoading && (
+      {/* Pagination */}
+      {!isLoading && totalOrders > 0 && (
         <div className="flex flex-col gap-3 text-sm text-black/45 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            {totalOrders} total orders
+            {totalOrders}{" "}
+            {totalOrders === 1
+              ? "order"
+              : "orders"}
           </p>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              disabled={page === 1}
+              disabled={page <= 1}
               onClick={() =>
-                setPage((current) => current - 1)
+                setPage((current) =>
+                  Math.max(1, current - 1)
+                )
               }
-              className="rounded-lg border border-black/10 bg-white px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-black/10 bg-white px-3 py-2 text-black transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Previous
             </button>
 
-            <span className="px-2">
+            <span className="min-w-24 text-center">
               Page {page} of {totalPages}
             </span>
 
@@ -181,9 +227,14 @@ function OrdersPage() {
               type="button"
               disabled={page >= totalPages}
               onClick={() =>
-                setPage((current) => current + 1)
+                setPage((current) =>
+                  Math.min(
+                    totalPages,
+                    current + 1
+                  )
+                )
               }
-              className="rounded-lg border border-black/10 bg-white px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-black/10 bg-white px-3 py-2 text-black transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
             </button>
