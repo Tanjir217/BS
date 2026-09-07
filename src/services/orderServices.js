@@ -217,64 +217,44 @@ export async function createOrder({
 
   try {
     const createdItems = [];
-
-    try {
-      for (const item of orderItems) {
-        const createdItem = await tablesDB.createRow({
+  
+    for (const item of orderItems) {
+      const createdItem = await tablesDB.createRow({
+        databaseId: DATABASE_ID,
+        tableId: ORDER_ITEMS_TABLE_ID,
+        rowId: ID.unique(),
+        data: {
+          order_ID: order.$id,
+          product_ID: item.product_ID,
+          product_Name: item.product_Name,
+          product_SKU: item.product_SKU,
+          product_Color: item.product_Color,
+          unit_Price: item.unit_Price,
+          quantity: item.quantity,
+          line_Total: item.line_Total,
+        },
+      });
+  
+      createdItems.push(createdItem);
+    }
+  
+    return {
+      order,
+      items: createdItems,
+    };
+  } catch (error) {
+    const existingItems = await getOrderItems(order.$id);
+  
+    await Promise.all(
+      existingItems.map((item) =>
+        tablesDB.deleteRow({
           databaseId: DATABASE_ID,
           tableId: ORDER_ITEMS_TABLE_ID,
-          rowId: ID.unique(),
-          data: {
-            order_ID: order.$id,
-            product_ID: item.product_ID,
-            product_Name: item.product_Name,
-            product_SKU: item.product_SKU,
-            product_Color: item.product_Color,
-            unit_Price: item.unit_Price,
-            quantity: item.quantity,
-            line_Total: item.line_Total,
-          },
-        });
-
-        createdItems.push(createdItem);
-      }
-
-      return {
-        order,
-        items: createdItems,
-      };
-    } catch (error) {
-      // Delete any order items that were successfully created
-      await Promise.all(
-        createdItems.map((item) =>
-          tablesDB.deleteRow({
-            databaseId: DATABASE_ID,
-            tableId: ORDER_ITEMS_TABLE_ID,
-            rowId: item.$id,
-          }),
-        ),
-      );
-
-      // Then delete the order
-      try {
-        await tablesDB.deleteRow({
-          databaseId: DATABASE_ID,
-          tableId: ORDERS_TABLE_ID,
-          rowId: order.$id,
-        });
-      } catch (rollbackError) {
-        console.error("Failed to roll back order:", rollbackError);
-      }
-
-      throw error;
-    }
-  } catch (error) {
-    /*
-    |--------------------------------------------------------------------------
-    | Roll back order if item creation fails
-    |--------------------------------------------------------------------------
-    */
-
+          rowId: item.$id,
+        })
+      )
+    );
+  
     try {
       await tablesDB.deleteRow({
         databaseId: DATABASE_ID,
@@ -282,9 +262,12 @@ export async function createOrder({
         rowId: order.$id,
       });
     } catch (rollbackError) {
-      console.error("Failed to roll back order:", rollbackError);
+      console.error(
+        "Failed to roll back order:",
+        rollbackError
+      );
     }
-
+  
     throw error;
   }
 }

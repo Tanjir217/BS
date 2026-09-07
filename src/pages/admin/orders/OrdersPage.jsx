@@ -61,11 +61,11 @@ function OrdersPage() {
 
   useEffect(() => {
     loadOrders();
-  }, [page]);
+  }, [page, orderStatus, paymentStatus]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [orderStatus, paymentStatus]);
+  // useEffect(() => {
+  //   setPage(1);
+  // }, [orderStatus, paymentStatus]);
 
   return (
     <div className="space-y-6 py-2 sm:py-4">
