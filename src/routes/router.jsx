@@ -9,6 +9,7 @@ import AdminDashboard from "../pages/admin/dashboard/AdminDashboard"
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import HomePage from "../pages/admin/home/HomePage"
+import OrderDetailPage from "../pages/admin/orders/OrderDetailPage";
 import OrdersPage from "../pages/admin/orders/OrdersPage";
 const router = createBrowserRouter([
   {
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
         path: "orders",
         element: <OrdersPage />,
       },
+      {
+        path: "orders/:orderId",
+        element: <OrderDetailPage />,
+      }
     ],
   }
 ]);
