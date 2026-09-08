@@ -106,7 +106,7 @@ export default function DashboardStats() {
       />
 
       <StatCard
-        title="Orders"
+        title="Orders This Month"
         value={Number(
           stats?.orders || 0
         ).toLocaleString("en-BD")}

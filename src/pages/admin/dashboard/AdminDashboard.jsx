@@ -1,7 +1,7 @@
 import DashboardStats from "./DashboardStats";
 import SalesOverview from "./SalesOverview";
 import BestSellingProducts from "./BestSellingProducts";
-import FavoriteProducts from "./FavoriteProducts";
+import OrderStatusOverview from "./OrderStatusOverview";
 import RecentOrders from "./RecentOrders";
 import LowStockProducts from "./LowStockProducts";
 
@@ -31,7 +31,7 @@ function AdminDashboard() {
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-1">
           <BestSellingProducts />
-          <FavoriteProducts />
+          <OrderStatusOverview />
         </div>
       </div>
 
