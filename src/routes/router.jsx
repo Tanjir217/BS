@@ -13,6 +13,7 @@ import OrderDetailPage from "../pages/admin/orders/OrderDetailPage";
 import OrdersPage from "../pages/admin/orders/OrdersPage";
 import CustomersPage from "../pages/admin/customers/CustomersPage";
 import CustomerDetailPage from "../pages/admin/customers/CustomerDetailPage";
+import AnalyticsPage from "../pages/admin/analytics/AnalyticsPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
         path: "customers/:customerId",
         element: <CustomerDetailPage />,
       },
+      {
+        path: "analytics",
+        element: <AnalyticsPage />,
+      }
     ],
   }
 ]);
