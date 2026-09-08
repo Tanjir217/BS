@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import CustomDropdown from "../components/CustomDropdown";
 import SectionCard from "../components/SectionCard";
-
+import SalesAnalytics from "./SalesAnalytics";
 import AnalyticsMetricCard from "../components/AnalyticsMetricCard";
 
 import {
@@ -270,6 +270,7 @@ function AnalyticsPage() {
           )}
         </div>
       </SectionCard>
+      <SalesAnalytics range={range} />
     </div>
   );
 }

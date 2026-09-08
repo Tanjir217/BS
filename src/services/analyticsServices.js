@@ -356,3 +356,220 @@ export async function getAnalyticsOverview(
       ),
   };
 }
+/*
+|--------------------------------------------------------------------------
+| Sales Analytics
+|--------------------------------------------------------------------------
+*/
+
+export async function getSalesAnalytics(
+  range = 30
+) {
+  const safeRange = [
+    7,
+    30,
+    90,
+  ].includes(Number(range))
+    ? Number(range)
+    : 30;
+
+  const now = new Date();
+
+  const startDate =
+    startOfDay(
+      new Date(
+        now.getTime() -
+          (safeRange - 1) *
+            24 *
+            60 *
+            60 *
+            1000
+      )
+    );
+
+  const orders = await getAllRows({
+    tableId: ORDERS_TABLE_ID,
+    queries: [
+      Query.greaterThanEqual(
+        "$createdAt",
+        startDate.toISOString()
+      ),
+      Query.lessThanEqual(
+        "$createdAt",
+        now.toISOString()
+      ),
+    ],
+  });
+
+  const revenueOrders =
+    orders.filter(
+      isRevenueOrder
+    );
+
+  const revenue =
+    calculateRevenue(orders);
+
+  const orderCount =
+    orders.length;
+
+  const averageOrderValue =
+    revenueOrders.length > 0
+      ? revenue /
+        revenueOrders.length
+      : 0;
+
+  /*
+  |--------------------------------------------------------------------------
+  | Revenue and order trends
+  |--------------------------------------------------------------------------
+  */
+
+  const trendMap = new Map();
+
+  for (
+    let index = 0;
+    index < safeRange;
+    index += 1
+  ) {
+    const date = new Date(
+      startDate.getTime() +
+        index *
+          24 *
+          60 *
+          60 *
+          1000
+    );
+
+    const key =
+      formatDateKey(date);
+
+    trendMap.set(key, {
+      date: key,
+
+      label:
+        formatDayLabel(
+          date,
+          safeRange
+        ),
+
+      revenue: 0,
+
+      orders: 0,
+    });
+  }
+
+  for (const order of orders) {
+    const createdAt =
+      new Date(
+        order.$createdAt
+      );
+
+    const key =
+      formatDateKey(
+        createdAt
+      );
+
+    const entry =
+      trendMap.get(key);
+
+    if (!entry) {
+      continue;
+    }
+
+    entry.orders += 1;
+
+    if (
+      isRevenueOrder(order)
+    ) {
+      entry.revenue += Number(
+        order.total || 0
+      );
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Order status breakdown
+  |--------------------------------------------------------------------------
+  */
+
+  const statusCounts = {
+    pending: 0,
+    confirmed: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
+  };
+
+  for (const order of orders) {
+    const status =
+      order?.order_Status;
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        statusCounts,
+        status
+      )
+    ) {
+      statusCounts[status] += 1;
+    }
+  }
+
+  return {
+    range: safeRange,
+
+    metrics: {
+      revenue,
+
+      orders:
+        orderCount,
+
+      averageOrderValue,
+    },
+
+    trend:
+      Array.from(
+        trendMap.values()
+      ),
+
+    statusBreakdown: [
+      {
+        key: "pending",
+        label: "Pending",
+        count:
+          statusCounts.pending,
+      },
+      {
+        key: "confirmed",
+        label: "Confirmed",
+        count:
+          statusCounts.confirmed,
+      },
+      {
+        key: "processing",
+        label: "Processing",
+        count:
+          statusCounts.processing,
+      },
+      {
+        key: "shipped",
+        label: "Shipped",
+        count:
+          statusCounts.shipped,
+      },
+      {
+        key: "delivered",
+        label: "Delivered",
+        count:
+          statusCounts.delivered,
+      },
+      {
+        key: "cancelled",
+        label: "Cancelled",
+        count:
+          statusCounts.cancelled,
+      },
+    ],
+  };
+}
