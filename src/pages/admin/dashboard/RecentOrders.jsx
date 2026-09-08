@@ -5,7 +5,7 @@ import SectionCard from "../components/SectionCard";
 import StatusBadge from "../components/StatusBadge";
 
 import { getRecentOrders } from "../../../services/dashboardServices";
-
+import SectionAction from "../components/SectionAction";
 function formatCurrency(value) {
   return `৳${Number(value || 0).toLocaleString("en-BD")}`;
 }
@@ -60,6 +60,9 @@ function RecentOrders() {
     <SectionCard
       title="Recent Orders"
       description="Latest orders placed in your store"
+      action={
+        <SectionAction to="/admin/orders" />
+      }
     >
       {error ? (
         <div className="p-5">

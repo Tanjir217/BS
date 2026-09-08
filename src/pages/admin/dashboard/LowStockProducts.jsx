@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
-
+import SectionAction from "../components/SectionAction";
 import SectionCard from "../components/SectionCard";
 import { getLowStockProducts } from "../../../services/dashboardServices";
 
@@ -42,6 +42,9 @@ function LowStockProducts() {
     <SectionCard
       title="Low Stock"
       description="Products that need restocking"
+      action={
+        <SectionAction to="/admin/products" />
+      }
     >
       {error ? (
         <div className="p-5">

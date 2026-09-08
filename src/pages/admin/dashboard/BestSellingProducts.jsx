@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import SectionAction from "../components/SectionAction";
 
 import SectionCard from "../components/SectionCard";
 import { getBestSellingProducts } from "../../../services/dashboardServices";
@@ -46,6 +46,9 @@ function BestSellingProducts() {
     <SectionCard
       title="Best Selling"
       description="Top products by units sold"
+      action={
+        <SectionAction to="/admin/products" />
+      }
     >
       {error ? (
         <div className="p-5">
