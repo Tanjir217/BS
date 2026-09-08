@@ -576,3 +576,69 @@ export async function getLowStockProducts(
 
   return response.rows;
 }
+/*
+|--------------------------------------------------------------------------
+| Order status overview
+|--------------------------------------------------------------------------
+*/
+
+export async function getOrderStatusOverview() {
+  const orders = await getAllRows({
+    tableId: ORDERS_TABLE_ID,
+  });
+
+  const statusCounts = {
+    pending: 0,
+    confirmed: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
+  };
+
+  for (const order of orders) {
+    const status = order?.order_Status;
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        statusCounts,
+        status
+      )
+    ) {
+      statusCounts[status] += 1;
+    }
+  }
+
+  return [
+    {
+      key: "pending",
+      label: "Pending",
+      count: statusCounts.pending,
+    },
+    {
+      key: "confirmed",
+      label: "Confirmed",
+      count: statusCounts.confirmed,
+    },
+    {
+      key: "processing",
+      label: "Processing",
+      count: statusCounts.processing,
+    },
+    {
+      key: "shipped",
+      label: "Shipped",
+      count: statusCounts.shipped,
+    },
+    {
+      key: "delivered",
+      label: "Delivered",
+      count: statusCounts.delivered,
+    },
+    {
+      key: "cancelled",
+      label: "Cancelled",
+      count: statusCounts.cancelled,
+    },
+  ];
+}
