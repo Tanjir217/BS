@@ -1,12 +1,10 @@
 import { Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 
-const DATABASE_ID =
-  import.meta.env.VITE_APPWRITE_DATABASE_ID;
+const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const ORDERS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
-
+const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
+const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID;
 const REVENUE_ORDER_STATUS = "delivered";
 const REVENUE_PAYMENT_STATUS = "paid";
 
@@ -27,68 +25,45 @@ function startOfDay(date) {
 function formatDateKey(date) {
   const year = date.getFullYear();
 
-  const month = String(
-    date.getMonth() + 1
-  ).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
 
-  const day = String(
-    date.getDate()
-  ).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
 
 function formatDayLabel(date, range) {
   if (range <= 7) {
-    return date.toLocaleDateString(
-      "en-US",
-      {
-        weekday: "short",
-      }
-    );
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+    });
   }
 
-  return date.toLocaleDateString(
-    "en-US",
-    {
-      month: "short",
-      day: "numeric",
-    }
-  );
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
-async function getAllRows({
-  tableId,
-  queries = [],
-  pageSize = 100,
-}) {
+async function getAllRows({ tableId, queries = [], pageSize = 100 }) {
   const rows = [];
 
   let offset = 0;
 
   while (true) {
-    const response =
-      await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId,
-        queries: [
-          ...queries,
-          Query.limit(pageSize),
-          Query.offset(offset),
-        ],
-      });
+    const response = await tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId,
+      queries: [...queries, Query.limit(pageSize), Query.offset(offset)],
+    });
 
     rows.push(...response.rows);
 
-    if (
-      rows.length >= response.total
-    ) {
+    if (rows.length >= response.total) {
       break;
     }
 
-    if (
-      response.rows.length === 0
-    ) {
+    if (response.rows.length === 0) {
       break;
     }
 
@@ -100,28 +75,18 @@ async function getAllRows({
 
 function isRevenueOrder(order) {
   return (
-    order?.order_Status ===
-      REVENUE_ORDER_STATUS &&
-    order?.payment_Status ===
-      REVENUE_PAYMENT_STATUS
+    order?.order_Status === REVENUE_ORDER_STATUS &&
+    order?.payment_Status === REVENUE_PAYMENT_STATUS
   );
 }
 
 function calculateRevenue(orders) {
   return orders
     .filter(isRevenueOrder)
-    .reduce(
-      (total, order) =>
-        total +
-        Number(order.total || 0),
-      0
-    );
+    .reduce((total, order) => total + Number(order.total || 0), 0);
 }
 
-function calculatePercentageChange(
-  current,
-  previous
-) {
+function calculatePercentageChange(current, previous) {
   if (previous === 0) {
     if (current === 0) {
       return 0;
@@ -130,11 +95,7 @@ function calculatePercentageChange(
     return 100;
   }
 
-  return (
-    ((current - previous) /
-      previous) *
-    100
-  );
+  return ((current - previous) / previous) * 100;
 }
 
 /*
@@ -143,117 +104,57 @@ function calculatePercentageChange(
 |--------------------------------------------------------------------------
 */
 
-export async function getAnalyticsOverview(
-  range = 30
-) {
-  const safeRange = [
-    7,
-    30,
-    90,
-  ].includes(Number(range))
-    ? Number(range)
-    : 30;
+export async function getAnalyticsOverview(range = 30) {
+  const safeRange = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
 
   const now = new Date();
 
-  const currentStart =
-    startOfDay(
-      new Date(
-        now.getTime() -
-          (safeRange - 1) *
-            24 *
-            60 *
-            60 *
-            1000
-      )
-    );
+  const currentStart = startOfDay(
+    new Date(now.getTime() - (safeRange - 1) * 24 * 60 * 60 * 1000),
+  );
 
-  const previousStart =
-    startOfDay(
-      new Date(
-        currentStart.getTime() -
-          safeRange *
-            24 *
-            60 *
-            60 *
-            1000
-      )
-    );
+  const previousStart = startOfDay(
+    new Date(currentStart.getTime() - safeRange * 24 * 60 * 60 * 1000),
+  );
 
-  const previousEnd =
-    new Date(
-      currentStart.getTime() - 1
-    );
+  const previousEnd = new Date(currentStart.getTime() - 1);
 
-  const [
-    currentOrders,
-    previousOrders,
-  ] = await Promise.all([
+  const [currentOrders, previousOrders] = await Promise.all([
     getAllRows({
       tableId: ORDERS_TABLE_ID,
       queries: [
-        Query.greaterThanEqual(
-          "$createdAt",
-          currentStart.toISOString()
-        ),
-        Query.lessThanEqual(
-          "$createdAt",
-          now.toISOString()
-        ),
+        Query.greaterThanEqual("$createdAt", currentStart.toISOString()),
+        Query.lessThanEqual("$createdAt", now.toISOString()),
       ],
     }),
 
     getAllRows({
       tableId: ORDERS_TABLE_ID,
       queries: [
-        Query.greaterThanEqual(
-          "$createdAt",
-          previousStart.toISOString()
-        ),
-        Query.lessThanEqual(
-          "$createdAt",
-          previousEnd.toISOString()
-        ),
+        Query.greaterThanEqual("$createdAt", previousStart.toISOString()),
+        Query.lessThanEqual("$createdAt", previousEnd.toISOString()),
       ],
     }),
   ]);
 
-  const revenueOrders =
-    currentOrders.filter(
-      isRevenueOrder
-    );
+  const revenueOrders = currentOrders.filter(isRevenueOrder);
 
-  const previousRevenueOrders =
-    previousOrders.filter(
-      isRevenueOrder
-    );
+  const previousRevenueOrders = previousOrders.filter(isRevenueOrder);
 
-  const revenue =
-    calculateRevenue(
-      currentOrders
-    );
+  const revenue = calculateRevenue(currentOrders);
 
-  const previousRevenue =
-    calculateRevenue(
-      previousOrders
-    );
+  const previousRevenue = calculateRevenue(previousOrders);
 
-  const orders =
-    currentOrders.length;
+  const orders = currentOrders.length;
 
-  const previousOrderCount =
-    previousOrders.length;
+  const previousOrderCount = previousOrders.length;
 
   const averageOrderValue =
-    revenueOrders.length > 0
-      ? revenue /
-        revenueOrders.length
-      : 0;
+    revenueOrders.length > 0 ? revenue / revenueOrders.length : 0;
 
   const previousAverageOrderValue =
     previousRevenueOrders.length > 0
-      ? previousRevenue /
-        previousRevenueOrders.length
+      ? previousRevenue / previousRevenueOrders.length
       : 0;
 
   /*
@@ -262,62 +163,29 @@ export async function getAnalyticsOverview(
   |--------------------------------------------------------------------------
   */
 
-  const revenueByDate =
-    new Map();
+  const revenueByDate = new Map();
 
-  for (
-    let index = 0;
-    index < safeRange;
-    index += 1
-  ) {
-    const date = new Date(
-      currentStart.getTime() +
-        index *
-          24 *
-          60 *
-          60 *
-          1000
-    );
+  for (let index = 0; index < safeRange; index += 1) {
+    const date = new Date(currentStart.getTime() + index * 24 * 60 * 60 * 1000);
 
-    revenueByDate.set(
-      formatDateKey(date),
-      {
-        date:
-          formatDateKey(date),
+    revenueByDate.set(formatDateKey(date), {
+      date: formatDateKey(date),
 
-        label:
-          formatDayLabel(
-            date,
-            safeRange
-          ),
+      label: formatDayLabel(date, safeRange),
 
-        value: 0,
-      }
-    );
+      value: 0,
+    });
   }
 
-  for (
-    const order of revenueOrders
-  ) {
-    const createdAt =
-      new Date(
-        order.$createdAt
-      );
+  for (const order of revenueOrders) {
+    const createdAt = new Date(order.$createdAt);
 
-    const key =
-      formatDateKey(
-        createdAt
-      );
+    const key = formatDateKey(createdAt);
 
-    const entry =
-      revenueByDate.get(
-        key
-      );
+    const entry = revenueByDate.get(key);
 
     if (entry) {
-      entry.value += Number(
-        order.total || 0
-      );
+      entry.value += Number(order.total || 0);
     }
   }
 
@@ -327,33 +195,21 @@ export async function getAnalyticsOverview(
     metrics: {
       revenue,
 
-      revenueChange:
-        calculatePercentageChange(
-          revenue,
-          previousRevenue
-        ),
+      revenueChange: calculatePercentageChange(revenue, previousRevenue),
 
       orders,
 
-      ordersChange:
-        calculatePercentageChange(
-          orders,
-          previousOrderCount
-        ),
+      ordersChange: calculatePercentageChange(orders, previousOrderCount),
 
       averageOrderValue,
 
-      averageOrderValueChange:
-        calculatePercentageChange(
-          averageOrderValue,
-          previousAverageOrderValue
-        ),
+      averageOrderValueChange: calculatePercentageChange(
+        averageOrderValue,
+        previousAverageOrderValue,
+      ),
     },
 
-    revenueTrend:
-      Array.from(
-        revenueByDate.values()
-      ),
+    revenueTrend: Array.from(revenueByDate.values()),
   };
 }
 /*
@@ -362,61 +218,31 @@ export async function getAnalyticsOverview(
 |--------------------------------------------------------------------------
 */
 
-export async function getSalesAnalytics(
-  range = 30
-) {
-  const safeRange = [
-    7,
-    30,
-    90,
-  ].includes(Number(range))
-    ? Number(range)
-    : 30;
+export async function getSalesAnalytics(range = 30) {
+  const safeRange = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
 
   const now = new Date();
 
-  const startDate =
-    startOfDay(
-      new Date(
-        now.getTime() -
-          (safeRange - 1) *
-            24 *
-            60 *
-            60 *
-            1000
-      )
-    );
+  const startDate = startOfDay(
+    new Date(now.getTime() - (safeRange - 1) * 24 * 60 * 60 * 1000),
+  );
 
   const orders = await getAllRows({
     tableId: ORDERS_TABLE_ID,
     queries: [
-      Query.greaterThanEqual(
-        "$createdAt",
-        startDate.toISOString()
-      ),
-      Query.lessThanEqual(
-        "$createdAt",
-        now.toISOString()
-      ),
+      Query.greaterThanEqual("$createdAt", startDate.toISOString()),
+      Query.lessThanEqual("$createdAt", now.toISOString()),
     ],
   });
 
-  const revenueOrders =
-    orders.filter(
-      isRevenueOrder
-    );
+  const revenueOrders = orders.filter(isRevenueOrder);
 
-  const revenue =
-    calculateRevenue(orders);
+  const revenue = calculateRevenue(orders);
 
-  const orderCount =
-    orders.length;
+  const orderCount = orders.length;
 
   const averageOrderValue =
-    revenueOrders.length > 0
-      ? revenue /
-        revenueOrders.length
-      : 0;
+    revenueOrders.length > 0 ? revenue / revenueOrders.length : 0;
 
   /*
   |--------------------------------------------------------------------------
@@ -426,31 +252,15 @@ export async function getSalesAnalytics(
 
   const trendMap = new Map();
 
-  for (
-    let index = 0;
-    index < safeRange;
-    index += 1
-  ) {
-    const date = new Date(
-      startDate.getTime() +
-        index *
-          24 *
-          60 *
-          60 *
-          1000
-    );
+  for (let index = 0; index < safeRange; index += 1) {
+    const date = new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000);
 
-    const key =
-      formatDateKey(date);
+    const key = formatDateKey(date);
 
     trendMap.set(key, {
       date: key,
 
-      label:
-        formatDayLabel(
-          date,
-          safeRange
-        ),
+      label: formatDayLabel(date, safeRange),
 
       revenue: 0,
 
@@ -459,18 +269,11 @@ export async function getSalesAnalytics(
   }
 
   for (const order of orders) {
-    const createdAt =
-      new Date(
-        order.$createdAt
-      );
+    const createdAt = new Date(order.$createdAt);
 
-    const key =
-      formatDateKey(
-        createdAt
-      );
+    const key = formatDateKey(createdAt);
 
-    const entry =
-      trendMap.get(key);
+    const entry = trendMap.get(key);
 
     if (!entry) {
       continue;
@@ -478,12 +281,8 @@ export async function getSalesAnalytics(
 
     entry.orders += 1;
 
-    if (
-      isRevenueOrder(order)
-    ) {
-      entry.revenue += Number(
-        order.total || 0
-      );
+    if (isRevenueOrder(order)) {
+      entry.revenue += Number(order.total || 0);
     }
   }
 
@@ -503,15 +302,9 @@ export async function getSalesAnalytics(
   };
 
   for (const order of orders) {
-    const status =
-      order?.order_Status;
+    const status = order?.order_Status;
 
-    if (
-      Object.prototype.hasOwnProperty.call(
-        statusCounts,
-        status
-      )
-    ) {
+    if (Object.prototype.hasOwnProperty.call(statusCounts, status)) {
       statusCounts[status] += 1;
     }
   }
@@ -522,54 +315,225 @@ export async function getSalesAnalytics(
     metrics: {
       revenue,
 
-      orders:
-        orderCount,
+      orders: orderCount,
 
       averageOrderValue,
     },
 
-    trend:
-      Array.from(
-        trendMap.values()
-      ),
+    trend: Array.from(trendMap.values()),
 
     statusBreakdown: [
       {
         key: "pending",
         label: "Pending",
-        count:
-          statusCounts.pending,
+        count: statusCounts.pending,
       },
       {
         key: "confirmed",
         label: "Confirmed",
-        count:
-          statusCounts.confirmed,
+        count: statusCounts.confirmed,
       },
       {
         key: "processing",
         label: "Processing",
-        count:
-          statusCounts.processing,
+        count: statusCounts.processing,
       },
       {
         key: "shipped",
         label: "Shipped",
-        count:
-          statusCounts.shipped,
+        count: statusCounts.shipped,
       },
       {
         key: "delivered",
         label: "Delivered",
-        count:
-          statusCounts.delivered,
+        count: statusCounts.delivered,
       },
       {
         key: "cancelled",
         label: "Cancelled",
-        count:
-          statusCounts.cancelled,
+        count: statusCounts.cancelled,
       },
     ],
+  };
+}
+/*
+|--------------------------------------------------------------------------
+| Product Analytics
+|--------------------------------------------------------------------------
+*/
+
+export async function getProductAnalytics(range = 30) {
+  const safeRange = [7, 30, 90].includes(Number(range))
+    ? Number(range)
+    : 30;
+
+  const now = new Date();
+
+  const startDate = startOfDay(
+    new Date(
+      now.getTime() -
+        (safeRange - 1) *
+          24 *
+          60 *
+          60 *
+          1000
+    )
+  );
+
+  const orders = await getAllRows({
+    tableId: ORDERS_TABLE_ID,
+    queries: [
+      Query.greaterThanEqual(
+        "$createdAt",
+        startDate.toISOString()
+      ),
+      Query.lessThanEqual(
+        "$createdAt",
+        now.toISOString()
+      ),
+    ],
+  });
+
+  const revenueOrders = orders.filter(isRevenueOrder);
+
+  const revenueOrderIds = new Set(
+    revenueOrders.map((order) => order.$id)
+  );
+
+  if (revenueOrders.length === 0) {
+    return {
+      range: safeRange,
+      metrics: {
+        revenue: 0,
+        unitsSold: 0,
+        productsSold: 0,
+      },
+      products: [],
+      categories: [],
+    };
+  }
+
+  const orderItems = await getAllRows({
+    tableId: ORDER_ITEMS_TABLE_ID,
+  });
+
+  const products = await getAllRows({
+    tableId: PRODUCTS_TABLE_ID,
+  });
+
+  const productMap = new Map(
+    products.map((product) => [
+      product.$id,
+      product,
+    ])
+  );
+
+  const productStats = new Map();
+
+  let totalRevenue = 0;
+  let totalUnitsSold = 0;
+
+  for (const item of orderItems) {
+    if (!revenueOrderIds.has(item.order_ID)) {
+      continue;
+    }
+
+    const productId = item.product_ID;
+
+    const quantity = Number(
+      item.quantity || 0
+    );
+
+    const lineTotal = Number(
+      item.line_Total || 0
+    );
+
+    if (!productStats.has(productId)) {
+      const product =
+        productMap.get(productId);
+
+      productStats.set(productId, {
+        productId,
+        name:
+          item.product_Name ||
+          product?.name ||
+          "Unknown Product",
+        sku:
+          item.product_SKU ||
+          product?.sku ||
+          "",
+        categoryId:
+          product?.categoryID ||
+          null,
+        unitsSold: 0,
+        revenue: 0,
+        orderCount: 0,
+      });
+    }
+
+    const stats =
+      productStats.get(productId);
+
+    stats.unitsSold += quantity;
+    stats.revenue += lineTotal;
+    stats.orderCount += 1;
+
+    totalUnitsSold += quantity;
+    totalRevenue += lineTotal;
+  }
+
+  const productResults =
+    Array.from(productStats.values())
+      .sort(
+        (a, b) =>
+          b.revenue - a.revenue
+      );
+
+  const categoryStats = new Map();
+
+  for (const product of productResults) {
+    const categoryId =
+      product.categoryId ||
+      "uncategorized";
+
+    if (!categoryStats.has(categoryId)) {
+      categoryStats.set(categoryId, {
+        categoryId,
+        revenue: 0,
+        unitsSold: 0,
+        productCount: 0,
+      });
+    }
+
+    const category =
+      categoryStats.get(categoryId);
+
+    category.revenue +=
+      product.revenue;
+
+    category.unitsSold +=
+      product.unitsSold;
+
+    category.productCount += 1;
+  }
+
+  return {
+    range: safeRange,
+
+    metrics: {
+      revenue: totalRevenue,
+      unitsSold: totalUnitsSold,
+      productsSold: productResults.length,
+    },
+
+    products: productResults,
+
+    categories:
+      Array.from(
+        categoryStats.values()
+      ).sort(
+        (a, b) =>
+          b.revenue - a.revenue
+      ),
   };
 }
