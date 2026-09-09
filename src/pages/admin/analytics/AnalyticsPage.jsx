@@ -5,6 +5,7 @@ import SectionCard from "../components/SectionCard";
 import SalesAnalytics from "./SalesAnalytics";
 import AnalyticsMetricCard from "../components/AnalyticsMetricCard";
 import ProductAnalytics from "./ProductAnalytics";
+import CustomerAnalytics from "./CustomerAnalytics";
 import { getAnalyticsOverview } from "../../../services/analyticsServices";
 
 const RANGE_OPTIONS = [
@@ -210,6 +211,7 @@ function AnalyticsPage() {
       </SectionCard>
       <SalesAnalytics range={range} />
       <ProductAnalytics range={range} />
+      <CustomerAnalytics range={range} />
     </div>
   );
 }

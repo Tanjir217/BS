@@ -193,7 +193,7 @@ export async function createCustomer(customerData) {
       whatsapp_Number:
         customerData.whatsapp_Number || "",
 
-      customer_Tier:
+      customer_Tire:
         customerData.customer_Tire ||
         CUSTOMER_TIERS.REGULAR,
 

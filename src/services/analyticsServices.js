@@ -6,6 +6,7 @@ const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
 const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
 const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID;
 const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID;
+const CUSTOMERS_TABLE_ID = import.meta.env.VITE_APPWRITE_CUSTOMERS_TABLE_ID;
 const REVENUE_ORDER_STATUS = "delivered";
 const REVENUE_PAYMENT_STATUS = "paid";
 
@@ -540,5 +541,240 @@ export async function getProductAnalytics(range = 30) {
     categories: Array.from(categoryStats.values()).sort(
       (a, b) => b.revenue - a.revenue,
     ),
+  };
+}
+/*
+|--------------------------------------------------------------------------
+| Customer Analytics
+|--------------------------------------------------------------------------
+*/
+
+export async function getCustomerAnalytics(range = 30) {
+  const safeRange = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
+
+  const now = new Date();
+
+  const startDate = startOfDay(
+    new Date(now.getTime() - (safeRange - 1) * 24 * 60 * 60 * 1000),
+  );
+
+  const [currentOrders, historicalOrders, customers] = await Promise.all([
+    getAllRows({
+      tableId: ORDERS_TABLE_ID,
+      queries: [
+        Query.greaterThanEqual("$createdAt", startDate.toISOString()),
+        Query.lessThanEqual("$createdAt", now.toISOString()),
+      ],
+    }),
+
+    getAllRows({
+      tableId: ORDERS_TABLE_ID,
+      queries: [Query.lessThan("$createdAt", startDate.toISOString())],
+    }),
+
+    getAllRows({
+      tableId: CUSTOMERS_TABLE_ID,
+    }),
+  ]);
+
+  const customerMap = new Map(
+    customers.map((customer) => [customer.$id, customer]),
+  );
+
+  const revenueOrders = currentOrders.filter(isRevenueOrder);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Historical purchasing customers
+  |--------------------------------------------------------------------------
+  */
+
+  const historicalCustomerIds = new Set();
+
+  for (const order of historicalOrders) {
+    if (!isRevenueOrder(order) || !order.customer_ID) {
+      continue;
+    }
+
+    historicalCustomerIds.add(order.customer_ID);
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Current customer aggregation
+  |--------------------------------------------------------------------------
+  */
+
+  const customerStats = new Map();
+
+  let customerRevenue = 0;
+
+  const currentCustomerIds = new Set();
+
+  for (const order of revenueOrders) {
+    const customerId = order.customer_ID;
+
+    /*
+     * Guest orders do not belong to a
+     * customer analytics profile.
+     */
+    if (!customerId) {
+      continue;
+    }
+
+    const customer = customerMap.get(customerId);
+
+    /*
+     * Ignore orphaned customer IDs
+     * instead of showing incomplete
+     * customer records.
+     */
+    if (!customer) {
+      continue;
+    }
+
+    currentCustomerIds.add(customerId);
+
+    const revenue = Number(order.total || 0);
+
+    customerRevenue += revenue;
+
+    if (!customerStats.has(customerId)) {
+      customerStats.set(customerId, {
+        customerId,
+
+        name:
+          [customer.first_Name, customer.last_Name]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || "Unnamed Customer",
+
+        email: customer.email || "",
+
+        tier: customer.customer_Tire || CUSTOMER_TIERS.REGULAR,
+
+        revenue: 0,
+
+        orderCount: 0,
+      });
+    }
+
+    const stats = customerStats.get(customerId);
+
+    stats.revenue += revenue;
+
+    stats.orderCount += 1;
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | New and returning customers
+  |--------------------------------------------------------------------------
+  */
+
+  let newCustomers = 0;
+  let returningCustomers = 0;
+
+  for (const customerId of currentCustomerIds) {
+    const customer = customerMap.get(customerId);
+
+    if (!customer) {
+      continue;
+    }
+
+    const createdAt = new Date(customer.$createdAt);
+
+    if (
+      !Number.isNaN(createdAt.getTime()) &&
+      createdAt >= startDate &&
+      createdAt <= now
+    ) {
+      newCustomers += 1;
+      continue;
+    }
+
+    if (historicalCustomerIds.has(customerId)) {
+      returningCustomers += 1;
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Top customers
+  |--------------------------------------------------------------------------
+  */
+
+  const topCustomers = Array.from(customerStats.values()).sort(
+    (a, b) => b.revenue - a.revenue,
+  );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Tier performance
+  |--------------------------------------------------------------------------
+  */
+
+  const tierStats = new Map();
+
+  for (const customer of topCustomers) {
+    const tier = customer.tier || CUSTOMER_TIERS.REGULAR;
+
+    if (!tierStats.has(tier)) {
+      tierStats.set(tier, {
+        tier,
+        customerCount: 0,
+        revenue: 0,
+        orderCount: 0,
+      });
+    }
+
+    const stats = tierStats.get(tier);
+
+    stats.customerCount += 1;
+
+    stats.revenue += customer.revenue;
+
+    stats.orderCount += customer.orderCount;
+  }
+
+  const tierOrder = [
+    CUSTOMER_TIERS.VIP,
+    CUSTOMER_TIERS.PREMIUM,
+    CUSTOMER_TIERS.REGULAR,
+  ];
+
+  const tierPerformance = tierOrder
+    .map((tier) => tierStats.get(tier))
+    .filter(Boolean);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Metrics
+  |--------------------------------------------------------------------------
+  */
+
+  const purchasingCustomers = currentCustomerIds.size;
+
+  const averageCustomerSpend =
+    purchasingCustomers > 0 ? customerRevenue / purchasingCustomers : 0;
+
+  return {
+    range: safeRange,
+
+    metrics: {
+      revenue: customerRevenue,
+
+      purchasingCustomers,
+
+      newCustomers,
+
+      returningCustomers,
+
+      averageCustomerSpend,
+    },
+
+    topCustomers: topCustomers.slice(0, 8),
+
+    tierPerformance,
   };
 }

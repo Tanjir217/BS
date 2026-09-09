@@ -366,11 +366,11 @@ import {
                     className={[
                       "inline-flex rounded-full px-2.5 py-1 text-xs font-medium capitalize",
                       getTierClasses(
-                        customer.customer_Tier
+                        customer.customer_Tire
                       ),
                     ].join(" ")}
                   >
-                    {customer.customer_Tier ||
+                    {customer.customer_Tire ||
                       "regular"}
                   </span>
                 </div>
@@ -564,11 +564,11 @@ import {
               className={[
                 "inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-medium capitalize",
                 getTierClasses(
-                  customer.customer_Tier
+                  customer.customer_Tire
                 ),
               ].join(" ")}
             >
-              {customer.customer_Tier ||
+              {customer.customer_Tire ||
                 "regular"}
             </span>
           </div>
@@ -579,7 +579,7 @@ import {
                 <span className="text-black/55">
                   {tierProgress.currentRule
                     ?.tier_Name ||
-                    customer.customer_Tier}
+                    customer.customer_Tire}
                 </span>
   
                 {tierProgress.nextRule ? (
@@ -685,7 +685,7 @@ import {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[850px] text-left">
+                <table className="w-full min-w-212.5 text-left">
                   <thead>
                     <tr className="border-b border-black/6 text-xs text-black/45">
                       <th className="px-5 py-3 font-medium">
@@ -859,7 +859,7 @@ import {
           {label}
         </p>
   
-        <p className="mt-1 break-words text-sm font-medium text-black">
+        <p className="mt-1 wrap-break-words text-sm font-medium text-black">
           {value || "—"}
         </p>
       </div>
