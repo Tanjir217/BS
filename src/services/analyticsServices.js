@@ -2,7 +2,7 @@ import { Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-
+const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
 const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
 const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID;
 const REVENUE_ORDER_STATUS = "delivered";
@@ -363,42 +363,25 @@ export async function getSalesAnalytics(range = 30) {
 */
 
 export async function getProductAnalytics(range = 30) {
-  const safeRange = [7, 30, 90].includes(Number(range))
-    ? Number(range)
-    : 30;
+  const safeRange = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
 
   const now = new Date();
 
   const startDate = startOfDay(
-    new Date(
-      now.getTime() -
-        (safeRange - 1) *
-          24 *
-          60 *
-          60 *
-          1000
-    )
+    new Date(now.getTime() - (safeRange - 1) * 24 * 60 * 60 * 1000),
   );
 
   const orders = await getAllRows({
     tableId: ORDERS_TABLE_ID,
     queries: [
-      Query.greaterThanEqual(
-        "$createdAt",
-        startDate.toISOString()
-      ),
-      Query.lessThanEqual(
-        "$createdAt",
-        now.toISOString()
-      ),
+      Query.greaterThanEqual("$createdAt", startDate.toISOString()),
+      Query.lessThanEqual("$createdAt", now.toISOString()),
     ],
   });
 
   const revenueOrders = orders.filter(isRevenueOrder);
 
-  const revenueOrderIds = new Set(
-    revenueOrders.map((order) => order.$id)
-  );
+  const revenueOrderIds = new Set(revenueOrders.map((order) => order.$id));
 
   if (revenueOrders.length === 0) {
     return {
@@ -421,12 +404,7 @@ export async function getProductAnalytics(range = 30) {
     tableId: PRODUCTS_TABLE_ID,
   });
 
-  const productMap = new Map(
-    products.map((product) => [
-      product.$id,
-      product,
-    ])
-  );
+  const productMap = new Map(products.map((product) => [product.$id, product]));
 
   const productStats = new Map();
 
@@ -440,39 +418,25 @@ export async function getProductAnalytics(range = 30) {
 
     const productId = item.product_ID;
 
-    const quantity = Number(
-      item.quantity || 0
-    );
+    const quantity = Number(item.quantity || 0);
 
-    const lineTotal = Number(
-      item.line_Total || 0
-    );
+    const lineTotal = Number(item.line_Total || 0);
 
     if (!productStats.has(productId)) {
-      const product =
-        productMap.get(productId);
+      const product = productMap.get(productId);
 
       productStats.set(productId, {
         productId,
-        name:
-          item.product_Name ||
-          product?.name ||
-          "Unknown Product",
-        sku:
-          item.product_SKU ||
-          product?.sku ||
-          "",
-        categoryId:
-          product?.categoryID ||
-          null,
+        name: item.product_Name || product?.name || "Unknown Product",
+        sku: item.product_SKU || product?.sku || "",
+        categoryId: product?.categoryID || null,
         unitsSold: 0,
         revenue: 0,
         orderCount: 0,
       });
     }
 
-    const stats =
-      productStats.get(productId);
+    const stats = productStats.get(productId);
 
     stats.unitsSold += quantity;
     stats.revenue += lineTotal;
@@ -482,19 +446,14 @@ export async function getProductAnalytics(range = 30) {
     totalRevenue += lineTotal;
   }
 
-  const productResults =
-    Array.from(productStats.values())
-      .sort(
-        (a, b) =>
-          b.revenue - a.revenue
-      );
+  const productResults = Array.from(productStats.values()).sort(
+    (a, b) => b.revenue - a.revenue,
+  );
 
   const categoryStats = new Map();
 
   for (const product of productResults) {
-    const categoryId =
-      product.categoryId ||
-      "uncategorized";
+    const categoryId = product.categoryId || "uncategorized";
 
     if (!categoryStats.has(categoryId)) {
       categoryStats.set(categoryId, {
@@ -505,14 +464,11 @@ export async function getProductAnalytics(range = 30) {
       });
     }
 
-    const category =
-      categoryStats.get(categoryId);
+    const category = categoryStats.get(categoryId);
 
-    category.revenue +=
-      product.revenue;
+    category.revenue += product.revenue;
 
-    category.unitsSold +=
-      product.unitsSold;
+    category.unitsSold += product.unitsSold;
 
     category.productCount += 1;
   }
@@ -528,12 +484,8 @@ export async function getProductAnalytics(range = 30) {
 
     products: productResults,
 
-    categories:
-      Array.from(
-        categoryStats.values()
-      ).sort(
-        (a, b) =>
-          b.revenue - a.revenue
-      ),
+    categories: Array.from(categoryStats.values()).sort(
+      (a, b) => b.revenue - a.revenue,
+    ),
   };
 }
