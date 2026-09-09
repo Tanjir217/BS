@@ -4,10 +4,8 @@ import CustomDropdown from "../components/CustomDropdown";
 import SectionCard from "../components/SectionCard";
 import SalesAnalytics from "./SalesAnalytics";
 import AnalyticsMetricCard from "../components/AnalyticsMetricCard";
-
-import {
-  getAnalyticsOverview,
-} from "../../../services/analyticsServices";
+import ProductAnalytics from "./ProductAnalytics";
+import { getAnalyticsOverview } from "../../../services/analyticsServices";
 
 const RANGE_OPTIONS = [
   {
@@ -25,9 +23,7 @@ const RANGE_OPTIONS = [
 ];
 
 function formatCurrency(value) {
-  return `৳${Number(value || 0).toLocaleString(
-    "en-BD"
-  )}`;
+  return `৳${Number(value || 0).toLocaleString("en-BD")}`;
 }
 
 function AnalyticsPage() {
@@ -35,35 +31,22 @@ function AnalyticsPage() {
 
   const [data, setData] = useState(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  async function loadAnalytics(
-    selectedRange = range
-  ) {
+  async function loadAnalytics(selectedRange = range) {
     try {
       setLoading(true);
       setError("");
 
-      const result =
-        await getAnalyticsOverview(
-          selectedRange
-        );
+      const result = await getAnalyticsOverview(selectedRange);
 
       setData(result);
     } catch (err) {
-      console.error(
-        "Failed to load analytics:",
-        err
-      );
+      console.error("Failed to load analytics:", err);
 
-      setError(
-        err?.message ||
-          "Failed to load analytics."
-      );
+      setError(err?.message || "Failed to load analytics.");
     } finally {
       setLoading(false);
     }
@@ -73,18 +56,13 @@ function AnalyticsPage() {
     loadAnalytics(range);
   }, [range]);
 
-  const metrics =
-    data?.metrics;
+  const metrics = data?.metrics;
 
-  const revenueTrend =
-    data?.revenueTrend || [];
+  const revenueTrend = data?.revenueTrend || [];
 
   const maxRevenue = Math.max(
-    ...revenueTrend.map(
-      (item) =>
-        Number(item.value) || 0
-    ),
-    1
+    ...revenueTrend.map((item) => Number(item.value) || 0),
+    1,
   );
 
   return (
@@ -101,8 +79,7 @@ function AnalyticsPage() {
           </h1>
 
           <p className="mt-2 max-w-xl text-sm text-black/45">
-            Understand your store performance,
-            sales trends, and order activity.
+            Understand your store performance, sales trends, and order activity.
           </p>
         </div>
 
@@ -119,15 +96,11 @@ function AnalyticsPage() {
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
           <div className="flex items-center justify-between gap-4">
-            <p className="text-xs text-red-600">
-              {error}
-            </p>
+            <p className="text-xs text-red-600">{error}</p>
 
             <button
               type="button"
-              onClick={() =>
-                loadAnalytics(range)
-              }
+              onClick={() => loadAnalytics(range)}
               className="shrink-0 text-xs font-medium text-red-700 underline"
             >
               Retry
@@ -151,34 +124,20 @@ function AnalyticsPage() {
           <>
             <AnalyticsMetricCard
               label="Revenue"
-              value={formatCurrency(
-                metrics?.revenue
-              )}
-              change={
-                metrics?.revenueChange
-              }
+              value={formatCurrency(metrics?.revenue)}
+              change={metrics?.revenueChange}
             />
 
             <AnalyticsMetricCard
               label="Orders"
-              value={Number(
-                metrics?.orders || 0
-              ).toLocaleString(
-                "en-BD"
-              )}
-              change={
-                metrics?.ordersChange
-              }
+              value={Number(metrics?.orders || 0).toLocaleString("en-BD")}
+              change={metrics?.ordersChange}
             />
 
             <AnalyticsMetricCard
               label="Average Order Value"
-              value={formatCurrency(
-                metrics?.averageOrderValue
-              )}
-              change={
-                metrics?.averageOrderValueChange
-              }
+              value={formatCurrency(metrics?.averageOrderValue)}
+              change={metrics?.averageOrderValueChange}
             />
           </>
         )}
@@ -192,12 +151,9 @@ function AnalyticsPage() {
         <div className="p-5">
           {loading ? (
             <div className="flex h-72 items-center justify-center">
-              <p className="text-xs text-black/30">
-                Loading revenue trend...
-              </p>
+              <p className="text-xs text-black/30">Loading revenue trend...</p>
             </div>
-          ) : revenueTrend.length ===
-            0 ? (
+          ) : revenueTrend.length === 0 ? (
             <div className="flex h-72 items-center justify-center">
               <p className="text-xs text-black/35">
                 No revenue data available.
@@ -206,71 +162,54 @@ function AnalyticsPage() {
           ) : (
             <>
               <div className="mb-5">
-                <p className="text-xs text-black/40">
-                  Total revenue
-                </p>
+                <p className="text-xs text-black/40">Total revenue</p>
 
                 <p className="mt-1 text-xl font-semibold">
-                  {formatCurrency(
-                    metrics?.revenue
-                  )}
+                  {formatCurrency(metrics?.revenue)}
                 </p>
               </div>
 
               <div className="flex h-72 items-end gap-1 border-b border-black/8 sm:gap-2">
-                {revenueTrend.map(
-                  (item) => {
-                    const value =
-                      Number(
-                        item.value
-                      ) || 0;
+                {revenueTrend.map((item) => {
+                  const value = Number(item.value) || 0;
 
-                    const height =
-                      value === 0
-                        ? 0
-                        : Math.max(
-                            (value /
-                              maxRevenue) *
-                              100,
-                            3
-                          );
+                  const height =
+                    value === 0 ? 0 : Math.max((value / maxRevenue) * 100, 3);
 
-                    return (
-                      <div
-                        key={item.date}
-                        className="flex h-full min-w-0 flex-1 flex-col justify-end"
-                      >
-                        <div className="flex min-h-0 flex-1 items-end">
-                          <div
-                            className="group relative w-full rounded-t-md bg-black transition-all duration-300 hover:bg-black/75"
-                            style={{
-                              height: `${height}%`,
-                            }}
-                            title={`${item.label}: ${formatCurrency(value)}`}
-                          >
-                            {value > 0 && (
-                              <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
-                                {formatCurrency(
-                                  value
-                                )}
-                              </div>
-                            )}
-                          </div>
+                  return (
+                    <div
+                      key={item.date}
+                      className="flex h-full min-w-0 flex-1 flex-col justify-end"
+                    >
+                      <div className="flex min-h-0 flex-1 items-end">
+                        <div
+                          className="group relative w-full rounded-t-md bg-black transition-all duration-300 hover:bg-black/75"
+                          style={{
+                            height: `${height}%`,
+                          }}
+                          title={`${item.label}: ${formatCurrency(value)}`}
+                        >
+                          {value > 0 && (
+                            <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                              {formatCurrency(value)}
+                            </div>
+                          )}
                         </div>
-
-                        <p className="truncate pb-3 pt-3 text-center text-[9px] text-black/35">
-                          {item.label}
-                        </p>
                       </div>
-                    );
-                  }
-                )}
+
+                      <p className="truncate pb-3 pt-3 text-center text-[9px] text-black/35">
+                        {item.label}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}
         </div>
       </SectionCard>
       <SalesAnalytics range={range} />
+      <ProductAnalytics range={range} />
     </div>
   );
 }

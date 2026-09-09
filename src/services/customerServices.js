@@ -265,8 +265,8 @@ export async function updateCustomer(
       whatsapp_Number:
         customerData.whatsapp_Number || "",
 
-      customer_Tier:
-        customerData.customer_Tier ||
+      customer_Tire:
+        customerData.customer_Tire ||
         CUSTOMER_TIERS.REGULAR,
 
       is_Active:
