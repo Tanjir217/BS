@@ -100,10 +100,10 @@ function CustomerRow({ customer }) {
         <span
           className={[
             "inline-flex rounded-full px-2.5 py-1 text-xs font-medium capitalize",
-            getTierClasses(customer.customer_Tier),
+            getTierClasses(customer.customer_Tire),
           ].join(" ")}
         >
-          {customer.customer_Tier || "regular"}
+          {customer.customer_Tire || "regular"}
         </span>
       </td>
 

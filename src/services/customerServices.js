@@ -85,7 +85,7 @@ export async function getCustomers({
       throw new Error("Invalid customer tier filter.");
     }
 
-    queries.push(Query.equal("customer_Tier", tier));
+    queries.push(Query.equal("customer_Tire", tier));
   }
 
   if (active !== "all") {
@@ -194,7 +194,7 @@ export async function createCustomer(customerData) {
         customerData.whatsapp_Number || "",
 
       customer_Tier:
-        customerData.customer_Tier ||
+        customerData.customer_Tire ||
         CUSTOMER_TIERS.REGULAR,
 
       is_Active:
@@ -318,7 +318,7 @@ export async function getCustomerStats() {
       tableId: CUSTOMERS_TABLE_ID,
       queries: [
         Query.equal(
-          "customer_Tier",
+          "customer_Tire",
           CUSTOMER_TIERS.PREMIUM
         ),
         Query.limit(1),
@@ -330,7 +330,7 @@ export async function getCustomerStats() {
       tableId: CUSTOMERS_TABLE_ID,
       queries: [
         Query.equal(
-          "customer_Tier",
+          "customer_Tire",
           CUSTOMER_TIERS.VIP
         ),
         Query.limit(1),

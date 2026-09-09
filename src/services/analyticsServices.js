@@ -5,6 +5,7 @@ const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
 const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
 const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID;
+const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID;
 const REVENUE_ORDER_STATUS = "delivered";
 const REVENUE_PAYMENT_STATUS = "paid";
 
@@ -386,25 +387,37 @@ export async function getProductAnalytics(range = 30) {
   if (revenueOrders.length === 0) {
     return {
       range: safeRange,
+
       metrics: {
         revenue: 0,
         unitsSold: 0,
         productsSold: 0,
       },
+
       products: [],
       categories: [],
     };
   }
 
-  const orderItems = await getAllRows({
-    tableId: ORDER_ITEMS_TABLE_ID,
-  });
+  const [orderItems, products, categories] = await Promise.all([
+    getAllRows({
+      tableId: ORDER_ITEMS_TABLE_ID,
+    }),
 
-  const products = await getAllRows({
-    tableId: PRODUCTS_TABLE_ID,
-  });
+    getAllRows({
+      tableId: PRODUCTS_TABLE_ID,
+    }),
+
+    getAllRows({
+      tableId: CATEGORIES_TABLE_ID,
+    }),
+  ]);
 
   const productMap = new Map(products.map((product) => [product.$id, product]));
+
+  const categoryMap = new Map(
+    categories.map((category) => [category.$id, category]),
+  );
 
   const productStats = new Map();
 
@@ -425,41 +438,79 @@ export async function getProductAnalytics(range = 30) {
     if (!productStats.has(productId)) {
       const product = productMap.get(productId);
 
+      const categoryId = product?.categoryID || null;
+
+      const category = categoryId ? categoryMap.get(categoryId) : null;
+
       productStats.set(productId, {
         productId,
+
         name: item.product_Name || product?.name || "Unknown Product",
+
         sku: item.product_SKU || product?.sku || "",
-        categoryId: product?.categoryID || null,
+
+        categoryId,
+
+        categoryName: category?.name || "Uncategorized",
+
         unitsSold: 0,
+
         revenue: 0,
-        orderCount: 0,
+
+        orderIds: new Set(),
       });
     }
 
     const stats = productStats.get(productId);
 
     stats.unitsSold += quantity;
+
     stats.revenue += lineTotal;
-    stats.orderCount += 1;
+
+    stats.orderIds.add(item.order_ID);
 
     totalUnitsSold += quantity;
+
     totalRevenue += lineTotal;
   }
 
-  const productResults = Array.from(productStats.values()).sort(
-    (a, b) => b.revenue - a.revenue,
-  );
+  const productResults = Array.from(productStats.values())
+    .map((product) => ({
+      productId: product.productId,
+
+      name: product.name,
+
+      sku: product.sku,
+
+      categoryId: product.categoryId,
+
+      categoryName: product.categoryName,
+
+      unitsSold: product.unitsSold,
+
+      revenue: product.revenue,
+
+      orderCount: product.orderIds.size,
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
 
   const categoryStats = new Map();
 
   for (const product of productResults) {
     const categoryId = product.categoryId || "uncategorized";
 
+    const categoryName = product.categoryName || "Uncategorized";
+
     if (!categoryStats.has(categoryId)) {
       categoryStats.set(categoryId, {
         categoryId,
+
+        name: categoryName,
+
         revenue: 0,
+
         unitsSold: 0,
+
         productCount: 0,
       });
     }
@@ -478,7 +529,9 @@ export async function getProductAnalytics(range = 30) {
 
     metrics: {
       revenue: totalRevenue,
+
       unitsSold: totalUnitsSold,
+
       productsSold: productResults.length,
     },
 
