@@ -9,7 +9,6 @@ import {
   Home,
   Users,
   BarChart3,
-  Settings,
   LogOut,
 } from "lucide-react";
 
@@ -18,42 +17,48 @@ const navigation = [
     label: "Dashboard",
     to: "/admin",
     icon: LayoutDashboard,
+    area: "dashboard",
   },
   {
     label: "Orders",
     to: "/admin/orders",
     icon: ShoppingBag,
+    area: "orders",
   },
   {
     label: "Products",
     to: "/admin/products",
     icon: Package,
+    area: "products",
   },
   {
     label: "Categories",
     to: "/admin/categories",
     icon: Tags,
+    area: "categories",
   },
   {
     label: "Homepage",
     to: "/admin/homepage",
     icon: Home,
+    area: "homepage",
   },
   {
     label: "Customers",
     to: "/admin/customers",
     icon: Users,
+    area: "customers",
   },
   {
     label: "Analytics",
     to: "/admin/analytics",
     icon: BarChart3,
+    area: "analytics",
   },
 ];
-
 function AdminSidebar() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, canAccess } = useAuth();
 
   async function handleSignOut() {
     await signOut();
@@ -80,7 +85,9 @@ function AdminSidebar() {
           </p>
 
           <div className="space-y-1">
-            {navigation.map((item) => {
+            {navigation
+            .filter((item) => canAccess(item.area))
+            .map((item) => {
               const Icon = item.icon;
 
               return (
@@ -109,20 +116,6 @@ function AdminSidebar() {
             System
           </p>
 
-          {/* <NavLink
-            to="/admin/settings"
-            className={({ isActive }) =>
-              [
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
-                isActive
-                  ? "bg-black text-white"
-                  : "text-black/60 hover:bg-black/5 hover:text-black",
-              ].join(" ")
-            }
-          >
-            <Settings size={17} strokeWidth={1.8} />
-            <span>Settings</span>
-          </NavLink> */}
         </nav>
 
         {/* Bottom */}

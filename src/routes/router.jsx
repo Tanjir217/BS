@@ -16,6 +16,7 @@ import CustomerDetailPage from "../pages/admin/customers/CustomerDetailPage";
 import AnalyticsPage from "../pages/admin/analytics/AnalyticsPage";
 import ProtectedAdminRoute from "./ProtectedAdminRoute";
 import AdminLogin from "../pages/admin/AdminLogin";
+import RoleProtectedRoute from "./RoleProtectedRoute";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -50,33 +51,96 @@ const router = createBrowserRouter([
           {
             element: <AdminLayout />,
             children: [
-              { index: true, element: <AdminDashboard /> },
-              { path: "categories", element: <CategoriesPage /> },
-              { path: "products", element: <ProductsPage /> },
-              { path: "homepage", element: <HomePage /> },
-              { path: "orders", element: <OrdersPage /> },
               {
-                path: "orders/:orderId",
-                element: <OrderDetailPage />,
+                index: true,
+                element: <AdminDashboard />,
               },
+  
               {
-                path: "customers",
-                element: <CustomersPage />,
+                element: (
+                  <RoleProtectedRoute area="orders" />
+                ),
+                children: [
+                  {
+                    path: "orders",
+                    element: <OrdersPage />,
+                  },
+                  {
+                    path: "orders/:orderId",
+                    element: <OrderDetailPage />,
+                  },
+                ],
               },
+  
               {
-                path: "customers/:customerId",
-                element: <CustomerDetailPage />,
+                element: (
+                  <RoleProtectedRoute area="customers" />
+                ),
+                children: [
+                  {
+                    path: "customers",
+                    element: <CustomersPage />,
+                  },
+                  {
+                    path: "customers/:customerId",
+                    element: <CustomerDetailPage />,
+                  },
+                ],
               },
+  
               {
-                path: "analytics",
-                element: <AnalyticsPage />,
+                element: (
+                  <RoleProtectedRoute area="products" />
+                ),
+                children: [
+                  {
+                    path: "products",
+                    element: <ProductsPage />,
+                  },
+                ],
+              },
+  
+              {
+                element: (
+                  <RoleProtectedRoute area="categories" />
+                ),
+                children: [
+                  {
+                    path: "categories",
+                    element: <CategoriesPage />,
+                  },
+                ],
+              },
+  
+              {
+                element: (
+                  <RoleProtectedRoute area="homepage" />
+                ),
+                children: [
+                  {
+                    path: "homepage",
+                    element: <HomePage />,
+                  },
+                ],
+              },
+  
+              {
+                element: (
+                  <RoleProtectedRoute area="analytics" />
+                ),
+                children: [
+                  {
+                    path: "analytics",
+                    element: <AnalyticsPage />,
+                  },
+                ],
               },
             ],
           },
         ],
       },
     ],
-  },
+  }
 ]);
 
 export default router;

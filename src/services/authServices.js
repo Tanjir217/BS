@@ -5,11 +5,6 @@ import { account, teams } from "../utils/appwrite";
 const MANAGEMENT_TEAM_ID =
   import.meta.env.VITE_APPWRITE_MANAGEMENT_TEAM_ID;
 
-export const MANAGEMENT_ROLES = {
-  OWNER: "owner",
-  MANAGER: "manager",
-  STAFF: "staff",
-};
 
 export async function getCurrentUser() {
   try {
