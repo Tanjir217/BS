@@ -1,4 +1,6 @@
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -50,15 +52,20 @@ const navigation = [
 ];
 
 function AdminSidebar() {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    navigate("/admin/login", { replace: true });
+  }
   return (
     <aside className="hidden w-64 shrink-0 border-r border-black/8 bg-white lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
         {/* Brand */}
         <div className="flex h-20 items-center border-b border-black/8 px-6">
           <div>
-            <p className="text-lg font-semibold tracking-[0.18em]">
-              BAYZID
-            </p>
+            <p className="text-lg font-semibold tracking-[0.18em]">BAYZID</p>
 
             <p className="text-[10px] tracking-[0.35em] text-black/45">
               SHOES ADMIN
@@ -102,7 +109,7 @@ function AdminSidebar() {
             System
           </p>
 
-          <NavLink
+          {/* <NavLink
             to="/admin/settings"
             className={({ isActive }) =>
               [
@@ -115,13 +122,14 @@ function AdminSidebar() {
           >
             <Settings size={17} strokeWidth={1.8} />
             <span>Settings</span>
-          </NavLink>
+          </NavLink> */}
         </nav>
 
         {/* Bottom */}
         <div className="border-t border-black/8 p-4">
           <button
             type="button"
+            onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-black/55 transition hover:bg-black/5 hover:text-black"
           >
             <LogOut size={17} strokeWidth={1.8} />

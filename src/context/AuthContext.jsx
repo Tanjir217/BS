@@ -13,7 +13,11 @@ import {
     loginAdmin,
     logoutAdmin,
   } from "../services/authServices";
-  
+  import {
+    hasAccess,
+    hasAnyManagementRole,
+    hasManagementRole,
+  } from "../utils/managementRoles";
   const AuthContext = createContext(null);
   
   export function AuthProvider({ children }) {
@@ -130,32 +134,60 @@ import {
         setAuthError(null);
       }
     }, []);
-  
-    const value = useMemo(
-      () => ({
-        user,
-        management,
-        loading,
-        authError,
-        isAuthenticated: Boolean(user),
-        isManagementMember: Boolean(
-          management?.isMember
-        ),
-        managementRoles: management?.roles || [],
-        refreshAuth,
-        signIn,
-        signOut,
-      }),
-      [
-        user,
-        management,
-        loading,
-        authError,
-        refreshAuth,
-        signIn,
-        signOut,
-      ]
-    );
+    const hasRole = useCallback(
+        (role) =>
+          hasManagementRole(management?.roles, role),
+        [management?.roles]
+      );
+      
+      const hasAnyRole = useCallback(
+        (roles) =>
+          hasAnyManagementRole(
+            management?.roles,
+            roles
+          ),
+        [management?.roles]
+      );
+      
+      const canAccess = useCallback(
+        (area) =>
+          hasAccess(
+            management?.roles,
+            area
+          ),
+        [management?.roles]
+      );
+      const value = useMemo(
+        () => ({
+          user,
+          management,
+          loading,
+          authError,
+          isAuthenticated: Boolean(user),
+          isManagementMember: Boolean(
+            management?.isMember
+          ),
+          managementRoles: management?.roles || [],
+          hasRole,
+          hasAnyRole,
+          canAccess,
+          refreshAuth,
+          signIn,
+          signOut,
+        }),
+        [
+          user,
+          management,
+          loading,
+          authError,
+          hasRole,
+          hasAnyRole,
+          canAccess,
+          refreshAuth,
+          signIn,
+          signOut,
+        ]
+      );
   
     return (
       <AuthContext.Provider value={value}>
