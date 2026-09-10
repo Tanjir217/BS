@@ -5,7 +5,7 @@ export const MANAGEMENT_ROLES = {
   };
   
   export const ROLE_ACCESS = {
-    owner: [
+    [MANAGEMENT_ROLES.OWNER]: [
       "dashboard",
       "orders",
       "customers",
@@ -17,7 +17,7 @@ export const MANAGEMENT_ROLES = {
       "management",
     ],
   
-    manager: [
+    [MANAGEMENT_ROLES.MANAGER]: [
       "dashboard",
       "orders",
       "customers",
@@ -27,12 +27,30 @@ export const MANAGEMENT_ROLES = {
       "analytics",
     ],
   
-    staff: [
+    [MANAGEMENT_ROLES.STAFF]: [
       "dashboard",
       "orders",
       "customers",
     ],
   };
+  
+  export const ROLE_PRIORITY = [
+    MANAGEMENT_ROLES.OWNER,
+    MANAGEMENT_ROLES.MANAGER,
+    MANAGEMENT_ROLES.STAFF,
+  ];
+  
+  export function getPrimaryManagementRole(roles) {
+    if (!Array.isArray(roles)) {
+      return null;
+    }
+  
+    return (
+      ROLE_PRIORITY.find((role) =>
+        roles.includes(role)
+      ) || null
+    );
+  }
   
   export function hasManagementRole(
     roles,
@@ -47,7 +65,10 @@ export const MANAGEMENT_ROLES = {
     roles,
     allowedRoles
   ) {
-    if (!Array.isArray(roles)) {
+    if (
+      !Array.isArray(roles) ||
+      !Array.isArray(allowedRoles)
+    ) {
       return false;
     }
   
@@ -56,10 +77,7 @@ export const MANAGEMENT_ROLES = {
     );
   }
   
-  export function hasAccess(
-    roles,
-    area
-  ) {
+  export function hasAccess(roles, area) {
     if (!Array.isArray(roles)) {
       return false;
     }
