@@ -1,22 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { loginAdmin } from "../../services/authServices";
+import { useAuth } from "../../context/AuthContext";
 
 function AdminLogin() {
   const navigate = useNavigate();
+  const {
+    signIn,
+    isManagementMember,
+    loading: authLoading,
+  } = useAuth();
 
-  const [email, setEmail] =
-    useState("");
+  const [email, setEmail] = useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!authLoading && isManagementMember) {
+      navigate("/admin", {
+        replace: true,
+      });
+    }
+  }, [
+    authLoading,
+    isManagementMember,
+    navigate,
+  ]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -25,24 +37,18 @@ function AdminLogin() {
     setLoading(true);
 
     try {
-      await loginAdmin(
-        email,
-        password
-      );
+        await signIn(
+            email,
+            password
+          );
 
       navigate("/admin", {
         replace: true,
       });
     } catch (requestError) {
-      console.error(
-        "Admin login failed:",
-        requestError
-      );
+      console.error("Admin login failed:", requestError);
 
-      setError(
-        requestError?.message ||
-          "Unable to sign in."
-      );
+      setError(requestError?.message || "Unable to sign in.");
     } finally {
       setLoading(false);
     }
@@ -61,15 +67,11 @@ function AdminLogin() {
           </h1>
 
           <p className="mt-2 text-sm text-black/45">
-            Sign in to access the store
-            administration.
+            Sign in to access the store administration.
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
               htmlFor="admin-email"
@@ -82,11 +84,7 @@ function AdminLogin() {
               id="admin-email"
               type="email"
               value={email}
-              onChange={(event) =>
-                setEmail(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
               className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-black/25"
               placeholder="admin@example.com"
@@ -106,11 +104,7 @@ function AdminLogin() {
               id="admin-password"
               type="password"
               value={password}
-              onChange={(event) =>
-                setPassword(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-black/25"
               placeholder="Enter your password"
@@ -120,9 +114,7 @@ function AdminLogin() {
 
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3">
-              <p className="text-xs text-red-600">
-                {error}
-              </p>
+              <p className="text-xs text-red-600">{error}</p>
             </div>
           )}
 
@@ -131,9 +123,7 @@ function AdminLogin() {
             disabled={loading}
             className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-black/85 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading
-              ? "Signing in..."
-              : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
       </div>

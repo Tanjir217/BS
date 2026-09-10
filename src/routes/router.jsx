@@ -14,6 +14,8 @@ import OrdersPage from "../pages/admin/orders/OrdersPage";
 import CustomersPage from "../pages/admin/customers/CustomersPage";
 import CustomerDetailPage from "../pages/admin/customers/CustomerDetailPage";
 import AnalyticsPage from "../pages/admin/analytics/AnalyticsPage";
+import ProtectedAdminRoute from "./ProtectedAdminRoute";
+import AdminLogin from "../pages/admin/AdminLogin";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -36,47 +38,45 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <AdminLayout />,
     errorElement: <NotFound />,
     children: [
       {
-        index: true,
-        element: <AdminDashboard />,
+        path: "login",
+        element: <AdminLogin />,
       },
       {
-        path: "categories",
-        element: <CategoriesPage />,
+        element: <ProtectedAdminRoute />,
+        children: [
+          {
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <AdminDashboard /> },
+              { path: "categories", element: <CategoriesPage /> },
+              { path: "products", element: <ProductsPage /> },
+              { path: "homepage", element: <HomePage /> },
+              { path: "orders", element: <OrdersPage /> },
+              {
+                path: "orders/:orderId",
+                element: <OrderDetailPage />,
+              },
+              {
+                path: "customers",
+                element: <CustomersPage />,
+              },
+              {
+                path: "customers/:customerId",
+                element: <CustomerDetailPage />,
+              },
+              {
+                path: "analytics",
+                element: <AnalyticsPage />,
+              },
+            ],
+          },
+        ],
       },
-      {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
-        path: "homepage",
-        element: <HomePage />,
-      },
-      {
-        path: "orders",
-        element: <OrdersPage />,
-      },
-      {
-        path: "orders/:orderId",
-        element: <OrderDetailPage />,
-      },
-      {
-        path: "customers",
-        element: <CustomersPage />,
-      },
-      {
-        path: "customers/:customerId",
-        element: <CustomerDetailPage />,
-      },
-      {
-        path: "analytics",
-        element: <AnalyticsPage />,
-      }
     ],
-  }
+  },
 ]);
 
 export default router;

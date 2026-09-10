@@ -1,4 +1,4 @@
-import { Client, Account, TablesDB, Storage } from "appwrite";
+import { Client, Account, TablesDB, Teams, Storage } from "appwrite";
 const client = new Client();
 
 client
@@ -8,5 +8,6 @@ client
 export const account = new Account(client);
 export const tablesDB = new TablesDB(client);
 export const storage = new Storage(client);
+export const teams = new Teams(client);
 
 
