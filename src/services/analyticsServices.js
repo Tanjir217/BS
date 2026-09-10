@@ -1,6 +1,6 @@
 import { Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
-
+import { CUSTOMER_TIERS } from "./customerServices";
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
 const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
