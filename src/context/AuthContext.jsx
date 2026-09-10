@@ -23,42 +23,56 @@ import {
     const [authError, setAuthError] = useState(null);
   
     const refreshAuth = useCallback(async () => {
-      setLoading(true);
-      setAuthError(null);
-  
-      try {
-        const currentUser = await getCurrentUser();
-  
-        if (!currentUser) {
+        setLoading(true);
+        setAuthError(null);
+      
+        try {
+          const currentUser = await getCurrentUser();
+      
+          if (!currentUser) {
+            setUser(null);
+            setManagement(null);
+            return null;
+          }
+      
+          const managementAccess =
+            await getManagementAccess(currentUser);
+      
+          if (!managementAccess.isMember) {
+            await logoutAdmin().catch(() => {});
+      
+            setUser(null);
+            setManagement(null);
+      
+            return null;
+          }
+      
+          setUser(currentUser);
+          setManagement(managementAccess);
+      
+          return {
+            user: currentUser,
+            management: managementAccess,
+          };
+        } catch (error) {
+          console.error(
+            "Auth initialization failed:",
+            error
+          );
+      
           setUser(null);
           setManagement(null);
+      
+          setAuthError(
+            error?.message ||
+              "Unable to initialize authentication."
+          );
+      
           return null;
+        } finally {
+          setLoading(false);
         }
-  
-        const managementAccess =
-          await getManagementAccess(currentUser);
-  
-        setUser(currentUser);
-        setManagement(managementAccess);
-  
-        return {
-          user: currentUser,
-          management: managementAccess,
-        };
-      } catch (error) {
-        console.error("Auth initialization failed:", error);
-  
-        setUser(null);
-        setManagement(null);
-        setAuthError(
-          error?.message || "Unable to initialize authentication."
-        );
-  
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+      }, []);
   
     useEffect(() => {
       refreshAuth();
