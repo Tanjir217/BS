@@ -67,41 +67,30 @@ export async function getManagementAccess(user) {
     );
   }
 
-  // First check the teams belonging to the current user.
-  // This avoids querying the membership list for users
-  // who are not members of the management team.
-  const teamResponse = await teams.list({
-    total: false,
-  });
-
-  const managementTeam = teamResponse.teams?.find(
-    (team) => team.$id === MANAGEMENT_TEAM_ID
-  );
-
-  if (!managementTeam) {
-    return {
-      isMember: false,
-      roles: [],
-      membership: null,
-    };
-  }
-
-  // The user is a member of the management team,
-  // so we can now retrieve the membership and its roles.
-  const membershipResponse = await teams.listMemberships({
+  /*
+   * Verify that the configured team actually exists
+   * and that the authenticated user can access it.
+   */
+  await teams.get({
     teamId: MANAGEMENT_TEAM_ID,
-    queries: [
-      Query.equal("userId", user.$id),
-    ],
-    total: false,
   });
+
+  /*
+   * Ask Appwrite directly for this user's membership
+   * in the management team.
+   */
+  const membershipResponse =
+    await teams.listMemberships({
+      teamId: MANAGEMENT_TEAM_ID,
+      queries: [
+        Query.equal("userId", user.$id),
+        Query.equal("confirm", true),
+      ],
+      total: false,
+    });
 
   const membership =
-    membershipResponse.memberships?.find(
-      (item) =>
-        item.userId === user.$id &&
-        item.confirm === true
-    ) || null;
+    membershipResponse.memberships?.[0] || null;
 
   if (!membership) {
     return {

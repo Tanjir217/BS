@@ -65,38 +65,47 @@ import {
     }, [refreshAuth]);
   
     const signIn = useCallback(
-      async (email, password) => {
-        setAuthError(null);
-  
-        await loginAdmin(email, password);
-  
-        const currentUser = await getCurrentUser();
-  
-        if (!currentUser) {
-          throw new Error("Unable to load the signed-in user.");
-        }
-  
-        const managementAccess =
-          await getManagementAccess(currentUser);
-  
-        if (!managementAccess.isMember) {
-          await logoutAdmin().catch(() => {});
-  
-          throw new Error(
-            "This account does not have access to the management area."
-          );
-        }
-  
-        setUser(currentUser);
-        setManagement(managementAccess);
-  
-        return {
-          user: currentUser,
-          management: managementAccess,
-        };
-      },
-      []
-    );
+        async (email, password) => {
+          setAuthError(null);
+      
+          try {
+            await loginAdmin(email, password);
+      
+            const currentUser = await getCurrentUser();
+      
+            if (!currentUser) {
+              throw new Error(
+                "Unable to load the signed-in user."
+              );
+            }
+      
+            const managementAccess =
+              await getManagementAccess(currentUser);
+      
+            if (!managementAccess.isMember) {
+              throw new Error(
+                "This account does not have access to the management area."
+              );
+            }
+      
+            setUser(currentUser);
+            setManagement(managementAccess);
+      
+            return {
+              user: currentUser,
+              management: managementAccess,
+            };
+          } catch (error) {
+            await logoutAdmin().catch(() => {});
+      
+            setUser(null);
+            setManagement(null);
+      
+            throw error;
+          }
+        },
+        []
+      );
   
     const signOut = useCallback(async () => {
       try {
