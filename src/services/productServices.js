@@ -200,3 +200,78 @@ export async function deleteProduct(productId) {
 
   return true;
 }
+/*
+|--------------------------------------------------------------------------
+| Get active products for a category and all descendants
+|--------------------------------------------------------------------------
+*/
+
+export async function getProductsByCategoryIds(
+  categoryIds,
+  {
+    page = 1,
+    limit = 24,
+  } = {}
+) {
+  if (
+    !Array.isArray(categoryIds) ||
+    categoryIds.length === 0
+  ) {
+    return {
+      products: [],
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+    };
+  }
+
+  const offset = (page - 1) * limit;
+
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries: [
+      Query.equal(
+        "categoryID",
+        categoryIds
+      ),
+      Query.equal(
+        "isActive",
+        true
+      ),
+      Query.orderDesc(
+        "$createdAt"
+      ),
+      Query.limit(limit),
+      Query.offset(offset),
+    ],
+  });
+
+  const productsWithImages =
+    await Promise.all(
+      response.rows.map(
+        async (product) => {
+          const primaryImage =
+            await getPrimaryProductImage(
+              product.$id
+            );
+
+          return {
+            ...product,
+            primaryImage,
+          };
+        }
+      )
+    );
+
+  return {
+    products: productsWithImages,
+    total: response.total,
+    page,
+    limit,
+    totalPages: Math.ceil(
+      response.total / limit
+    ),
+  };
+}
