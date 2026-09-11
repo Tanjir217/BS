@@ -10,8 +10,12 @@ function MegaMenuColumn({ column }) {
       <ul className="m-0 list-none p-0">
         {column.links.map((link) => (
           <li
-            key={link.label}
-            className={link.separated ? "mt-3 border-t border-gray-300 pt-4" : ""}
+            key={link.id || link.label}
+            className={
+              link.separated
+                ? "mt-3 border-t border-gray-300 pt-4"
+                : ""
+            }
           >
             <Link
               to={link.href}
@@ -23,12 +27,14 @@ function MegaMenuColumn({ column }) {
         ))}
       </ul>
 
-      <Link
-        to={`${column.links[0]?.href.split("/").slice(0, 3).join("/")}`}
-        className="mt-5 block border-t border-gray-300 pt-5 text-lg text-gray-900 no-underline hover:opacity-60"
-      >
-        View All
-      </Link>
+      {column.href && (
+        <Link
+          to={column.href}
+          className="mt-5 block border-t border-gray-300 pt-5 text-lg text-gray-900 no-underline hover:opacity-60"
+        >
+          View All
+        </Link>
+      )}
     </div>
   );
 }

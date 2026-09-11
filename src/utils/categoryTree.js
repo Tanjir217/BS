@@ -11,6 +11,7 @@ export function buildCategoryTree(categories = []) {
     nodes.set(category.$id, {
       ...category,
       children: [],
+      parentCategory: null,
     });
   });
 
@@ -24,7 +25,10 @@ export function buildCategoryTree(categories = []) {
       parentId !== category.$id &&
       nodes.has(parentId)
     ) {
-      nodes.get(parentId).children.push(category);
+      const parent = nodes.get(parentId);
+
+      category.parentCategory = parent;
+      parent.children.push(category);
     } else {
       roots.push(category);
     }
@@ -91,6 +95,22 @@ export function getCategoryPath(category) {
   }
 
   return path;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Get category URL
+|--------------------------------------------------------------------------
+*/
+
+export function getCategoryUrl(category) {
+  const path = getCategoryPath(category);
+
+  if (path.length === 0) {
+    return "/all-products";
+  }
+
+  return `/all-products/${path.join("/")}`;
 }
 
 /*
