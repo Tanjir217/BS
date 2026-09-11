@@ -21,16 +21,19 @@ function CategoryPage() {
   const [products, setProducts] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
+
   const [categoryIds, setCategoryIds] = useState([]);
 
   const [isProductsLoading, setIsProductsLoading] = useState(false);
 
   const [error, setError] = useState(null);
+
   const [page, setPage] = useState(1);
 
   const [totalPages, setTotalPages] = useState(1);
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -38,6 +41,12 @@ function CategoryPage() {
       try {
         setIsLoading(true);
         setError(null);
+
+        // Reset product pagination when category changes.
+        setProducts([]);
+        setPage(1);
+        setTotalPages(1);
+        setCategoryIds([]);
 
         const categories = await getCategories();
 
@@ -72,13 +81,30 @@ function CategoryPage() {
 
         setIsProductsLoading(true);
 
-        const productResponse = await getProductsByCategoryIds(categoryIds);
+        /*
+         * IMPORTANT:
+         * Use resolvedCategoryIds directly here.
+         *
+         * Do not use categoryIds because
+         * setCategoryIds() is asynchronous.
+         */
+        const productResponse = await getProductsByCategoryIds(
+          resolvedCategoryIds,
+          {
+            page: 1,
+            limit: 24,
+          },
+        );
 
         if (!isMounted) {
           return;
         }
 
         setProducts(productResponse.products);
+
+        setPage(productResponse.page);
+
+        setTotalPages(productResponse.totalPages);
       } catch (loadError) {
         console.error("Failed to load category:", loadError);
 
@@ -99,6 +125,40 @@ function CategoryPage() {
       isMounted = false;
     };
   }, [location.pathname]);
+
+  /*
+   * Load the next page of products and append
+   * them to the existing product list.
+   */
+  async function handleLoadMore() {
+    if (isLoadingMore || page >= totalPages || categoryIds.length === 0) {
+      return;
+    }
+
+    try {
+      setIsLoadingMore(true);
+
+      const nextPage = page + 1;
+
+      const productResponse = await getProductsByCategoryIds(categoryIds, {
+        page: nextPage,
+        limit: 24,
+      });
+
+      setProducts((currentProducts) => [
+        ...currentProducts,
+        ...productResponse.products,
+      ]);
+
+      setPage(productResponse.page);
+
+      setTotalPages(productResponse.totalPages);
+    } catch (loadError) {
+      console.error("Failed to load more products:", loadError);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -211,6 +271,20 @@ function CategoryPage() {
         </div>
 
         <ProductGrid products={products} isLoading={isProductsLoading} />
+
+        {/* Load More */}
+        {!isProductsLoading && products.length > 0 && page < totalPages && (
+          <div className="mt-14 flex justify-center">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isLoadingMore ? "Loading..." : "Load More"}
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );
