@@ -17,6 +17,7 @@ import AnalyticsPage from "../pages/admin/analytics/AnalyticsPage";
 import ProtectedAdminRoute from "./ProtectedAdminRoute";
 import AdminLogin from "../pages/admin/AdminLogin";
 import RoleProtectedRoute from "./RoleProtectedRoute";
+import CategoryPage from "../pages/catalog/CategoryPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -30,6 +31,18 @@ const router = createBrowserRouter([
       {
         path: "*",
         element: <NotFound />,
+      },
+      {
+        path: "all-products/*",
+        element: <CategoryPage />,
+      },
+      {
+        path: "women/*",
+        element: <CategoryPage />,
+      },
+      {
+        path: "men/*",
+        element: <CategoryPage />,
       },
       {
         path: "products/:slug",

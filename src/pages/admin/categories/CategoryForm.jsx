@@ -1,17 +1,38 @@
 import { useEffect, useState } from "react";
+import { getCategoriesForAdmin } from "../../../services/categoryServices";
 
 function CategoryForm({
   category,
   onSubmit,
   onCancel,
 }) {
+  const [categories, setCategories] = useState([]);
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     description: "",
     imageUrl: "",
+    parentCategoryID: "",
     isActive: true,
   });
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getCategoriesForAdmin();
+
+        setCategories(data);
+      } catch (error) {
+        console.error(
+          "Failed to load category parents:",
+          error
+        );
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     if (category) {
@@ -20,6 +41,8 @@ function CategoryForm({
         slug: category.slug || "",
         description: category.description || "",
         imageUrl: category.imageUrl || "",
+        parentCategoryID:
+          category.parentCategoryID || "",
         isActive: category.isActive ?? true,
       });
     } else {
@@ -28,17 +51,26 @@ function CategoryForm({
         slug: "",
         description: "",
         imageUrl: "",
+        parentCategoryID: "",
         isActive: true,
       });
     }
   }, [category]);
 
   function handleChange(event) {
-    const { name, value, type, checked } = event.target;
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = event.target;
 
     setFormData((current) => ({
       ...current,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : value,
     }));
   }
 
@@ -48,6 +80,10 @@ function CategoryForm({
     onSubmit(formData);
   }
 
+  const availableParents = categories.filter(
+    (item) => item.$id !== category?.$id
+  );
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -55,11 +91,15 @@ function CategoryForm({
     >
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/35">
-          {category ? "Edit category" : "New category"}
+          {category
+            ? "Edit category"
+            : "New category"}
         </p>
 
         <h2 className="mt-1 text-lg font-semibold">
-          {category ? "Update category" : "Create category"}
+          {category
+            ? "Update category"
+            : "Create category"}
         </h2>
       </div>
 
@@ -94,6 +134,36 @@ function CategoryForm({
             className="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none transition focus:border-black"
             placeholder="womens-shoes"
           />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="mb-2 block text-sm font-medium">
+            Parent Category
+          </label>
+
+          <select
+            name="parentCategoryID"
+            value={formData.parentCategoryID}
+            onChange={handleChange}
+            className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-black"
+          >
+            <option value="">
+              No parent — top level category
+            </option>
+
+            {availableParents.map((parent) => (
+              <option
+                key={parent.$id}
+                value={parent.$id}
+              >
+                {parent.name}
+              </option>
+            ))}
+          </select>
+
+          <p className="mt-2 text-xs text-black/45">
+            Leave empty for a top-level category.
+          </p>
         </div>
 
         <div className="md:col-span-2">
@@ -154,7 +224,9 @@ function CategoryForm({
           type="submit"
           className="rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-black/80"
         >
-          {category ? "Update Category" : "Create Category"}
+          {category
+            ? "Update Category"
+            : "Create Category"}
         </button>
       </div>
     </form>
