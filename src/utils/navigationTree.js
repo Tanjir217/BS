@@ -125,7 +125,7 @@ import {
     if (leafChildren.length > 0) {
       columns.push({
         id: `${category.$id}-shop`,
-        title: "",
+        title: null,
         href: getCategoryUrl(category),
   
         links: leafChildren.map(

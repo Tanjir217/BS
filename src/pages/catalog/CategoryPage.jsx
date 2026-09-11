@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
-import {
-  Link,
-  useLocation,
-} from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-import {
-  getCategories,
-} from "../../services/categoryServices";
+import { getCategories } from "../../services/categoryServices";
 
-import {
-  getProductsByCategoryIds,
-} from "../../services/productServices";
+import { getProductsByCategoryIds } from "../../services/productServices";
 
 import {
   buildCategoryTree,
@@ -23,21 +16,21 @@ import ProductGrid from "../../components/product/ProductGrid";
 function CategoryPage() {
   const location = useLocation();
 
-  const [category, setCategory] =
-    useState(null);
+  const [category, setCategory] = useState(null);
 
-  const [products, setProducts] =
-    useState([]);
+  const [products, setProducts] = useState([]);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [categoryIds, setCategoryIds] = useState([]);
 
-  const [isProductsLoading, setIsProductsLoading] =
-    useState(false);
+  const [isProductsLoading, setIsProductsLoading] = useState(false);
 
-  const [error, setError] =
-    useState(null);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
 
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   useEffect(() => {
     let isMounted = true;
 
@@ -46,30 +39,16 @@ function CategoryPage() {
         setIsLoading(true);
         setError(null);
 
-        const categories =
-          await getCategories();
+        const categories = await getCategories();
 
-        const tree =
-          buildCategoryTree(
-            categories
-          );
+        const tree = buildCategoryTree(categories);
 
-        const segments =
-          location.pathname
-            .split("/")
-            .filter(Boolean);
+        const segments = location.pathname.split("/").filter(Boolean);
 
         const slugs =
-          segments[0] ===
-          "all-products"
-            ? segments.slice(1)
-            : segments;
+          segments[0] === "all-products" ? segments.slice(1) : segments;
 
-        const resolvedCategory =
-          findCategoryByPath(
-            tree,
-            slugs
-          );
+        const resolvedCategory = findCategoryByPath(tree, slugs);
 
         if (!isMounted) {
           return;
@@ -77,49 +56,34 @@ function CategoryPage() {
 
         if (!resolvedCategory) {
           setCategory(null);
-          setError(
-            "Category could not be found."
-          );
+          setError("Category could not be found.");
           return;
         }
 
-        setCategory(
-          resolvedCategory
-        );
+        setCategory(resolvedCategory);
 
         /*
          * Get the selected category plus
          * every descendant category.
          */
-        const categoryIds =
-          getDescendantCategoryIds(
-            resolvedCategory
-          );
+        const resolvedCategoryIds = getDescendantCategoryIds(resolvedCategory);
+
+        setCategoryIds(resolvedCategoryIds);
 
         setIsProductsLoading(true);
 
-        const productResponse =
-          await getProductsByCategoryIds(
-            categoryIds
-          );
+        const productResponse = await getProductsByCategoryIds(categoryIds);
 
         if (!isMounted) {
           return;
         }
 
-        setProducts(
-          productResponse.products
-        );
+        setProducts(productResponse.products);
       } catch (loadError) {
-        console.error(
-          "Failed to load category:",
-          loadError
-        );
+        console.error("Failed to load category:", loadError);
 
         if (isMounted) {
-          setError(
-            "Unable to load this category."
-          );
+          setError("Unable to load this category.");
         }
       } finally {
         if (isMounted) {
@@ -139,9 +103,7 @@ function CategoryPage() {
   if (isLoading) {
     return (
       <main className="mx-auto max-w-360 px-6 py-16 md:px-10">
-        <p className="text-sm text-black/50">
-          Loading category...
-        </p>
+        <p className="text-sm text-black/50">Loading category...</p>
       </main>
     );
   }
@@ -153,13 +115,9 @@ function CategoryPage() {
           Catalog
         </p>
 
-        <h1 className="mt-3 text-3xl font-medium">
-          Category not found
-        </h1>
+        <h1 className="mt-3 text-3xl font-medium">Category not found</h1>
 
-        <p className="mt-3 text-sm text-black/50">
-          {error}
-        </p>
+        <p className="mt-3 text-sm text-black/50">{error}</p>
 
         <Link
           to="/"
@@ -198,50 +156,40 @@ function CategoryPage() {
           </h2>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {category.children.map(
-              (child) => (
-                <Link
-                  key={child.$id}
-                  to={`/all-products/${[
-                    ...location.pathname
-                      .split("/")
-                      .filter(Boolean)
-                      .filter(
-                        (segment) =>
-                          segment !==
-                          "all-products"
-                      ),
-                    child.slug,
-                  ].join("/")}`}
-                  className="group border border-black/10 p-5 no-underline transition hover:border-black"
-                >
-                  {child.imageUrl && (
-                    <img
-                      src={
-                        child.imageUrl
-                      }
-                      alt={child.name}
-                      loading="lazy"
-                      className="aspect-[4/5] w-full object-cover"
-                    />
+            {category.children.map((child) => (
+              <Link
+                key={child.$id}
+                to={`/all-products/${[
+                  ...location.pathname
+                    .split("/")
+                    .filter(Boolean)
+                    .filter((segment) => segment !== "all-products"),
+                  child.slug,
+                ].join("/")}`}
+                className="group border border-black/10 p-5 no-underline transition hover:border-black"
+              >
+                {child.imageUrl && (
+                  <img
+                    src={child.imageUrl}
+                    alt={child.name}
+                    loading="lazy"
+                    className="aspect-[4/5] w-full object-cover"
+                  />
+                )}
+
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-black">
+                    {child.name}
+                  </h3>
+
+                  {child.description && (
+                    <p className="mt-2 text-xs leading-5 text-black/50">
+                      {child.description}
+                    </p>
                   )}
-
-                  <div className="mt-4">
-                    <h3 className="text-sm font-medium text-black">
-                      {child.name}
-                    </h3>
-
-                    {child.description && (
-                      <p className="mt-2 text-xs leading-5 text-black/50">
-                        {
-                          child.description
-                        }
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              )
-            )}
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
       )}
@@ -254,25 +202,15 @@ function CategoryPage() {
               Shop
             </p>
 
-            <h2 className="mt-2 text-2xl font-medium">
-              {category.name}
-            </h2>
+            <h2 className="mt-2 text-2xl font-medium">{category.name}</h2>
           </div>
 
-          {!isProductsLoading &&
-            products.length > 0 && (
-              <p className="text-xs text-black/40">
-                {products.length} products
-              </p>
-            )}
+          {!isProductsLoading && products.length > 0 && (
+            <p className="text-xs text-black/40">{products.length} products</p>
+          )}
         </div>
 
-        <ProductGrid
-          products={products}
-          isLoading={
-            isProductsLoading
-          }
-        />
+        <ProductGrid products={products} isLoading={isProductsLoading} />
       </section>
     </main>
   );

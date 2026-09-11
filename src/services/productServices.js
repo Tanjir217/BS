@@ -4,6 +4,7 @@ import {
   deleteProductImages,
   getPrimaryProductImage,
   getProductImages,
+  getPrimaryProductImages,
 } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
@@ -248,22 +249,26 @@ export async function getProductsByCategoryIds(
     ],
   });
 
-  const productsWithImages =
-    await Promise.all(
-      response.rows.map(
-        async (product) => {
-          const primaryImage =
-            await getPrimaryProductImage(
-              product.$id
-            );
+  const productIds =
+  response.rows.map(
+    (product) => product.$id
+  );
 
-          return {
-            ...product,
-            primaryImage,
-          };
-        }
-      )
-    );
+const primaryImages =
+  await getPrimaryProductImages(
+    productIds
+  );
+
+const productsWithImages =
+  response.rows.map(
+    (product) => ({
+      ...product,
+      primaryImage:
+        primaryImages[
+          product.$id
+        ] ?? null,
+    })
+  );
 
   return {
     products: productsWithImages,

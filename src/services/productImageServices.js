@@ -200,3 +200,37 @@ export async function reorderProductImage(productId, imageId, direction) {
 
   return getProductImages(productId);
 }
+// Get primary images for multiple products in one query
+export async function getPrimaryProductImages(productIds) {
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return {};
+  }
+
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCT_IMAGES_TABLE_ID,
+    queries: [
+      Query.equal("product_ID", productIds),
+      Query.equal("isPrimary", true),
+    ],
+  });
+
+  return response.rows.reduce((images, image) => {
+    // Keep the first primary image if bad/duplicate data exists.
+    if (!images[image.product_ID]) {
+      images[image.product_ID] = {
+        id: image.$id,
+        fileID: image.fileID,
+        alt: image.alt,
+        sortOrder: image.sortOrder,
+        isPrimary: image.isPrimary,
+        url: storage.getFileView({
+          bucketId: STORAGE_BUCKET_ID,
+          fileId: image.fileID,
+        }),
+      };
+    }
+
+    return images;
+  }, {});
+}
