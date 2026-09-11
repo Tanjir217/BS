@@ -16,15 +16,29 @@ function MegaMenu({ data, isOpen, onClose }) {
       `}
     >
       {data && (
-        <div className="mx-auto max-w-360 px-10 py-6">
+        <div className="
+        mx-auto 
+        max-h-[75vh] 
+        max-w-360 
+        overflow-y-auto 
+        px-10 
+        py-6
+        ">
           <div className="grid grid-cols-12 gap-8">
-
-            <div className="col-span-8 grid grid-cols-4 gap-10">
+            <div
+              className="
+              col-span-8
+              grid
+              grid-cols-2
+              gap-x-8
+              gap-y-10
+              md:grid-cols-3
+              lg:grid-cols-4
+              xl:grid-cols-5
+              "
+            >
               {data.columns.map((column) => (
-                <MegaMenuColumn
-                  key={column.id}
-                  column={column}
-                />
+                <MegaMenuColumn key={column.id} column={column} />
               ))}
             </div>
 
@@ -50,7 +64,6 @@ function MegaMenu({ data, isOpen, onClose }) {
                 </Link>
               ))}
             </div>
-
           </div>
         </div>
       )}
