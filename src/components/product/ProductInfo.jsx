@@ -1,95 +1,227 @@
 import { Heart, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+
 import ProductAccordion from "./ProductAccordion";
 
+function formatPrice(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "0";
+  }
+
+  return numericValue.toLocaleString("en-BD", {
+    maximumFractionDigits: 0,
+  });
+}
+
 function ProductInfo({ product }) {
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] =
+    useState(1);
+
+  const [isWishlisted, setIsWishlisted] =
+    useState(false);
+
+  const stockQuantity =
+    Number(product.stockQuantity) || 0;
+
+  const isInStock =
+    stockQuantity > 0;
+
+  const compareAtPrice =
+    product.compareAtPrice !==
+      null &&
+    product.compareAtPrice !==
+      undefined &&
+    product.compareAtPrice !== ""
+      ? Number(
+          product.compareAtPrice,
+        )
+      : null;
+
+  const hasDiscount =
+    Number.isFinite(
+      compareAtPrice,
+    ) &&
+    compareAtPrice >
+      Number(product.price);
+
+  function increaseQuantity() {
+    setQuantity((current) =>
+      Math.min(
+        current + 1,
+        Math.max(stockQuantity, 1),
+      ),
+    );
+  }
+
+  function decreaseQuantity() {
+    setQuantity((current) =>
+      Math.max(
+        1,
+        current - 1,
+      ),
+    );
+  }
 
   return (
     <aside className="product-info">
+      {/* Product heading */}
       <div className="product-info__heading">
-        <p className="product-info__badge">{product.badge}</p>
         <div className="product-info__title-row">
-          <h1>{product.name}</h1>
+          <div>
+            <p className="text-xs uppercase tracking-[0.16em] text-black/40">
+              {product.sku}
+            </p>
+
+            <h1 className="mt-3 text-3xl font-medium tracking-tight">
+              {product.name}
+            </h1>
+          </div>
+
           <button
-            className={`product-info__wishlist ${isWishlisted ? "is-active" : ""}`}
+            className={`product-info__wishlist ${
+              isWishlisted
+                ? "is-active"
+                : ""
+            }`}
             type="button"
-            onClick={() => setIsWishlisted((current) => !current)}
+            onClick={() =>
+              setIsWishlisted(
+                (current) =>
+                  !current,
+              )
+            }
             aria-label={
-              isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+              isWishlisted
+                ? "Remove from wishlist"
+                : "Add to wishlist"
             }
           >
             <Heart
               size={21}
               strokeWidth={1.25}
-              fill={isWishlisted ? "currentColor" : "none"}
+              fill={
+                isWishlisted
+                  ? "currentColor"
+                  : "none"
+              }
             />
           </button>
         </div>
-        <p className="product-info__subtitle">{product.subtitle}</p>
-        <p className="product-info__price">
-          {product.currency}
-          {product.price.toLocaleString("en-GB")}
-        </p>
+
+        <div className="mt-5 flex items-center gap-3">
+          <p className="text-lg font-medium">
+            ৳
+            {formatPrice(
+              product.price,
+            )}
+          </p>
+
+          {hasDiscount && (
+            <p className="text-sm text-black/40 line-through">
+              ৳
+              {formatPrice(
+                compareAtPrice,
+              )}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="product-info__choice">
-        <div className="product-info__choice-header">
-          <span>
-            Colour: <strong>{product.color}</strong>
+      {/* Color */}
+      {product.color && (
+        <div className="product-info__choice mt-8">
+          <div className="product-info__choice-header">
+            <span>
+              Colour:{" "}
+              <strong>
+                {product.color}
+              </strong>
+            </span>
+          </div>
+
+          <div className="mt-3">
+            <span
+              className="inline-block h-8 w-8 rounded-full border border-black/15"
+              style={{
+                backgroundColor:
+                  product.colorHEX ||
+                  "transparent",
+              }}
+              aria-label={
+                product.color
+              }
+              title={
+                product.color
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Stock */}
+      <div className="mt-8 border-y border-black/10 py-5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs uppercase tracking-[0.14em] text-black/40">
+            Availability
+          </span>
+
+          <span
+            className={
+              isInStock
+                ? "text-sm"
+                : "text-sm text-black/40"
+            }
+          >
+            {isInStock
+              ? "In stock"
+              : "Out of stock"}
           </span>
         </div>
-        <button
-          className="product-info__color"
-          type="button"
-          aria-label={`Color: ${product.color}`}
-        >
-          <span style={{ backgroundColor: product.colourHex }} />
-        </button>
+
+        {isInStock &&
+          stockQuantity <= 5 && (
+            <p className="mt-2 text-xs text-black/40">
+              Only {stockQuantity}{" "}
+              left
+            </p>
+          )}
       </div>
 
-      <div className="product-info__choice">
-        <div className="product-info__choice-header">
-          <span>Size {selectedSize && <strong>IT {selectedSize}</strong>}</span>
-          <button className="product-info__text-button" type="button">
-            Size Guide
-          </button>
-        </div>
-        <div
-          className="product-info__sizes"
-          role="list"
-          aria-label="Select size"
-        >
-          {product.sizes.map((size) => (
-            <button
-              className={selectedSize === size ? "is-selected" : ""}
-              key={size}
-              type="button"
-              onClick={() => setSelectedSize(size)}
-              aria-pressed={selectedSize === size}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="product-info__quantity">
+      {/* Quantity */}
+      <div className="product-info__quantity mt-8">
         <span>Quantity</span>
+
         <div>
           <button
             type="button"
-            onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+            onClick={
+              decreaseQuantity
+            }
+            disabled={
+              !isInStock ||
+              quantity <= 1
+            }
             aria-label="Decrease quantity"
           >
             <Minus size={15} />
           </button>
-          <span aria-live="polite">{quantity}</span>
+
+          <span aria-live="polite">
+            {quantity}
+          </span>
+
           <button
             type="button"
-            onClick={() => setQuantity((value) => value + 1)}
+            onClick={
+              increaseQuantity
+            }
+            disabled={
+              !isInStock ||
+              quantity >=
+                stockQuantity
+            }
             aria-label="Increase quantity"
           >
             <Plus size={15} />
@@ -97,39 +229,45 @@ function ProductInfo({ product }) {
         </div>
       </div>
 
+      {/* Add to bag */}
       <button
-        className="product-info__add"
+        className="product-info__add mt-5"
         type="button"
-        disabled={!selectedSize}
+        disabled={!isInStock}
       >
-        {selectedSize ? "Add To Bag" : "Select Size"}
+        {isInStock
+          ? "Add To Bag"
+          : "Out Of Stock"}
       </button>
-      <p className="product-info__delivery">
-        Delivery estimated in 1–4 business days
-        <br />
-        Enjoy complimentary delivery and returns
-      </p>
 
-      <div className="product-info__accordions">
-        <ProductAccordion title="Product Details" defaultOpen>
-          <p>Item No. {product.sku}</p>
-          <p>{product.description}</p>
-          <ul>
-            {product.details.map((detail) => (
-              <li key={detail}>{detail}</li>
-            ))}
-          </ul>
-        </ProductAccordion>
-        <ProductAccordion title="Delivery & Returns">
+      {/* Product details */}
+      <div className="product-info__accordions mt-8">
+        <ProductAccordion
+          title="Product Details"
+          defaultOpen
+        >
           <p>
-            Complimentary standard delivery and returns. Your order will arrive
-            in 1–4 business days.
+            Item No.{" "}
+            {product.sku}
           </p>
+
+          {product.description && (
+            <p>
+              {product.description}
+            </p>
+          )}
         </ProductAccordion>
-        <ProductAccordion title="Find In Store">
+
+        <ProductAccordion
+          title="Delivery & Returns"
+        >
           <p>
-            Visit a Bayzid Shoes boutique to try this style with a personal
-            advisor.
+            Delivery and return
+            information will be
+            connected to the
+            commerce configuration
+            during checkout
+            implementation.
           </p>
         </ProductAccordion>
       </div>

@@ -13,14 +13,14 @@ import {
   getDescendantCategoryIds,
 } from "../../utils/categoryTree";
 import ProductGrid from "../../components/product/ProductGrid";
-
+const DEFAULT_FILTERS = {
+  minPrice: "",
+  maxPrice: "",
+  color: "",
+  availability: "all",
+};
 function CategoryPage() {
-  const DEFAULT_FILTERS = {
-    minPrice: "",
-    maxPrice: "",
-    color: "",
-    availability: "all",
-  };
+  
   const location = useLocation();
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
