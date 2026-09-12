@@ -204,7 +204,7 @@ export async function deleteProduct(productId) {
 
 export async function getProductsByCategoryIds(
   categoryIds,
-  { page = 1, limit = 24, sort = "newest" } = {},
+  { page = 1, limit = 24, sort = "newest", filters = {} } = {},
 ) {
   if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
     return {
@@ -217,6 +217,9 @@ export async function getProductsByCategoryIds(
   }
 
   const offset = (page - 1) * limit;
+
+  const { minPrice, maxPrice, color, availability } = filters;
+
   let sortQuery;
 
   switch (sort) {
@@ -237,16 +240,51 @@ export async function getProductsByCategoryIds(
       sortQuery = Query.orderDesc("$createdAt");
       break;
   }
+
+  const queries = [
+    Query.equal("categoryID", categoryIds),
+
+    Query.equal("isActive", true),
+  ];
+
+  /*
+   * Price filtering
+   */
+  if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+    queries.push(Query.greaterThanEqual("price", Number(minPrice)));
+  }
+
+  if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+    queries.push(Query.lessThanEqual("price", Number(maxPrice)));
+  }
+
+  /*
+   * Color filtering
+   */
+  if (typeof color === "string" && color.trim() !== "") {
+    queries.push(Query.equal("color", color.trim()));
+  }
+
+  /*
+   * Availability filtering
+   */
+  if (availability === "in-stock") {
+    queries.push(Query.greaterThan("stockQuantity", 0));
+  }
+
+  /*
+   * Sorting + pagination
+   */
+  queries.push(sortQuery);
+
+  queries.push(Query.limit(limit));
+
+  queries.push(Query.offset(offset));
+
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,
-    queries: [
-      Query.equal("categoryID", categoryIds),
-      Query.equal("isActive", true),
-      sortQuery,
-      Query.limit(limit),
-      Query.offset(offset),
-    ],
+    queries,
   });
 
   const productIds = response.rows.map((product) => product.$id);

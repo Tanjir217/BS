@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getCategories } from "../../services/categoryServices";
 import { getProductsByCategoryIds } from "../../services/productServices";
+import ProductFilters from "../../components/product/ProductFilters";
 import {
   buildCategoryTree,
   findCategoryByPath,
@@ -24,6 +25,12 @@ function CategoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [filters, setFilters] = useState({
+    minPrice: "",
+    maxPrice: "",
+    color: "",
+    availability: "all",
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -44,17 +51,12 @@ function CategoryPage() {
 
         const tree = buildCategoryTree(categories);
 
-        const segments = location.pathname
-          .split("/")
-          .filter(Boolean);
+        const segments = location.pathname.split("/").filter(Boolean);
 
         const slugs =
-          segments[0] === "all-products"
-            ? segments.slice(1)
-            : segments;
+          segments[0] === "all-products" ? segments.slice(1) : segments;
 
-        const resolvedCategory =
-          findCategoryByPath(tree, slugs);
+        const resolvedCategory = findCategoryByPath(tree, slugs);
 
         if (!isMounted) {
           return;
@@ -72,14 +74,9 @@ function CategoryPage() {
          * Get the selected category plus
          * every descendant category.
          */
-        const resolvedCategoryIds =
-          getDescendantCategoryIds(
-            resolvedCategory
-          );
+        const resolvedCategoryIds = getDescendantCategoryIds(resolvedCategory);
 
-        setCategoryIds(
-          resolvedCategoryIds
-        );
+        setCategoryIds(resolvedCategoryIds);
 
         setIsProductsLoading(true);
 
@@ -90,45 +87,32 @@ function CategoryPage() {
          * Do not use categoryIds because
          * setCategoryIds() is asynchronous.
          */
-        const productResponse =
-          await getProductsByCategoryIds(
-            resolvedCategoryIds,
-            {
-              page: 1,
-              limit: 24,
-              sort,
-            }
-          );
+        const productResponse = await getProductsByCategoryIds(
+          resolvedCategoryIds,
+          {
+            page: 1,
+            limit: 24,
+            sort,
+            filters,
+          },
+        );
 
         if (!isMounted) {
           return;
         }
 
-        setProducts(
-          productResponse.products
-        );
+        setProducts(productResponse.products);
 
-        setPage(
-          productResponse.page
-        );
+        setPage(productResponse.page);
 
-        setTotalPages(
-          productResponse.totalPages
-        );
+        setTotalPages(productResponse.totalPages);
 
-        setTotalProducts(
-          productResponse.total
-        );
+        setTotalProducts(productResponse.total);
       } catch (loadError) {
-        console.error(
-          "Failed to load category:",
-          loadError
-        );
+        console.error("Failed to load category:", loadError);
 
         if (isMounted) {
-          setError(
-            "Unable to load this category."
-          );
+          setError("Unable to load this category.");
         }
       } finally {
         if (isMounted) {
@@ -143,18 +127,14 @@ function CategoryPage() {
     return () => {
       isMounted = false;
     };
-  }, [location.pathname, sort]);
+  }, [location.pathname, sort, filters]);
 
   /*
    * Load the next page of products and append
    * them to the existing product list.
    */
   async function handleLoadMore() {
-    if (
-      isLoadingMore ||
-      page >= totalPages ||
-      categoryIds.length === 0
-    ) {
+    if (isLoadingMore || page >= totalPages || categoryIds.length === 0) {
       return;
     }
 
@@ -163,35 +143,23 @@ function CategoryPage() {
 
       const nextPage = page + 1;
 
-      const productResponse =
-        await getProductsByCategoryIds(
-          categoryIds,
-          {
-            page: nextPage,
-            limit: 24,
-            sort,
-          }
-        );
+      const productResponse = await getProductsByCategoryIds(categoryIds, {
+        page: nextPage,
+        limit: 24,
+        sort,
+        filters,
+      });
 
-      setProducts(
-        (currentProducts) => [
-          ...currentProducts,
-          ...productResponse.products,
-        ]
-      );
+      setProducts((currentProducts) => [
+        ...currentProducts,
+        ...productResponse.products,
+      ]);
 
-      setPage(
-        productResponse.page
-      );
+      setPage(productResponse.page);
 
-      setTotalPages(
-        productResponse.totalPages
-      );
+      setTotalPages(productResponse.totalPages);
     } catch (loadError) {
-      console.error(
-        "Failed to load more products:",
-        loadError
-      );
+      console.error("Failed to load more products:", loadError);
     } finally {
       setIsLoadingMore(false);
     }
@@ -200,9 +168,7 @@ function CategoryPage() {
   if (isLoading) {
     return (
       <main className="mx-auto max-w-360 px-6 py-16 md:px-10">
-        <p className="text-sm text-black/50">
-          Loading category...
-        </p>
+        <p className="text-sm text-black/50">Loading category...</p>
       </main>
     );
   }
@@ -214,13 +180,9 @@ function CategoryPage() {
           Catalog
         </p>
 
-        <h1 className="mt-3 text-3xl font-medium">
-          Category not found
-        </h1>
+        <h1 className="mt-3 text-3xl font-medium">Category not found</h1>
 
-        <p className="mt-3 text-sm text-black/50">
-          {error}
-        </p>
+        <p className="mt-3 text-sm text-black/50">{error}</p>
 
         <Link
           to="/"
@@ -266,10 +228,7 @@ function CategoryPage() {
                   ...location.pathname
                     .split("/")
                     .filter(Boolean)
-                    .filter(
-                      (segment) =>
-                        segment !== "all-products"
-                    ),
+                    .filter((segment) => segment !== "all-products"),
                   child.slug,
                 ].join("/")}`}
                 className="group border border-black/10 p-5 no-underline transition hover:border-black"
@@ -308,16 +267,13 @@ function CategoryPage() {
               Shop
             </p>
 
-            <h2 className="mt-2 text-2xl font-medium">
-              {category.name}
-            </h2>
+            <h2 className="mt-2 text-2xl font-medium">{category.name}</h2>
 
-            {!isProductsLoading &&
-              totalProducts > 0 && (
-                <p className="mt-2 text-xs text-black/40">
-                  {totalProducts} products
-                </p>
-              )}
+            {!isProductsLoading && totalProducts > 0 && (
+              <p className="mt-2 text-xs text-black/40">
+                {totalProducts} products
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -331,52 +287,48 @@ function CategoryPage() {
             <select
               id="product-sort"
               value={sort}
-              onChange={(event) =>
-                setSort(event.target.value)
-              }
+              onChange={(event) => setSort(event.target.value)}
               className="min-w-44 border-0 border-b border-black/20 bg-transparent py-2 text-sm outline-none"
             >
-              <option value="newest">
-                Newest
-              </option>
+              <option value="newest">Newest</option>
 
-              <option value="featured">
-                Featured
-              </option>
+              <option value="featured">Featured</option>
 
-              <option value="price-asc">
-                Price: Low to High
-              </option>
+              <option value="price-asc">Price: Low to High</option>
 
-              <option value="price-desc">
-                Price: High to Low
-              </option>
+              <option value="price-desc">Price: High to Low</option>
             </select>
           </div>
         </div>
-
-        <ProductGrid
-          products={products}
-          isLoading={isProductsLoading}
-        />
+        <div className="mb-8">
+          <ProductFilters
+            filters={filters}
+            onChange={setFilters}
+            onClear={() =>
+              setFilters({
+                minPrice: "",
+                maxPrice: "",
+                color: "",
+                availability: "all",
+              })
+            }
+          />
+        </div>
+        <ProductGrid products={products} isLoading={isProductsLoading} />
 
         {/* Load More */}
-        {!isProductsLoading &&
-          products.length > 0 &&
-          page < totalPages && (
-            <div className="mt-14 flex justify-center">
-              <button
-                type="button"
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-                className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {isLoadingMore
-                  ? "Loading..."
-                  : "Load More"}
-              </button>
-            </div>
-          )}
+        {!isProductsLoading && products.length > 0 && page < totalPages && (
+          <div className="mt-14 flex justify-center">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isLoadingMore ? "Loading..." : "Load More"}
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );
