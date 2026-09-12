@@ -201,7 +201,85 @@ export async function deleteProduct(productId) {
 | Get active products for a category and all descendants
 |--------------------------------------------------------------------------
 */
+/*
+|-------------------------------------------------------------------------- 
+| Get the active product price range for a category and all descendants
+|-------------------------------------------------------------------------- 
+*/
 
+export async function getProductPriceRange(
+  categoryIds,
+) {
+  if (
+    !Array.isArray(categoryIds) ||
+    categoryIds.length === 0
+  ) {
+    return null;
+  }
+
+  const baseQueries = [
+    Query.equal(
+      "categoryID",
+      categoryIds,
+    ),
+
+    Query.equal(
+      "isActive",
+      true,
+    ),
+
+    Query.select([
+      "price",
+    ]),
+
+    Query.limit(1),
+  ];
+
+  const [
+    minimumResponse,
+    maximumResponse,
+  ] = await Promise.all([
+    tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      queries: [
+        ...baseQueries,
+        Query.orderAsc("price"),
+      ],
+      total: false,
+    }),
+
+    tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      queries: [
+        ...baseQueries,
+        Query.orderDesc("price"),
+      ],
+      total: false,
+    }),
+  ]);
+
+  const minimumPrice = Number(
+    minimumResponse.rows[0]?.price,
+  );
+
+  const maximumPrice = Number(
+    maximumResponse.rows[0]?.price,
+  );
+
+  if (
+    !Number.isFinite(minimumPrice) ||
+    !Number.isFinite(maximumPrice)
+  ) {
+    return null;
+  }
+
+  return {
+    min: minimumPrice,
+    max: maximumPrice,
+  };
+}
 export async function getProductsByCategoryIds(
   categoryIds,
   { page = 1, limit = 24, sort = "newest", filters = {} } = {},

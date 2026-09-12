@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getCategories } from "../../services/categoryServices";
-import { getProductsByCategoryIds } from "../../services/productServices";
+import {
+  getProductsByCategoryIds,
+  getProductPriceRange,
+} from "../../services/productServices";
 import ProductFilters from "../../components/product/ProductFilters";
 import {
   buildCategoryTree,
@@ -11,41 +14,65 @@ import {
 import ProductGrid from "../../components/product/ProductGrid";
 
 function CategoryPage() {
-  const location = useLocation();
-
-  const [category, setCategory] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [categoryIds, setCategoryIds] = useState([]);
-  const [isProductsLoading, setIsProductsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState("newest");
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [filters, setFilters] = useState({
+  const DEFAULT_FILTERS = {
     minPrice: "",
     maxPrice: "",
     color: "",
     availability: "all",
-  });
+  };
+  const location = useLocation();
+  const [category, setCategory] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [categoryIds, setCategoryIds] = useState([]);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sort, setSort] = useState("newest");
+  const [priceRange, setPriceRange] = useState(null);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isProductsLoading, setIsProductsLoading] = useState(false);
+  const [isPriceRangeLoading, setIsPriceRangeLoading] = useState(false);
+  
+  
 
+  /*
+   * Category context
+   *
+   * Runs only when the category URL changes.
+   *
+   * This is responsible for:
+   * - resolving the category
+   * - resolving descendant category IDs
+   * - getting the database price range
+   *
+   * It does NOT load products.
+   */
   useEffect(() => {
     let isMounted = true;
 
-    async function loadCategory() {
+    async function loadCategoryContext() {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Reset product pagination when category or sort changes.
+        setCategory(null);
+        setCategoryIds([]);
+
         setProducts([]);
         setPage(1);
         setTotalPages(1);
         setTotalProducts(0);
-        setCategoryIds([]);
+
+        setPriceRange(null);
+        setIsPriceRangeLoading(true);
+
+        /*
+         * A new category starts with clean filters.
+         */
+        setFilters(DEFAULT_FILTERS);
 
         const categories = await getCategories();
 
@@ -68,34 +95,83 @@ function CategoryPage() {
           return;
         }
 
-        setCategory(resolvedCategory);
+        const resolvedCategoryIds = getDescendantCategoryIds(resolvedCategory);
 
         /*
-         * Get the selected category plus
-         * every descendant category.
+         * Price range is independent from
+         * sorting and active filters.
+         *
+         * It is therefore fetched only once
+         * for this category.
          */
-        const resolvedCategoryIds = getDescendantCategoryIds(resolvedCategory);
+        const resolvedPriceRange =
+          await getProductPriceRange(resolvedCategoryIds);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCategory(resolvedCategory);
 
         setCategoryIds(resolvedCategoryIds);
 
-        setIsProductsLoading(true);
+        setPriceRange(resolvedPriceRange);
+      } catch (loadError) {
+        console.error("Failed to load category:", loadError);
 
-        /*
-         * IMPORTANT:
-         * Use resolvedCategoryIds directly here.
-         *
-         * Do not use categoryIds because
-         * setCategoryIds() is asynchronous.
-         */
-        const productResponse = await getProductsByCategoryIds(
-          resolvedCategoryIds,
-          {
-            page: 1,
-            limit: 24,
-            sort,
-            filters,
+        if (isMounted) {
+          setError("Unable to load this category.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          setIsPriceRangeLoading(false);
+        }
+      }
+    }
+
+    loadCategoryContext();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.pathname]);
+  /*
+   * Product catalog query
+   *
+   * This runs when:
+   * - category changes
+   * - sort changes
+   * - an applied filter changes
+   *
+   * Draft filter changes do NOT reach this effect.
+   */
+  useEffect(() => {
+    if (categoryIds.length === 0) {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    async function loadProducts() {
+      try {
+        setIsProductsLoading(true);
+        setProducts([]);
+        setPage(1);
+        setTotalPages(1);
+        setTotalProducts(0);
+
+        const productResponse = await getProductsByCategoryIds(categoryIds, {
+          page: 1,
+          limit: 24,
+          sort,
+          filters: {
+            minPrice: filters.minPrice,
+            maxPrice: filters.maxPrice,
+            color: filters.color,
+            availability: filters.availability,
           },
-        );
+        });
 
         if (!isMounted) {
           return;
@@ -109,26 +185,31 @@ function CategoryPage() {
 
         setTotalProducts(productResponse.total);
       } catch (loadError) {
-        console.error("Failed to load category:", loadError);
+        console.error("Failed to load products:", loadError);
 
         if (isMounted) {
-          setError("Unable to load this category.");
+          setError("Unable to load products.");
         }
       } finally {
         if (isMounted) {
-          setIsLoading(false);
           setIsProductsLoading(false);
         }
       }
     }
 
-    loadCategory();
+    loadProducts();
 
     return () => {
       isMounted = false;
     };
-  }, [location.pathname, sort, filters]);
-
+  }, [
+    categoryIds,
+    sort,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.color,
+    filters.availability,
+  ]);
   /*
    * Load the next page of products and append
    * them to the existing product list.
@@ -303,15 +384,10 @@ function CategoryPage() {
         <div className="mb-8">
           <ProductFilters
             filters={filters}
-            onChange={setFilters}
-            onClear={() =>
-              setFilters({
-                minPrice: "",
-                maxPrice: "",
-                color: "",
-                availability: "all",
-              })
-            }
+            priceRange={priceRange}
+            isPriceRangeLoading={isPriceRangeLoading}
+            onApply={setFilters}
+            onClear={() => setFilters(DEFAULT_FILTERS)}
           />
         </div>
         <ProductGrid products={products} isLoading={isProductsLoading} />
