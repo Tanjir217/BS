@@ -30,20 +30,15 @@ function ProductDetail() {
           return;
         }
 
-        if (!data) {
-          setProduct(null);
-          return;
-        }
-
         setProduct(data);
-      } catch (loadError) {
+      } catch (err) {
         console.error(
           "Failed to load product:",
-          loadError,
+          err,
         );
 
         if (isMounted) {
-          setError(loadError);
+          setError(err);
         }
       } finally {
         if (isMounted) {
@@ -61,11 +56,10 @@ function ProductDetail() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-360 px-6 py-16 md:px-10">
-        <div className="grid min-h-[50vh] place-items-center">
-          <p className="text-sm text-black/50">
-            Loading product...
-          </p>
+      <main className="product-page product-page--loading">
+        <div className="product-loading">
+          <span className="product-loading__line" />
+          <span className="product-loading__line product-loading__line--short" />
         </div>
       </main>
     );
@@ -76,8 +70,14 @@ function ProductDetail() {
   }
 
   return (
-    <main className="mx-auto max-w-360 px-6 py-12 md:px-10 md:py-16">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)] lg:items-start lg:gap-16">
+    <main className="product-page">
+      <div className="product-breadcrumbs">
+        <span>Home</span>
+        <span>Shop</span>
+        <span>{product.name}</span>
+      </div>
+
+      <div className="product-page__layout">
         <ProductGallery
           images={product.images}
           productName={product.name}
