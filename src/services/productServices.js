@@ -58,10 +58,7 @@ export async function getProductById(productId) {
   return response.rows[0] ?? null;
 }
 // Get all products for admin
-export async function getProductsForAdmin({
-  page = 1,
-  limit = 10,
-} = {}) {
+export async function getProductsForAdmin({ page = 1, limit = 10 } = {}) {
   const offset = (page - 1) * limit;
 
   const response = await tablesDB.listRows({
@@ -76,15 +73,13 @@ export async function getProductsForAdmin({
 
   const productsWithImages = await Promise.all(
     response.rows.map(async (product) => {
-      const primaryImage = await getPrimaryProductImage(
-        product.$id
-      );
+      const primaryImage = await getPrimaryProductImage(product.$id);
 
       return {
         ...product,
         primaryImage,
       };
-    })
+    }),
   );
 
   return {
@@ -160,11 +155,11 @@ export async function updateProduct(productId, productData) {
   };
 
   data.compareAtPrice =
-  productData.compareAtPrice === "" ||
-  productData.compareAtPrice === null ||
-  productData.compareAtPrice === undefined
-    ? null
-    : Number(productData.compareAtPrice);
+    productData.compareAtPrice === "" ||
+    productData.compareAtPrice === null ||
+    productData.compareAtPrice === undefined
+      ? null
+      : Number(productData.compareAtPrice);
 
   const response = await tablesDB.updateRow({
     databaseId: DATABASE_ID,
@@ -209,15 +204,9 @@ export async function deleteProduct(productId) {
 
 export async function getProductsByCategoryIds(
   categoryIds,
-  {
-    page = 1,
-    limit = 24,
-  } = {}
+  { page = 1, limit = 24, sort = "newest" } = {},
 ) {
-  if (
-    !Array.isArray(categoryIds) ||
-    categoryIds.length === 0
-  ) {
+  if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
     return {
       products: [],
       total: 0,
@@ -228,55 +217,52 @@ export async function getProductsByCategoryIds(
   }
 
   const offset = (page - 1) * limit;
+  let sortQuery;
 
+  switch (sort) {
+    case "price-asc":
+      sortQuery = Query.orderAsc("price");
+      break;
+
+    case "price-desc":
+      sortQuery = Query.orderDesc("price");
+      break;
+
+    case "featured":
+      sortQuery = Query.orderDesc("isFeatured");
+      break;
+
+    case "newest":
+    default:
+      sortQuery = Query.orderDesc("$createdAt");
+      break;
+  }
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,
     queries: [
-      Query.equal(
-        "categoryID",
-        categoryIds
-      ),
-      Query.equal(
-        "isActive",
-        true
-      ),
-      Query.orderDesc(
-        "$createdAt"
-      ),
+      Query.equal("categoryID", categoryIds),
+      Query.equal("isActive", true),
+      sortQuery,
       Query.limit(limit),
       Query.offset(offset),
     ],
   });
 
-  const productIds =
-  response.rows.map(
-    (product) => product.$id
-  );
+  const productIds = response.rows.map((product) => product.$id);
 
-const primaryImages =
-  await getPrimaryProductImages(
-    productIds
-  );
+  const primaryImages = await getPrimaryProductImages(productIds);
 
-const productsWithImages =
-  response.rows.map(
-    (product) => ({
-      ...product,
-      primaryImage:
-        primaryImages[
-          product.$id
-        ] ?? null,
-    })
-  );
+  const productsWithImages = response.rows.map((product) => ({
+    ...product,
+    primaryImage: primaryImages[product.$id] ?? null,
+  }));
 
   return {
     products: productsWithImages,
     total: response.total,
     page,
     limit,
-    totalPages: Math.ceil(
-      response.total / limit
-    ),
+    totalPages: Math.ceil(response.total / limit),
   };
 }
