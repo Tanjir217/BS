@@ -280,6 +280,99 @@ export async function getProductPriceRange(
     max: maximumPrice,
   };
 }
+/*
+|--------------------------------------------------------------------------
+| Get catalog filter options
+|--------------------------------------------------------------------------
+|
+| Returns filter values available for the supplied category tree.
+|
+| This is intentionally loaded at category-context level rather than
+| every time the customer changes a filter.
+|--------------------------------------------------------------------------
+*/
+
+export async function getProductFilterOptions(
+  categoryIds,
+) {
+  if (
+    !Array.isArray(categoryIds) ||
+    categoryIds.length === 0
+  ) {
+    return {
+      colors: [],
+    };
+  }
+
+  const queries = [
+    Query.equal(
+      "categoryID",
+      categoryIds,
+    ),
+
+    Query.equal(
+      "isActive",
+      true,
+    ),
+
+    Query.select([
+      "color",
+      "colorHEX",
+    ]),
+
+    Query.limit(100),
+  ];
+
+  const response =
+    await tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      queries,
+      total: false,
+    });
+
+  const colorMap = new Map();
+
+  for (const product of response.rows) {
+    const color =
+      typeof product.color === "string"
+        ? product.color.trim()
+        : "";
+
+    if (!color) {
+      continue;
+    }
+
+    const normalizedColor =
+      color.toLowerCase();
+
+    if (!colorMap.has(normalizedColor)) {
+      colorMap.set(
+        normalizedColor,
+        {
+          name: color,
+          hex:
+            typeof product.colorHEX ===
+              "string"
+              ? product.colorHEX.trim()
+              : "",
+        },
+      );
+    }
+  }
+
+  const colors = Array.from(
+    colorMap.values(),
+  ).sort((a, b) =>
+    a.name.localeCompare(
+      b.name,
+    ),
+  );
+
+  return {
+    colors,
+  };
+}
 export async function getProductsByCategoryIds(
   categoryIds,
   { page = 1, limit = 24, sort = "newest", filters = {} } = {},

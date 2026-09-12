@@ -10,13 +10,13 @@ function formatPrice(value) {
 
 function ProductFilters({
   filters,
+  filterOptions,
   priceRange,
   isPriceRangeLoading,
   onApply,
   onClear,
 }) {
-  const [draftFilters, setDraftFilters] =
-    useState(filters);
+  const [draftFilters, setDraftFilters] = useState(filters);
 
   /*
    * Keep the local filter controls synchronized
@@ -64,14 +64,11 @@ function ProductFilters({
     );
   }
 
-  const minimumPrice =
-    Number(priceRange.min);
+  const minimumPrice = Number(priceRange.min);
 
-  const maximumPrice =
-    Number(priceRange.max);
+  const maximumPrice = Number(priceRange.max);
 
-  const hasPriceRange =
-    maximumPrice > minimumPrice;
+  const hasPriceRange = maximumPrice > minimumPrice;
 
   /*
    * Empty means the full database range.
@@ -80,10 +77,7 @@ function ProductFilters({
     draftFilters.minPrice === ""
       ? minimumPrice
       : Math.min(
-          Math.max(
-            Number(draftFilters.minPrice),
-            minimumPrice,
-          ),
+          Math.max(Number(draftFilters.minPrice), minimumPrice),
           maximumPrice,
         );
 
@@ -91,41 +85,21 @@ function ProductFilters({
     draftFilters.maxPrice === ""
       ? maximumPrice
       : Math.min(
-          Math.max(
-            Number(draftFilters.maxPrice),
-            minimumPrice,
-          ),
+          Math.max(Number(draftFilters.maxPrice), minimumPrice),
           maximumPrice,
         );
 
-  const safeMinimum =
-    Math.min(
-      selectedMinimum,
-      selectedMaximum,
-    );
+  const safeMinimum = Math.min(selectedMinimum, selectedMaximum);
 
-  const safeMaximum =
-    Math.max(
-      selectedMinimum,
-      selectedMaximum,
-    );
+  const safeMaximum = Math.max(selectedMinimum, selectedMaximum);
 
-  const priceSpan =
-    maximumPrice - minimumPrice;
+  const priceSpan = maximumPrice - minimumPrice;
 
   const minimumPosition =
-    priceSpan > 0
-      ? ((safeMinimum - minimumPrice) /
-          priceSpan) *
-        100
-      : 0;
+    priceSpan > 0 ? ((safeMinimum - minimumPrice) / priceSpan) * 100 : 0;
 
   const maximumPosition =
-    priceSpan > 0
-      ? ((safeMaximum - minimumPrice) /
-          priceSpan) *
-        100
-      : 100;
+    priceSpan > 0 ? ((safeMaximum - minimumPrice) / priceSpan) * 100 : 100;
 
   const hasAppliedFilters =
     filters.minPrice !== "" ||
@@ -134,75 +108,42 @@ function ProductFilters({
     filters.availability !== "all";
 
   const hasDraftChanges =
-    draftFilters.minPrice !==
-      filters.minPrice ||
-    draftFilters.maxPrice !==
-      filters.maxPrice ||
-    draftFilters.color !==
-      filters.color ||
-    draftFilters.availability !==
-      filters.availability;
+    draftFilters.minPrice !== filters.minPrice ||
+    draftFilters.maxPrice !== filters.maxPrice ||
+    draftFilters.color !== filters.color ||
+    draftFilters.availability !== filters.availability;
 
-  function updateDraftFilter(
-    name,
-    value,
-  ) {
-    setDraftFilters(
-      (current) => ({
-        ...current,
-        [name]: value,
-      }),
-    );
+  function updateDraftFilter(name, value) {
+    setDraftFilters((current) => ({
+      ...current,
+      [name]: value,
+    }));
   }
 
-  function handleMinimumChange(
-    event,
-  ) {
-    const value = Number(
-      event.target.value,
-    );
+  function handleMinimumChange(event) {
+    const value = Number(event.target.value);
 
     const maximum =
       draftFilters.maxPrice === ""
         ? maximumPrice
-        : Number(
-            draftFilters.maxPrice,
-          );
+        : Number(draftFilters.maxPrice);
 
-    const nextMinimum = Math.min(
-      value,
-      maximum,
-    );
+    const nextMinimum = Math.min(value, maximum);
 
-    updateDraftFilter(
-      "minPrice",
-      nextMinimum,
-    );
+    updateDraftFilter("minPrice", nextMinimum);
   }
 
-  function handleMaximumChange(
-    event,
-  ) {
-    const value = Number(
-      event.target.value,
-    );
+  function handleMaximumChange(event) {
+    const value = Number(event.target.value);
 
     const minimum =
       draftFilters.minPrice === ""
         ? minimumPrice
-        : Number(
-            draftFilters.minPrice,
-          );
+        : Number(draftFilters.minPrice);
 
-    const nextMaximum = Math.max(
-      value,
-      minimum,
-    );
+    const nextMaximum = Math.max(value, minimum);
 
-    updateDraftFilter(
-      "maxPrice",
-      nextMaximum,
-    );
+    updateDraftFilter("maxPrice", nextMaximum);
   }
 
   function handleApply() {
@@ -214,15 +155,9 @@ function ProductFilters({
        * does not need to become an actual query
        * filter.
        */
-      minPrice:
-        safeMinimum <= minimumPrice
-          ? ""
-          : safeMinimum,
+      minPrice: safeMinimum <= minimumPrice ? "" : safeMinimum,
 
-      maxPrice:
-        safeMaximum >= maximumPrice
-          ? ""
-          : safeMaximum,
+      maxPrice: safeMaximum >= maximumPrice ? "" : safeMaximum,
     };
 
     onApply(nextFilters);
@@ -236,9 +171,7 @@ function ProductFilters({
       availability: "all",
     };
 
-    setDraftFilters(
-      clearedFilters,
-    );
+    setDraftFilters(clearedFilters);
 
     onClear();
   }
@@ -253,9 +186,7 @@ function ProductFilters({
               Filter
             </p>
 
-            <h3 className="mt-2 text-lg font-medium">
-              Refine your selection
-            </h3>
+            <h3 className="mt-2 text-lg font-medium">Refine your selection</h3>
           </div>
 
           {hasAppliedFilters && (
@@ -279,27 +210,15 @@ function ProductFilters({
 
               <p className="mt-1 text-sm text-black/60">
                 {CURRENCY_SYMBOL}
-                {formatPrice(
-                  safeMinimum,
-                )}{" "}
-                —{" "}
-                {CURRENCY_SYMBOL}
-                {formatPrice(
-                  safeMaximum,
-                )}
+                {formatPrice(safeMinimum)} — {CURRENCY_SYMBOL}
+                {formatPrice(safeMaximum)}
               </p>
             </div>
 
             <p className="text-xs text-black/35">
               {CURRENCY_SYMBOL}
-              {formatPrice(
-                minimumPrice,
-              )}{" "}
-              —{" "}
-              {CURRENCY_SYMBOL}
-              {formatPrice(
-                maximumPrice,
-              )}
+              {formatPrice(minimumPrice)} — {CURRENCY_SYMBOL}
+              {formatPrice(maximumPrice)}
             </p>
           </div>
 
@@ -313,9 +232,7 @@ function ProductFilters({
                 className="absolute top-5 h-1.5 rounded-full bg-black"
                 style={{
                   left: `${minimumPosition}%`,
-                  right: `${
-                    100 - maximumPosition
-                  }%`,
+                  right: `${100 - maximumPosition}%`,
                 }}
               />
 
@@ -327,9 +244,7 @@ function ProductFilters({
                 }}
               >
                 {CURRENCY_SYMBOL}
-                {formatPrice(
-                  safeMinimum,
-                )}
+                {formatPrice(safeMinimum)}
               </div>
 
               {/* Maximum value bubble */}
@@ -340,9 +255,7 @@ function ProductFilters({
                 }}
               >
                 {CURRENCY_SYMBOL}
-                {formatPrice(
-                  safeMaximum,
-                )}
+                {formatPrice(safeMaximum)}
               </div>
 
               {/* Minimum slider */}
@@ -353,14 +266,9 @@ function ProductFilters({
                 max={maximumPrice}
                 step="1"
                 value={safeMinimum}
-                onChange={
-                  handleMinimumChange
-                }
+                onChange={handleMinimumChange}
                 className={`catalog-price-range__input ${
-                  safeMinimum >=
-                  maximumPrice
-                    ? "z-20"
-                    : "z-30"
+                  safeMinimum >= maximumPrice ? "z-20" : "z-30"
                 }`}
               />
 
@@ -372,18 +280,14 @@ function ProductFilters({
                 max={maximumPrice}
                 step="1"
                 value={safeMaximum}
-                onChange={
-                  handleMaximumChange
-                }
+                onChange={handleMaximumChange}
                 className="catalog-price-range__input z-20"
               />
             </div>
           ) : (
-            <div className="mt-8 rounded-md bg-black/[0.03] px-4 py-3 text-sm">
+            <div className="mt-8 rounded-md bg-black/0.03 px-4 py-3 text-sm">
               {CURRENCY_SYMBOL}
-              {formatPrice(
-                minimumPrice,
-              )}
+              {formatPrice(minimumPrice)}
             </div>
           )}
         </div>
@@ -392,28 +296,52 @@ function ProductFilters({
         <div className="mt-8 grid gap-6 border-t border-black/10 pt-8 md:grid-cols-2">
           {/* Color */}
           <div>
-            <label
-              htmlFor="filter-color"
-              className="mb-2 block text-xs uppercase tracking-[0.14em] text-black/45"
-            >
+            <p className="mb-3 text-xs uppercase tracking-[0.14em] text-black/45">
               Color
-            </label>
+            </p>
 
-            <input
-              id="filter-color"
-              type="text"
-              value={
-                draftFilters.color
-              }
-              onChange={(event) =>
-                updateDraftFilter(
-                  "color",
-                  event.target.value,
-                )
-              }
-              placeholder="Black"
-              className="w-full border-b border-black/20 bg-transparent py-2 text-sm outline-none transition focus:border-black"
-            />
+            {filterOptions.colors.length === 0 ? (
+              <p className="text-sm text-black/40">
+                No color options available.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {filterOptions.colors.map((colorOption) => {
+                  const isSelected = draftFilters.color === colorOption.name;
+
+                  return (
+                    <button
+                      key={colorOption.name}
+                      type="button"
+                      onClick={() =>
+                        updateDraftFilter(
+                          "color",
+                          isSelected ? "" : colorOption.name,
+                        )
+                      }
+                      aria-pressed={isSelected}
+                      className={`flex items-center gap-2 border px-3 py-2 text-sm transition ${
+                        isSelected
+                          ? "border-black bg-black text-white"
+                          : "border-black/10 bg-white text-black hover:border-black"
+                      }`}
+                    >
+                      {colorOption.hex && (
+                        <span
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5 rounded-full border border-black/15"
+                          style={{
+                            backgroundColor: colorOption.hex,
+                          }}
+                        />
+                      )}
+
+                      <span>{colorOption.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Availability */}
@@ -427,24 +355,15 @@ function ProductFilters({
 
             <select
               id="filter-availability"
-              value={
-                draftFilters.availability
-              }
+              value={draftFilters.availability}
               onChange={(event) =>
-                updateDraftFilter(
-                  "availability",
-                  event.target.value,
-                )
+                updateDraftFilter("availability", event.target.value)
               }
               className="w-full border-b border-black/20 bg-transparent py-2 text-sm outline-none transition focus:border-black"
             >
-              <option value="all">
-                All products
-              </option>
+              <option value="all">All products</option>
 
-              <option value="in-stock">
-                In stock
-              </option>
+              <option value="in-stock">In stock</option>
             </select>
           </div>
         </div>
@@ -452,8 +371,7 @@ function ProductFilters({
         {/* Apply */}
         <div className="mt-8 flex flex-col gap-3 border-t border-black/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-black/40">
-            Move the range freely. Products
-            update when you apply the filters.
+            Move the range freely. Products update when you apply the filters.
           </p>
 
           <button

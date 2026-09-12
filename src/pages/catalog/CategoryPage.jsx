@@ -4,6 +4,7 @@ import { getCategories } from "../../services/categoryServices";
 import {
   getProductsByCategoryIds,
   getProductPriceRange,
+  getProductFilterOptions,
 } from "../../services/productServices";
 import ProductFilters from "../../components/product/ProductFilters";
 import {
@@ -35,8 +36,9 @@ function CategoryPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isProductsLoading, setIsProductsLoading] = useState(false);
   const [isPriceRangeLoading, setIsPriceRangeLoading] = useState(false);
-  
-  
+  const [filterOptions, setFilterOptions] = useState({
+    colors: [],
+  });
 
   /*
    * Category context
@@ -68,7 +70,9 @@ function CategoryPage() {
 
         setPriceRange(null);
         setIsPriceRangeLoading(true);
-
+        setFilterOptions({
+          colors: [],
+        });
         /*
          * A new category starts with clean filters.
          */
@@ -104,18 +108,37 @@ function CategoryPage() {
          * It is therefore fetched only once
          * for this category.
          */
-        const resolvedPriceRange =
-          await getProductPriceRange(resolvedCategoryIds);
-
+        const [
+          resolvedPriceRange,
+          resolvedFilterOptions,
+        ] = await Promise.all([
+          getProductPriceRange(
+            resolvedCategoryIds,
+          ),
+        
+          getProductFilterOptions(
+            resolvedCategoryIds,
+          ),
+        ]);
         if (!isMounted) {
           return;
         }
 
-        setCategory(resolvedCategory);
-
-        setCategoryIds(resolvedCategoryIds);
-
-        setPriceRange(resolvedPriceRange);
+        setCategory(
+          resolvedCategory,
+        );
+        
+        setCategoryIds(
+          resolvedCategoryIds,
+        );
+        
+        setPriceRange(
+          resolvedPriceRange,
+        );
+        
+        setFilterOptions(
+          resolvedFilterOptions,
+        );
       } catch (loadError) {
         console.error("Failed to load category:", loadError);
 
@@ -384,6 +407,7 @@ function CategoryPage() {
         <div className="mb-8">
           <ProductFilters
             filters={filters}
+            filterOptions={filterOptions}
             priceRange={priceRange}
             isPriceRangeLoading={isPriceRangeLoading}
             onApply={setFilters}
