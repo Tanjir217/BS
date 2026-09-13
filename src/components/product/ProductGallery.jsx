@@ -131,8 +131,12 @@ function ProductGallery({
         {images.map(
           (image, index) => (
             <figure
-              className="product-gallery__image"
-              key={image.id}
+            className={`product-gallery__image ${
+              activeImage === index
+                ? "is-active"
+                : ""
+            }`}
+            key={image.id}
             >
               <img
                 src={image.url}

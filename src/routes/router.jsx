@@ -18,6 +18,7 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute";
 import AdminLogin from "../pages/admin/AdminLogin";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 import CategoryPage from "../pages/catalog/CategoryPage";
+import CartPage from "../pages/cart/CartPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
       {
         path: "products/:slug",
         element: <ProductDetail />,
+      },
+      {
+        path: "cart",
+        element: <CartPage />,
       },
     ],
   },
