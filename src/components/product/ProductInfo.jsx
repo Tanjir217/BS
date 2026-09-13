@@ -17,6 +17,7 @@ function formatPrice(value) {
 }
 
 function ProductInfo({ product }) {
+  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
 
   const [isWishlisted, setIsWishlisted] = useState(false);

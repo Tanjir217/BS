@@ -204,7 +204,7 @@ export function CartProvider({ children }) {
 
     try {
       const validationResults = await Promise.all(
-        items.map(async (item) => {
+        itemsToValidate.map(async (item) => {
           try {
             const product = await getProductById(item.productId);
 
