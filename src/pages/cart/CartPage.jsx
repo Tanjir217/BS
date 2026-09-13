@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-
+import {useEffect} from "react"
 import CartItem from "../../components/cart/CartItem";
 import { useCart } from "../../context/CartContext";
 
@@ -18,10 +18,27 @@ function CartPage() {
     itemCount,
     subtotal,
     clearCart,
+    validateCart,
+    isValidating,
   } = useCart();
-
+  useEffect(() => {
+    if (items.length === 0) {
+      return;
+    }
+  
+    validateCart();
+    // Cart validation intentionally runs
+    // when the cart page mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  {isValidating && (
+    <span>
+      Checking availability...
+    </span>
+  )}
   if (items.length === 0) {
     return (
+      
       <main className="cart-page">
         <div className="cart-page__empty">
           <p className="cart-page__eyebrow">
