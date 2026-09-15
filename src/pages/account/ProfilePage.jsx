@@ -11,9 +11,7 @@ function ProfilePage() {
 
   const [name, setName] = useState("");
 
-  const [phone, setPhone] = useState(
-    () => localStorage.getItem("bayzid_customer_phone") || "",
-  );
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
 
   const [success, setSuccess] = useState("");
@@ -34,6 +32,12 @@ function ProfilePage() {
   useEffect(() => {
     if (user) {
       setName(user.name || "");
+  
+      setPhone(
+        localStorage.getItem(
+          `bayzid_customer_phone_${user.$id}`,
+        ) || "",
+      );
     }
   }, [user]);
 
@@ -118,7 +122,10 @@ function ProfilePage() {
 
                 setPhone(value);
 
-                localStorage.setItem("bayzid_customer_phone", value);
+                localStorage.setItem(
+                  `bayzid_customer_phone_${user.$id}`,
+                  value,
+                );
               }}
               autoComplete="tel"
               inputMode="tel"
