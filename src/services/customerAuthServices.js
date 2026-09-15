@@ -59,7 +59,12 @@ export async function registerCustomer({
     password,
   });
 
-  return user;
+  await account.createEmailPasswordSession({
+    email: normalizedEmail,
+    password,
+  });
+  
+  return await account.get();
 }
 
 export async function loginCustomer(

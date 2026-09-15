@@ -20,6 +20,9 @@ import RoleProtectedRoute from "./RoleProtectedRoute";
 import CategoryPage from "../pages/catalog/CategoryPage";
 import CartPage from "../pages/cart/CartPage";
 import CheckoutPage from "../pages/checkout/CheckoutPage";
+import LoginPage from "../pages/account/LoginPage";
+import RegisterPage from "../pages/account/RegisterPage";
+import AccountPage from "../pages/account/AccountPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -57,6 +60,18 @@ const router = createBrowserRouter([
       {
         path: "checkout",
         element: <CheckoutPage />,
+      },
+      {
+        path: "account/login",
+        element: <LoginPage />,
+      },
+      {
+        path: "account/register",
+        element: <RegisterPage />,
+      },
+      {
+        path: "account",
+        element: <AccountPage />,
       },
     ],
   },
