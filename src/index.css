@@ -2094,7 +2094,15 @@ body {
   font-size: 0.68rem !important;
   line-height: 1.5 !important;
 }
-
+.account-form__success {
+  margin: 0;
+  border-left: 1px solid #171717;
+  padding: 0.65rem 0.8rem;
+  background: rgb(23 23 23 / 4%);
+  color: #171717;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
 /* ---------------------------------------------------------
    Account actions
    --------------------------------------------------------- */

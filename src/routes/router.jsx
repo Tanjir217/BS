@@ -23,6 +23,7 @@ import CheckoutPage from "../pages/checkout/CheckoutPage";
 import LoginPage from "../pages/account/LoginPage";
 import RegisterPage from "../pages/account/RegisterPage";
 import AccountPage from "../pages/account/AccountPage";
+import ProfilePage from "../pages/account/ProfilePage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
       {
         path: "account",
         element: <AccountPage />,
+      },
+      {
+        path: "account/profile",
+        element: <ProfilePage />,
       },
     ],
   },
