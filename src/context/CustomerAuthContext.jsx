@@ -96,34 +96,32 @@ import {
         [],
       );
   
-    const signIn =
+      const signIn =
       useCallback(
         async (
           email,
           password,
         ) => {
           setError(null);
-  
+    
           try {
-            await loginCustomer(
-              email,
-              password,
-            );
-  
             const currentUser =
-              await getCurrentCustomer();
-  
+              await loginCustomer(
+                email,
+                password,
+              );
+    
             setUser(currentUser);
-  
+    
             return currentUser;
           } catch (error) {
             setUser(null);
-  
+    
             setError(
               error?.message ||
                 "Unable to sign in.",
             );
-  
+    
             throw error;
           }
         },
