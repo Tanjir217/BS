@@ -42,14 +42,12 @@ import {
           const managementAccess =
             await getManagementAccess(currentUser);
       
-          if (!managementAccess.isMember) {
-            await logoutAdmin().catch(() => {});
-      
-            setUser(null);
-            setManagement(null);
-      
-            return null;
-          }
+            if (!managementAccess.isMember) {
+              setUser(null);
+              setManagement(null);
+            
+              return null;
+            }
       
           setUser(currentUser);
           setManagement(managementAccess);

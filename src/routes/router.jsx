@@ -25,6 +25,8 @@ import RegisterPage from "../pages/account/RegisterPage";
 import AccountPage from "../pages/account/AccountPage";
 import ProfilePage from "../pages/account/ProfilePage";
 import AddressesPage from "../pages/account/AddressesPage";
+import OrdersPage from "../pages/account/OrdersPage";
+import OrderDetailPage from "../pages/account/OrderDetailPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -82,6 +84,14 @@ const router = createBrowserRouter([
       {
         path: "account/addresses",
         element: <AddressesPage />,
+      },
+      {
+        path: "account/orders",
+        element: <OrdersPage />,
+      },
+      {
+        path: "account/orders/:orderId",
+        element: <OrderDetailPage />,
       },
     ],
   },
