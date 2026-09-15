@@ -47,7 +47,7 @@ export async function registerCustomer({
     );
   }
 
-  const user = await account.create({
+  await account.create({
     userId: "unique()",
     email: normalizedEmail,
     password,
@@ -59,11 +59,6 @@ export async function registerCustomer({
     password,
   });
 
-  await account.createEmailPasswordSession({
-    email: normalizedEmail,
-    password,
-  });
-  
   return await account.get();
 }
 
@@ -86,10 +81,12 @@ export async function loginCustomer(
     );
   }
 
-  return account.createEmailPasswordSession({
+  await account.createEmailPasswordSession({
     email: normalizedEmail,
     password,
   });
+
+  return await account.get();
 }
 
 export async function logoutCustomer() {

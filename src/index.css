@@ -1924,3 +1924,359 @@ body {
       );
   }
 }
+/* =========================================================
+   Customer account
+   ========================================================= */
+
+.account-page {
+  width: min(100%, 1400px);
+  min-height: calc(100vh - 8rem);
+  margin-inline: auto;
+  padding:
+    clamp(3rem, 8vw, 7rem)
+    clamp(1rem, 4vw, 4rem)
+    clamp(5rem, 10vw, 9rem);
+}
+
+.account-page__container {
+  width: min(100%, 900px);
+  margin-inline: auto;
+}
+
+.account-page__intro {
+  max-width: 680px;
+  margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.account-page__intro p {
+  margin: 0 0 1rem;
+  color: rgb(23 23 23 / 45%);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.account-page__intro h1 {
+  margin: 0;
+  color: #171717;
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+  font-size: clamp(
+    2.6rem,
+    6vw,
+    5.5rem
+  );
+  font-weight: 400;
+  letter-spacing: -0.065em;
+  line-height: 0.92;
+}
+
+.account-page__intro span {
+  display: block;
+  max-width: 540px;
+  margin-top: 1.4rem;
+  color: rgb(23 23 23 / 58%);
+  font-size: 0.78rem;
+  letter-spacing: 0.025em;
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------------
+   Loading
+   --------------------------------------------------------- */
+
+.account-page__loading {
+  display: grid;
+  min-height: 50vh;
+  place-items: center;
+  color: rgb(23 23 23 / 55%);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------
+   Forms
+   --------------------------------------------------------- */
+
+.account-form {
+  width: min(100%, 520px);
+  display: grid;
+  gap: 1.35rem;
+}
+
+.account-form label {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.account-form label > span {
+  color: rgb(23 23 23 / 55%);
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.account-form input {
+  width: 100%;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid rgb(23 23 23 / 20%);
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  color: #171717;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
+  transition:
+    border-color 180ms ease;
+}
+
+.account-form input:hover {
+  border-bottom-color: rgb(23 23 23 / 40%);
+}
+
+.account-form input:focus {
+  border-bottom-color: #171717;
+}
+
+.account-form button {
+  min-height: 3.25rem;
+  margin-top: 0.6rem;
+  border: 1px solid #171717;
+  background: #171717;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.account-form button:hover:not(:disabled) {
+  background: transparent;
+  color: #171717;
+}
+
+.account-form button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.account-form > p {
+  margin: 0;
+  color: rgb(23 23 23 / 50%);
+  font-size: 0.68rem;
+  line-height: 1.7;
+}
+
+.account-form > p a {
+  color: #171717;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.account-form__error {
+  margin: 0;
+  border-left: 1px solid #171717;
+  padding: 0.65rem 0.8rem;
+  background: rgb(23 23 23 / 4%);
+  color: #171717 !important;
+  font-size: 0.68rem !important;
+  line-height: 1.5 !important;
+}
+
+/* ---------------------------------------------------------
+   Account actions
+   --------------------------------------------------------- */
+
+.account-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.account-page__actions a {
+  display: inline-flex;
+  min-width: 170px;
+  min-height: 3.1rem;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid #171717;
+  padding: 0.75rem 1.5rem;
+  color: #171717;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.account-page__actions a:first-child {
+  background: #171717;
+  color: #fff;
+}
+
+.account-page__actions a:first-child:hover {
+  background: transparent;
+  color: #171717;
+}
+
+.account-page__actions a:last-child:hover {
+  background: #171717;
+  color: #fff;
+}
+
+/* ---------------------------------------------------------
+   Account dashboard
+   --------------------------------------------------------- */
+
+.account-page__grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 2rem;
+}
+
+.account-page__grid a {
+  position: relative;
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border: 1px solid rgb(23 23 23 / 12%);
+  padding: 1.35rem;
+  color: #171717;
+  text-decoration: none;
+  transition:
+    background 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
+}
+
+.account-page__grid a:hover {
+  background: #171717;
+  color: #fff;
+  transform: translateY(-3px);
+}
+
+.account-page__grid strong {
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+
+.account-page__grid span {
+  max-width: 180px;
+  color: rgb(23 23 23 / 55%);
+  font-size: 0.64rem;
+  line-height: 1.6;
+  transition: color 220ms ease;
+}
+
+.account-page__grid a:hover span {
+  color: rgb(255 255 255 / 65%);
+}
+
+.account-page__container > button {
+  border: 0;
+  border-bottom: 1px solid rgb(23 23 23 / 35%);
+  background: transparent;
+  padding: 0 0 0.35rem;
+  color: #171717;
+  cursor: pointer;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.account-page__container > button:hover {
+  border-color: #171717;
+  opacity: 0.6;
+}
+
+/* ---------------------------------------------------------
+   Mobile
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .account-page {
+    min-height: calc(100vh - 5rem);
+    padding:
+      3rem
+      1rem
+      5rem;
+  }
+
+  .account-page__intro {
+    margin-bottom: 3rem;
+  }
+
+  .account-page__intro h1 {
+    font-size: clamp(
+      2.6rem,
+      13vw,
+      4rem
+    );
+  }
+
+  .account-page__intro span {
+    margin-top: 1rem;
+    font-size: 0.72rem;
+  }
+
+  .account-form {
+    width: 100%;
+  }
+
+  .account-page__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .account-page__actions a {
+    width: 100%;
+  }
+
+  .account-page__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-page__grid a {
+    min-height: 135px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Reduced motion
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .account-page__grid a,
+  .account-page__actions a,
+  .account-form button,
+  .account-form input {
+    transition: none;
+  }
+}
