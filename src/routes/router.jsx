@@ -24,6 +24,7 @@ import LoginPage from "../pages/account/LoginPage";
 import RegisterPage from "../pages/account/RegisterPage";
 import AccountPage from "../pages/account/AccountPage";
 import ProfilePage from "../pages/account/ProfilePage";
+import AddressesPage from "../pages/account/AddressesPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -77,6 +78,10 @@ const router = createBrowserRouter([
       {
         path: "account/profile",
         element: <ProfilePage />,
+      },
+      {
+        path: "account/addresses",
+        element: <AddressesPage />,
       },
     ],
   },

@@ -2288,3 +2288,450 @@ body {
     transition: none;
   }
 }
+/* ==========================================================================
+   Account Addresses
+   ========================================================================== */
+
+.account-addresses {
+  width: 100%;
+}
+
+.account-addresses__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.account-addresses__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.75rem 1.2rem;
+  border: 1px solid #171717;
+  background: #171717;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.account-addresses__add:hover {
+  background: #fff;
+  color: #171717;
+}
+
+.account-addresses__add:active {
+  transform: translateY(1px);
+}
+
+.account-addresses__message {
+  margin-bottom: 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #deded9;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.account-addresses__message--error {
+  border-color: #d9b7b7;
+  background: #fff8f8;
+  color: #8b2424;
+}
+
+.account-addresses__message--success {
+  border-color: #bfd5c5;
+  background: #f6fbf7;
+  color: #27643a;
+}
+
+.account-addresses__loading {
+  padding: 4rem 1rem;
+  border-top: 1px solid #deded9;
+  border-bottom: 1px solid #deded9;
+  color: #777;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.account-addresses__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5rem 1.5rem;
+  border: 1px solid #deded9;
+  text-align: center;
+}
+
+.account-addresses__empty svg {
+  margin-bottom: 1rem;
+  color: #777;
+}
+
+.account-addresses__empty h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 400;
+}
+
+.account-addresses__empty p {
+  max-width: 28rem;
+  margin: 0.8rem 0 1.5rem;
+  color: #777;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+.account-addresses__empty button {
+  border: 1px solid #171717;
+  background: #171717;
+  color: #fff;
+  padding: 0.8rem 1.4rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.account-addresses__list {
+  display: grid;
+  grid-template-columns: repeat(
+    2,
+    minmax(0, 1fr)
+  );
+  gap: 1rem;
+}
+
+.account-address-card {
+  position: relative;
+  display: flex;
+  min-height: 270px;
+  flex-direction: column;
+  border: 1px solid #deded9;
+  background: #fff;
+  padding: 1.35rem;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.account-address-card:hover {
+  border-color: #aaa9a4;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 5%);
+  transform: translateY(-2px);
+}
+
+.account-address-card.is-default {
+  border-color: #171717;
+}
+
+.account-address-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 45px;
+}
+
+.account-address-card__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #171717;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-address-card__label svg {
+  color: #777;
+}
+
+.account-address-card__default {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.55rem;
+  color: #27643a;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-address-card__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.account-address-card__actions button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #deded9;
+  background: #fff;
+  color: #444;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.account-address-card__actions button:hover {
+  border-color: #171717;
+  background: #171717;
+  color: #fff;
+}
+
+.account-address-card__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.account-address-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 2rem 0 1.5rem;
+  color: #555;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.account-address-card__body strong {
+  margin-bottom: 0.3rem;
+  color: #171717;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.account-address-card__set-default {
+  align-self: flex-start;
+  border: 0;
+  border-bottom: 1px solid #171717;
+  background: transparent;
+  padding: 0 0 0.2rem;
+  color: #171717;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.account-address-card__set-default:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+/* Form */
+
+.account-address-form {
+  margin-bottom: 3rem;
+  border: 1px solid #deded9;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.account-address-form__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.account-address-form__header p {
+  margin: 0 0 0.45rem;
+  color: #777;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-address-form__header h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 400;
+}
+
+.account-address-form__close {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #deded9;
+  background: #fff;
+  cursor: pointer;
+}
+
+.account-address-form__fields {
+  display: grid;
+  grid-template-columns: repeat(
+    2,
+    minmax(0, 1fr)
+  );
+  gap: 1.35rem;
+}
+
+.account-address-form__fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.account-address-form__fields label span {
+  color: #777;
+  font-size: 0.61rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.account-address-form__fields label small {
+  margin-left: 0.35rem;
+  color: #aaa;
+  font-size: 0.56rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.account-address-form__fields input,
+.account-address-form__fields select {
+  width: 100%;
+  min-height: 46px;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid #cfcfca;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.7rem 0;
+  color: #171717;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.account-address-form__fields input:focus,
+.account-address-form__fields select:focus {
+  border-bottom-color: #171717;
+  outline: 0;
+}
+
+.account-address-form__wide {
+  grid-column: 1 / -1;
+}
+
+.account-address-form__default {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  color: #444;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.account-address-form__default input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #171717;
+}
+
+.account-address-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 2rem;
+}
+
+.account-address-form__actions button {
+  min-height: 44px;
+  border: 1px solid #171717;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.63rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.account-address-form__actions button:first-child {
+  background: #fff;
+  color: #171717;
+}
+
+.account-address-form__actions button:last-child {
+  background: #171717;
+  color: #fff;
+}
+
+.account-address-form__actions button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.account-addresses__back {
+  margin: 2rem 0 0;
+  font-size: 0.72rem;
+}
+
+.account-addresses__back a {
+  color: #555;
+  text-decoration: none;
+}
+
+.account-addresses__back a:hover {
+  color: #171717;
+}
+
+/* Responsive */
+
+@media (max-width: 760px) {
+  .account-addresses__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .account-addresses__add {
+    width: 100%;
+  }
+
+  .account-addresses__list {
+    grid-template-columns: 1fr;
+  }
+
+  .account-address-card {
+    min-height: 0;
+  }
+
+  .account-address-form__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .account-address-form__wide {
+    grid-column: auto;
+  }
+
+  .account-address-form__actions {
+    flex-direction: column-reverse;
+  }
+
+  .account-address-form__actions button {
+    width: 100%;
+  }
+}
