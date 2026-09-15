@@ -15,105 +15,156 @@ import {
   updateCustomerProfile,
 } from "../services/customerAuthServices";
 
-export function CustomerAuthProvider({ children }) {
-  const updateProfile = useCallback(async ({ name }) => {
-    setError(null);
-  
-    try {
-      const updatedUser = await updateCustomerProfile({
-        name,
-      });
-  
-      setUser(updatedUser);
-  
-      return updatedUser;
-    } catch (error) {
-      setError(error?.message || "Unable to update your profile.");
-  
-      throw error;
-    }
-  }, []);
-  const [user, setUser] = useState(null);
+const CustomerAuthContext =
+  createContext(null);
 
-  const [loading, setLoading] = useState(true);
+export function CustomerAuthProvider({
+  children,
+}) {
+  const [user, setUser] =
+    useState(null);
 
-  const [error, setError] = useState(null);
-  const CustomerAuthContext = createContext(null);
+  const [loading, setLoading] =
+    useState(true);
 
-  const refreshCustomer = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const [error, setError] =
+    useState(null);
 
-    try {
-      const currentUser = await getCurrentCustomer();
+  const refreshCustomer =
+    useCallback(async () => {
+      setLoading(true);
+      setError(null);
 
-      setUser(currentUser);
+      try {
+        const currentUser =
+          await getCurrentCustomer();
 
-      return currentUser;
-    } catch (error) {
-      console.error("Customer authentication initialization failed:", error);
+        setUser(currentUser);
 
-      setUser(null);
+        return currentUser;
+      } catch (error) {
+        console.error(
+          "Customer authentication initialization failed:",
+          error,
+        );
 
-      setError(error?.message || "Unable to initialize your account.");
+        setUser(null);
 
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setError(
+          error?.message ||
+            "Unable to initialize your account.",
+        );
+
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    }, []);
 
   useEffect(() => {
     refreshCustomer();
   }, [refreshCustomer]);
 
-  const signUp = useCallback(async ({ email, password, name }) => {
-    setError(null);
-
-    try {
-      const newUser = await registerCustomer({
+  const signUp =
+    useCallback(
+      async ({
         email,
         password,
         name,
-      });
+      }) => {
+        setError(null);
 
-      setUser(newUser);
+        try {
+          const newUser =
+            await registerCustomer({
+              email,
+              password,
+              name,
+            });
 
-      return newUser;
-    } catch (error) {
-      setError(error?.message || "Unable to create your account.");
+          setUser(newUser);
 
-      throw error;
-    }
-  }, []);
+          return newUser;
+        } catch (error) {
+          setError(
+            error?.message ||
+              "Unable to create your account.",
+          );
 
-  const signIn = useCallback(async (email, password) => {
-    setError(null);
+          throw error;
+        }
+      },
+      [],
+    );
 
-    try {
-      const currentUser = await loginCustomer(email, password);
+  const signIn =
+    useCallback(
+      async (
+        email,
+        password,
+      ) => {
+        setError(null);
 
-      setUser(currentUser);
+        try {
+          const currentUser =
+            await loginCustomer(
+              email,
+              password,
+            );
 
-      return currentUser;
-    } catch (error) {
-      setUser(null);
+          setUser(currentUser);
 
-      setError(error?.message || "Unable to sign in.");
+          return currentUser;
+        } catch (error) {
+          setUser(null);
 
-      throw error;
-    }
-  }, []);
+          setError(
+            error?.message ||
+              "Unable to sign in.",
+          );
 
-  const signOut = useCallback(async () => {
-    setError(null);
+          throw error;
+        }
+      },
+      [],
+    );
 
-    try {
-      await logoutCustomer();
-    } finally {
-      setUser(null);
-    }
-  }, []);
+  const signOut =
+    useCallback(async () => {
+      setError(null);
+
+      try {
+        await logoutCustomer();
+      } finally {
+        setUser(null);
+      }
+    }, []);
+
+  const updateProfile =
+    useCallback(
+      async ({ name }) => {
+        setError(null);
+
+        try {
+          const updatedUser =
+            await updateCustomerProfile({
+              name,
+            });
+
+          setUser(updatedUser);
+
+          return updatedUser;
+        } catch (error) {
+          setError(
+            error?.message ||
+              "Unable to update your profile.",
+          );
+
+          throw error;
+        }
+      },
+      [],
+    );
 
   const value = useMemo(
     () => ({
@@ -121,7 +172,8 @@ export function CustomerAuthProvider({ children }) {
       loading,
       error,
 
-      isAuthenticated: Boolean(user),
+      isAuthenticated:
+        Boolean(user),
 
       refreshCustomer,
       signUp,
@@ -142,17 +194,19 @@ export function CustomerAuthProvider({ children }) {
   );
 
   return (
-    <CustomerAuthContext.Provider value={value}>
+    <CustomerAuthContext.Provider
+      value={value}
+    >
       {children}
     </CustomerAuthContext.Provider>
   );
 }
 
-
-
-
 export function useCustomerAuth() {
-  const context = useContext(CustomerAuthContext);
+  const context =
+    useContext(
+      CustomerAuthContext,
+    );
 
   if (!context) {
     throw new Error(
@@ -162,5 +216,3 @@ export function useCustomerAuth() {
 
   return context;
 }
-
-
