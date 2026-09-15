@@ -20,11 +20,9 @@ export async function updateCustomerProfile({
     );
   }
 
-  await account.updateName({
+  return await account.updateName({
     name: normalizedName,
   });
-
-  return await account.get();
 }
 
 
