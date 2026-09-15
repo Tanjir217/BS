@@ -1,5 +1,34 @@
 import { account } from "../utils/appwrite";
 
+
+
+export async function updateCustomerProfile({
+  name,
+}) {
+  const normalizedName =
+    String(name || "").trim();
+
+  if (!normalizedName) {
+    throw new Error(
+      "Name is required.",
+    );
+  }
+
+  if (normalizedName.length > 128) {
+    throw new Error(
+      "Name must be 128 characters or fewer.",
+    );
+  }
+
+  await account.updateName({
+    name: normalizedName,
+  });
+
+  return await account.get();
+}
+
+
+
 export async function getCurrentCustomer() {
   try {
     return await account.get();

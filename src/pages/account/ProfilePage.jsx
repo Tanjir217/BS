@@ -14,16 +14,15 @@ import {
     const navigate = useNavigate();
   
     const {
-      user,
-      loading,
-      isAuthenticated,
-    } = useCustomerAuth();
+        user,
+        loading,
+        isAuthenticated,
+        updateProfile,
+      } = useCustomerAuth();
   
     const [name, setName] =
       useState("");
   
-    const [phone, setPhone] =
-      useState("");
   
     const [error, setError] =
       useState("");
@@ -59,45 +58,43 @@ import {
     }, [user]);
   
     async function handleSubmit(event) {
-      event.preventDefault();
-  
-      setError("");
-      setSuccess("");
-  
-      if (!name.trim()) {
-        setError(
-          "Name is required.",
-        );
-  
-        return;
+        event.preventDefault();
+      
+        setError("");
+        setSuccess("");
+      
+        if (!name.trim()) {
+          setError(
+            "Name is required.",
+          );
+      
+          return;
+        }
+      
+        setSaving(true);
+      
+        try {
+          await updateProfile({
+            name,
+          });
+      
+          setSuccess(
+            "Profile updated successfully.",
+          );
+        } catch (error) {
+          console.error(
+            "Profile update failed:",
+            error,
+          );
+      
+          setError(
+            error?.message ||
+              "Unable to update your profile.",
+          );
+        } finally {
+          setSaving(false);
+        }
       }
-  
-      setSaving(true);
-  
-      try {
-        /*
-         * Appwrite profile update
-         * will be connected through the
-         * customer profile service.
-         */
-  
-        setSuccess(
-          "Profile updated successfully.",
-        );
-      } catch (error) {
-        console.error(
-          "Profile update failed:",
-          error,
-        );
-  
-        setError(
-          error?.message ||
-            "Unable to update your profile.",
-        );
-      } finally {
-        setSaving(false);
-      }
-    }
   
     if (
       loading ||
