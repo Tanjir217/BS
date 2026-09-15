@@ -62,18 +62,22 @@ export async function getManagementAccess(user) {
     );
   }
 
-  /*
-   * Verify that the configured team actually exists
-   * and that the authenticated user can access it.
-   */
-  await teams.get({
-    teamId: MANAGEMENT_TEAM_ID,
-  });
+  try {
+    await teams.get({
+      teamId: MANAGEMENT_TEAM_ID,
+    });
+  } catch (error) {
+    if (error?.code === 404) {
+      return {
+        isMember: false,
+        roles: [],
+        membership: null,
+      };
+    }
 
-  /*
-   * Ask Appwrite directly for this user's membership
-   * in the management team.
-   */
+    throw error;
+  }
+
   const membershipResponse =
     await teams.listMemberships({
       teamId: MANAGEMENT_TEAM_ID,
