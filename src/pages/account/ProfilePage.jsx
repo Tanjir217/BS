@@ -23,7 +23,7 @@ import {
     const [name, setName] =
       useState("");
   
-  
+    const [phone, setPhone] = useState("")
     const [error, setError] =
       useState("");
   
