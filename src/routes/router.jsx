@@ -9,8 +9,8 @@ import AdminDashboard from "../pages/admin/dashboard/AdminDashboard"
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import HomePage from "../pages/admin/home/HomePage"
-import OrderDetailPage from "../pages/admin/orders/OrderDetailPage";
-import OrdersPage from "../pages/admin/orders/OrdersPage";
+import AdminOrderDetailPage from "../pages/admin/orders/OrderDetailPage";
+import AdminOrdersPage from "../pages/admin/orders/OrdersPage";
 import CustomersPage from "../pages/admin/customers/CustomersPage";
 import CustomerDetailPage from "../pages/admin/customers/CustomerDetailPage";
 import AnalyticsPage from "../pages/admin/analytics/AnalyticsPage";
@@ -121,11 +121,11 @@ const router = createBrowserRouter([
                 children: [
                   {
                     path: "orders",
-                    element: <OrdersPage />,
+                    element: <AdminOrdersPage />,
                   },
                   {
                     path: "orders/:orderId",
-                    element: <OrderDetailPage />,
+                    element: <AdminOrderDetailPage />,
                   },
                 ],
               },

@@ -3,7 +3,9 @@ import { User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 function AccountButton() {
     return (
-        <Link>
+        <Link
+        to={"/account"}
+        >
         <User
         color='#5A1020'
         />
