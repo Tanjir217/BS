@@ -624,7 +624,7 @@ function CheckoutPage() {
 
       const order =
         await createOrder({
-          customer_ID: user.$id,
+          // customer_ID: user.$id,
 
           customer_Name:
             [

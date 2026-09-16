@@ -2,9 +2,13 @@ import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import { getProductByIdAdmin } from "./productServices";
 import { getProductById } from "./productServices";
-
+import {
+  functions,
+} from "../utils/appwrite";
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-
+const CREATE_ORDER_FUNCTION_ID =
+  import.meta.env
+    .VITE_APPWRITE_CREATE_ORDER_FUNCTION_ID;
 const ORDERS_TABLE_ID =
   import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
 
@@ -172,7 +176,6 @@ function assertPositiveInteger(value, fieldName) {
 */
 
 export async function createOrder({
-  customer_ID,
   customer_Name,
   customer_Email = "",
   customer_Phone,
@@ -181,290 +184,85 @@ export async function createOrder({
   shipping_Postal_Code = "",
   shipping_Cost = 0,
   discount = 0,
-  payment_Method = PAYMENT_METHODS.COD,
+  payment_Method =
+    PAYMENT_METHODS.COD,
   notes = "",
   items = [],
 }) {
-  const customerName = String(customer_Name || "").trim();
-  if (!customer_ID) {
-    throw new Error("Customer authentication is required.");
-  }
-  const customerPhone = String(customer_Phone || "").trim();
-  const shippingAddress = String(shipping_Address || "").trim();
-  const shippingCity = String(shipping_City || "").trim();
-
-  if (!customerName) {
-    throw new Error("Customer name is required.");
-  }
-
-  if (!customerPhone) {
-    throw new Error("Customer phone is required.");
-  }
-
-  if (!shippingAddress) {
-    throw new Error("Shipping address is required.");
-  }
-
-  if (!shippingCity) {
-    throw new Error("Shipping city is required.");
-  }
-
-  if (!Array.isArray(items) || items.length === 0) {
-    throw new Error("At least one order item is required.");
-  }
-
-  if (!Object.values(PAYMENT_METHODS).includes(payment_Method)) {
-    throw new Error("Invalid payment method.");
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | Merge duplicate products
-  |--------------------------------------------------------------------------
-  */
-
-  const itemMap = new Map();
-
-  for (const item of items) {
-    if (!item?.productId) {
-      throw new Error("Product ID is required.");
-    }
-
-    const quantity = assertPositiveInteger(
-      item.quantity,
-      `Quantity for ${item.productId}`
-    );
-
-    const currentQuantity =
-      itemMap.get(item.productId) || 0;
-
-    itemMap.set(
-      item.productId,
-      currentQuantity + quantity
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | Build order item snapshots
-  |--------------------------------------------------------------------------
-  */
-
-  const orderItems = await Promise.all(
-    [...itemMap.entries()].map(
-      async ([productId, quantity]) => {
-        const product =
-          await getProductById(productId);
-
-        if (!product) {
-          throw new Error(
-            `Product ${productId} could not be found.`
-          );
-        }
-
-        const unitPrice = assertNonNegativeInteger(
-          product.price,
-          `Price for ${product.name}`
-        );
-        if (
-          items.expectedPrice !== undefined &&
-          Number(items.expectedPrice) !== unitPrice
-        ) {
-          throw new Error(
-            `${product.name} price has changed. Please review your bag before placing the order.`
-          );
-        }
-        const stockQuantity = assertNonNegativeInteger(
-          product.stockQuantity,
-          `Stock for ${product.name}`
-        );
-
-        if (quantity > stockQuantity) {
-          throw new Error(
-            `${product.name} does not have enough stock.`
-          );
-        }
-
-        const lineTotal = unitPrice * quantity;
-
-        if (!Number.isSafeInteger(lineTotal)) {
-          throw new Error(
-            `Line total is too large for ${product.name}.`
-          );
-        }
-
-        return {
-          product_ID: product.$id,
-          product_Name: product.name,
-          product_SKU: product.sku || "",
-          product_Color: product.color || "",
-          unit_Price: unitPrice,
-          quantity,
-          line_Total: lineTotal,
-        };
-      }
-    )
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Calculate totals
-  |--------------------------------------------------------------------------
-  */
-
-  const subtotal = orderItems.reduce(
-    (sum, item) => sum + item.line_Total,
-    0
-  );
-
-  if (!Number.isSafeInteger(subtotal)) {
-    throw new Error("Order subtotal is too large.");
-  }
-
-  const shippingCostNumber =
-    assertNonNegativeInteger(
-      shipping_Cost,
-      "Shipping cost"
-    );
-
-  const discountNumber =
-    assertNonNegativeInteger(
-      discount,
-      "Discount"
-    );
-
   if (
-    discountNumber >
-    subtotal + shippingCostNumber
+    !CREATE_ORDER_FUNCTION_ID
   ) {
     throw new Error(
-      "Discount cannot be greater than the order amount."
+      "Create-order function is not configured.",
     );
   }
 
-  const total =
-    subtotal +
-    shippingCostNumber -
-    discountNumber;
+  const execution =
+    await functions.createExecution({
+      functionId:
+        CREATE_ORDER_FUNCTION_ID,
 
-  /*
-  |--------------------------------------------------------------------------
-  | Create order
-  |--------------------------------------------------------------------------
-  */
+      body: JSON.stringify({
+        customer_Name,
+        customer_Email,
+        customer_Phone,
+        shipping_Address,
+        shipping_City,
+        shipping_Postal_Code,
+        shipping_Cost,
+        discount,
+        payment_Method,
+        notes,
+        items,
+      }),
 
-  const orderId = ID.unique();
+      async: false,
 
-  const order = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: ORDERS_TABLE_ID,
-    rowId: orderId,
-    data: {
-      order_Number: generateOrderNumber(orderId),
+      path: "/",
 
-      customer_ID,
-      customer_Name: customerName,
-      customer_Email,
-      customer_Phone: customerPhone,
-
-      shipping_Address: shippingAddress,
-      shipping_City: shippingCity,
-      shipping_Postal_Code,
-
-      subtotal,
-      shipping_Cost: shippingCostNumber,
-      discount: discountNumber,
-      total,
-
-      payment_Method,
-      payment_Status: PAYMENT_STATUSES.PENDING,
-      order_Status: ORDER_STATUSES.PENDING,
-
-      notes,
-    },
-  });
-
-  /*
-  |--------------------------------------------------------------------------
-  | Create order items
-  |--------------------------------------------------------------------------
-  */
-
-  const createdItems = [];
-
-  try {
-    for (const item of orderItems) {
-      const createdItem = await tablesDB.createRow({
-        databaseId: DATABASE_ID,
-        tableId: ORDER_ITEMS_TABLE_ID,
-        rowId: ID.unique(),
-        data: {
-          order_ID: order.$id,
-          product_ID: item.product_ID,
-          product_Name: item.product_Name,
-          product_SKU: item.product_SKU,
-          product_Color: item.product_Color,
-          unit_Price: item.unit_Price,
-          quantity: item.quantity,
-          line_Total: item.line_Total,
-        },
-      });
-
-      createdItems.push(createdItem);
-    }
-
-    return {
-      order,
-      items: createdItems,
-    };
-  } catch (error) {
-    /*
-    |--------------------------------------------------------------------------
-    | Roll back created order items
-    |--------------------------------------------------------------------------
-    */
-
-    const rollbackResults =
-      await Promise.allSettled(
-        createdItems.map((item) =>
-          tablesDB.deleteRow({
-            databaseId: DATABASE_ID,
-            tableId: ORDER_ITEMS_TABLE_ID,
-            rowId: item.$id,
-          })
-        )
-      );
-
-    rollbackResults.forEach((result) => {
-      if (result.status === "rejected") {
-        console.error(
-          "Failed to roll back order item:",
-          result.reason
-        );
-      }
+      method: "POST",
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Roll back order
-    |--------------------------------------------------------------------------
-    */
+  let responseBody;
 
-    try {
-      await tablesDB.deleteRow({
-        databaseId: DATABASE_ID,
-        tableId: ORDERS_TABLE_ID,
-        rowId: order.$id,
-      });
-    } catch (rollbackError) {
-      console.error(
-        "Failed to roll back order:",
-        rollbackError
+  try {
+    responseBody =
+      JSON.parse(
+        execution.responseBody ||
+          "{}",
       );
-    }
-
-    throw error;
+  } catch {
+    throw new Error(
+      "The order service returned an invalid response.",
+    );
   }
+
+  if (
+    execution.responseStatusCode >=
+      400 ||
+    responseBody.success === false
+  ) {
+    throw new Error(
+      responseBody.error ||
+        "Unable to create the order.",
+    );
+  }
+
+  if (
+    !responseBody.order?.$id
+  ) {
+    throw new Error(
+      "Order was created but no order ID was returned.",
+    );
+  }
+
+  return {
+    order:
+      responseBody.order,
+
+    items:
+      responseBody.items || [],
+  };
 }
 
 /*
