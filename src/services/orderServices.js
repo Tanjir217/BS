@@ -1,6 +1,7 @@
 import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import { getProductByIdAdmin } from "./productServices";
+import { getProductById } from "./productServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
@@ -171,7 +172,7 @@ function assertPositiveInteger(value, fieldName) {
 */
 
 export async function createOrder({
-  customer_ID = "",
+  customer_ID,
   customer_Name,
   customer_Email = "",
   customer_Phone,
@@ -185,6 +186,9 @@ export async function createOrder({
   items = [],
 }) {
   const customerName = String(customer_Name || "").trim();
+  if (!customer_ID) {
+    throw new Error("Customer authentication is required.");
+  }
   const customerPhone = String(customer_Phone || "").trim();
   const shippingAddress = String(shipping_Address || "").trim();
   const shippingCity = String(shipping_City || "").trim();
@@ -250,7 +254,7 @@ export async function createOrder({
     [...itemMap.entries()].map(
       async ([productId, quantity]) => {
         const product =
-          await getProductByIdAdmin(productId);
+          await getProductById(productId);
 
         if (!product) {
           throw new Error(
@@ -262,7 +266,14 @@ export async function createOrder({
           product.price,
           `Price for ${product.name}`
         );
-
+        if (
+          items.expectedPrice !== undefined &&
+          Number(items.expectedPrice) !== unitPrice
+        ) {
+          throw new Error(
+            `${product.name} price has changed. Please review your bag before placing the order.`
+          );
+        }
         const stockQuantity = assertNonNegativeInteger(
           product.stockQuantity,
           `Stock for ${product.name}`

@@ -271,9 +271,10 @@ export function CartProvider({ children }) {
         }),
       );
       if (requestId !== validationRequestRef.current) {
-        return;
+        return null;
       }
       setItems(validationResults);
+      return validationResults
     } catch (error) {
       console.error("Cart validation failed:", error);
 
