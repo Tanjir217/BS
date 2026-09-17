@@ -1,15 +1,32 @@
-import {
-  Client,
-  Query,
-  TablesDB,
-  Teams,
-} from "node-appwrite";
+import { Client, Query, TablesDB, Teams } from "node-appwrite";
 
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
-const PRODUCTS_TABLE_ID = process.env.APPWRITE_PRODUCTS_TABLE_ID;
-const ORDERS_TABLE_ID = process.env.APPWRITE_ORDERS_TABLE_ID;
-const ORDER_ITEMS_TABLE_ID = process.env.APPWRITE_ORDER_ITEMS_TABLE_ID;
-const MANAGEMENT_TEAM_ID = process.env.APPWRITE_MANAGEMENT_TEAM_ID;
+// Appwrite Function variables are normally APPWRITE_*.
+// Keep VITE_APPWRITE_* as a compatibility fallback because the existing
+// manage-order deployment was configured with those names.
+function getEnv(primaryName, legacyName) {
+  return process.env[primaryName] || process.env[legacyName];
+}
+
+const DATABASE_ID = getEnv(
+  "APPWRITE_DATABASE_ID",
+  "VITE_APPWRITE_DATABASE_ID",
+);
+const PRODUCTS_TABLE_ID = getEnv(
+  "APPWRITE_PRODUCTS_TABLE_ID",
+  "VITE_APPWRITE_PRODUCTS_TABLE_ID",
+);
+const ORDERS_TABLE_ID = getEnv(
+  "APPWRITE_ORDERS_TABLE_ID",
+  "VITE_APPWRITE_ORDERS_TABLE_ID",
+);
+const ORDER_ITEMS_TABLE_ID = getEnv(
+  "APPWRITE_ORDER_ITEMS_TABLE_ID",
+  "VITE_APPWRITE_ORDER_ITEMS_TABLE_ID",
+);
+const MANAGEMENT_TEAM_ID = getEnv(
+  "APPWRITE_MANAGEMENT_TEAM_ID",
+  "VITE_APPWRITE_MANAGEMENT_TEAM_ID",
+);
 
 const ORDER_STATUSES = {
   PENDING: "pending",
