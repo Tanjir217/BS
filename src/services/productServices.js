@@ -44,19 +44,30 @@ export async function getProductBySlug(slug) {
     images,
   };
 }
-export async function getProductById(productId) {
-  const response = await tablesDB.listRows({
-    databaseId: DATABASE_ID,
-    tableId: PRODUCTS_TABLE_ID,
-    queries: [
-      Query.equal("$id", productId),
-      Query.equal("isActive", true),
-      Query.limit(1),
-    ],
-  });
 
-  return response.rows[0] ?? null;
+export async function getProductById(productId) {
+  if (!productId) {
+    return null;
+  }
+
+  try {
+    const product = await tablesDB.getRow({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      rowId: productId,
+    });
+
+    if (!product?.isActive) {
+      return null;
+    }
+
+    return product;
+  } catch (error) {
+    console.error(`Failed to fetch product ${productId}:`, error);
+    return null;
+  }
 }
+
 // Get all products for admin
 export async function getProductsForAdmin({ page = 1, limit = 10 } = {}) {
   const offset = (page - 1) * limit;
@@ -184,6 +195,7 @@ export async function updateProductStatus(productId, isActive) {
 
   return response;
 }
+
 // Delete a product
 export async function deleteProduct(productId) {
   await deleteProductImages(productId);
@@ -197,9 +209,9 @@ export async function deleteProduct(productId) {
   return true;
 }
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | Get active products for a category and all descendants
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 */
 /*
 |-------------------------------------------------------------------------- 
@@ -281,15 +293,15 @@ export async function getProductPriceRange(
   };
 }
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | Get catalog filter options
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 |
 | Returns filter values available for the supplied category tree.
 |
 | This is intentionally loaded at category-context level rather than
 | every time the customer changes a filter.
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 */
 
 export async function getProductFilterOptions(
@@ -373,6 +385,7 @@ export async function getProductFilterOptions(
     colors,
   };
 }
+
 export async function getProductsByCategoryIds(
   categoryIds,
   { page = 1, limit = 24, sort = "newest", filters = {} } = {},
