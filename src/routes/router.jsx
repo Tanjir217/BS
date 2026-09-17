@@ -11,6 +11,7 @@ import ProductsPage from "../pages/admin/products/ProductsPage";
 import HomePage from "../pages/admin/home/HomePage";
 import AdminOrderDetailPage from "../pages/admin/orders/OrderDetailPage";
 import AdminOrdersPage from "../pages/admin/orders/OrdersPage";
+import ReturnRequestsPage from "../pages/admin/orders/ReturnRequestsPage";
 import CustomersPage from "../pages/admin/customers/CustomersPage";
 import CustomerDetailPage from "../pages/admin/customers/CustomerDetailPage";
 import AnalyticsPage from "../pages/admin/analytics/AnalyticsPage";
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
                 children: [
                   { path: "orders", element: <AdminOrdersPage /> },
                   { path: "orders/:orderId", element: <AdminOrderDetailPage /> },
+                  { path: "returns", element: <ReturnRequestsPage /> },
                 ],
               },
               {
