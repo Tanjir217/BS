@@ -344,6 +344,17 @@ export async function cancelOrder(orderId) {
   });
 }
 
+export async function cancelCustomerOrder(orderId) {
+  if (!orderId) {
+    throw new Error("Order ID is required.");
+  }
+
+  return executeOrderManagement({
+    action: "cancel_order_customer",
+    orderId,
+  });
+}
+
 export async function updatePaymentStatus(orderId, paymentStatus) {
   if (!Object.values(PAYMENT_STATUSES).includes(paymentStatus)) {
     throw new Error(`Invalid payment status: ${paymentStatus}`);
