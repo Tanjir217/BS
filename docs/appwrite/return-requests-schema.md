@@ -30,8 +30,10 @@ Enable Row Security.
 Table-level permissions:
 
 - **Create:** authenticated users only.
-- Do **not** grant table-level Read, Update, or Delete to customers.
+- **Read:** the management team identified by `VITE_APPWRITE_MANAGEMENT_TEAM_ID`.
+- **Update:** the management team identified by `VITE_APPWRITE_MANAGEMENT_TEAM_ID`.
+- Do **not** grant customer Read/Update/Delete at table level.
 
-The customer app creates each row with a row-level Read permission for the creating customer. The server-side `manage-order` Function uses its API key for management operations and therefore does not depend on row permissions.
+Customer-created rows should also have row-level Read permission for the creating customer. Management team access remains available through the table-level permission.
 
-Appwrite requires table-level create permission for client row creation, while row-level permissions can restrict access to an individual row.
+The table-level create permission is required for client row creation, while row-level permissions restrict customer access to their own request.
