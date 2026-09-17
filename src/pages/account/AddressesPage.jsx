@@ -11,6 +11,7 @@ import {
   createCustomerAddress,
   deleteCustomerAddress,
   getCustomerAddresses,
+  setDefaultCustomerAddress,
   updateCustomerAddress,
 } from "../../services/customerAddressServices";
 
@@ -171,9 +172,6 @@ function AddressesPage() {
     setSuccess("");
 
     try {
-      const { setDefaultCustomerAddress } = await import(
-        "../../services/customerAddressServices"
-      );
       await setDefaultCustomerAddress(user.$id, addressId);
       await loadAddresses();
       setSuccess("Default address updated.");
