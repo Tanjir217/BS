@@ -44,6 +44,11 @@ const PAYMENT_STATUSES = {
   REFUNDED: "refunded",
 };
 
+const CUSTOMER_CANCELLABLE_STATUSES = new Set([
+  ORDER_STATUSES.PENDING,
+  ORDER_STATUSES.CONFIRMED,
+]);
+
 const ORDER_STATUS_TRANSITIONS = {
   [ORDER_STATUSES.PENDING]: [
     ORDER_STATUSES.PENDING,
@@ -260,22 +265,12 @@ async function updatePaymentStatus(tablesDB, orderId, nextStatus) {
   });
 }
 
-async function cancelOrder(tablesDB, orderId) {
-  const order = await getOrder(tablesDB, orderId);
-
-  if (!order) {
-    const error = new Error("Order not found.");
-    error.status = 404;
-    throw error;
-  }
-
-  validateOrderTransition(order.order_Status, ORDER_STATUSES.CANCELLED);
-
+async function restoreStockAndCancel(tablesDB, order) {
   if (order.order_Status === ORDER_STATUSES.CANCELLED) {
     return order;
   }
 
-  const items = await getOrderItems(tablesDB, orderId);
+  const items = await getOrderItems(tablesDB, order.$id);
 
   if (items.length === 0) {
     const error = new Error("Cannot cancel an order with no order items.");
@@ -290,7 +285,9 @@ async function cancelOrder(tablesDB, orderId) {
     const quantity = Number(item.quantity);
 
     if (!Number.isSafeInteger(quantity) || quantity <= 0) {
-      throw new Error(`Invalid quantity on order item ${item.$id}.`);
+      const error = new Error(`Invalid quantity on order item ${item.$id}.`);
+      error.status = 409;
+      throw error;
     }
 
     operations.push({
@@ -309,7 +306,7 @@ async function cancelOrder(tablesDB, orderId) {
     action: "update",
     databaseId: DATABASE_ID,
     tableId: ORDERS_TABLE_ID,
-    rowId: orderId,
+    rowId: order.$id,
     data: {
       order_Status: ORDER_STATUSES.CANCELLED,
     },
@@ -325,7 +322,61 @@ async function cancelOrder(tablesDB, orderId) {
     commit: true,
   });
 
-  return getOrder(tablesDB, orderId);
+  return getOrder(tablesDB, order.$id);
+}
+
+async function cancelOrder(tablesDB, orderId) {
+  const order = await getOrder(tablesDB, orderId);
+
+  if (!order) {
+    const error = new Error("Order not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  validateOrderTransition(order.order_Status, ORDER_STATUSES.CANCELLED);
+
+  return restoreStockAndCancel(tablesDB, order);
+}
+
+async function cancelOrderForCustomer(tablesDB, orderId, userId) {
+  if (!userId) {
+    const error = new Error("Customer authentication is required.");
+    error.status = 401;
+    throw error;
+  }
+
+  const order = await getOrder(tablesDB, orderId);
+
+  if (!order) {
+    const error = new Error("Order not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  if (order.customer_ID !== userId) {
+    const error = new Error("You do not have access to this order.");
+    error.status = 403;
+    throw error;
+  }
+
+  if (!CUSTOMER_CANCELLABLE_STATUSES.has(order.order_Status)) {
+    const error = new Error(
+      "This order can no longer be cancelled."
+    );
+    error.status = 409;
+    throw error;
+  }
+
+  if (order.payment_Status !== PAYMENT_STATUSES.PENDING) {
+    const error = new Error(
+      "A paid or refunded order must be handled by the store team."
+    );
+    error.status = 409;
+    throw error;
+  }
+
+  return restoreStockAndCancel(tablesDB, order);
 }
 
 export default async ({ req, res, log, error: logError }) => {
@@ -341,8 +392,6 @@ export default async ({ req, res, log, error: logError }) => {
 
     const userId = getUserId(req);
     const client = getServerClient(req);
-    await assertManagementAccess(client, userId);
-
     const payload = parseBody(req);
     const { action, orderId } = payload;
 
@@ -356,30 +405,36 @@ export default async ({ req, res, log, error: logError }) => {
     let order;
 
     switch (action) {
+      case "cancel_order_customer":
+        order = await cancelOrderForCustomer(tablesDB, orderId, userId);
+        break;
+
       case "update_order_status":
-        if (!payload.status) {
-          throw Object.assign(new Error("Order status is required."), {
-            status: 400,
-          });
-        }
-        order = await updateOrderStatus(tablesDB, orderId, payload.status);
-        break;
-
       case "cancel_order":
-        order = await cancelOrder(tablesDB, orderId);
-        break;
-
       case "update_payment_status":
-        if (!payload.paymentStatus) {
-          throw Object.assign(new Error("Payment status is required."), {
-            status: 400,
-          });
+        await assertManagementAccess(client, userId);
+
+        if (action === "update_order_status") {
+          if (!payload.status) {
+            throw Object.assign(new Error("Order status is required."), {
+              status: 400,
+            });
+          }
+          order = await updateOrderStatus(tablesDB, orderId, payload.status);
+        } else if (action === "cancel_order") {
+          order = await cancelOrder(tablesDB, orderId);
+        } else {
+          if (!payload.paymentStatus) {
+            throw Object.assign(new Error("Payment status is required."), {
+              status: 400,
+            });
+          }
+          order = await updatePaymentStatus(
+            tablesDB,
+            orderId,
+            payload.paymentStatus
+          );
         }
-        order = await updatePaymentStatus(
-          tablesDB,
-          orderId,
-          payload.paymentStatus
-        );
         break;
 
       default: {
@@ -389,7 +444,7 @@ export default async ({ req, res, log, error: logError }) => {
       }
     }
 
-    log(`Order ${orderId} managed by ${userId}: ${action}`);
+    log(`Order ${orderId} action ${action} by ${userId || "anonymous"}`);
 
     return res.json({
       success: true,
