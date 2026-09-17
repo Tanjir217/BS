@@ -1,7 +1,6 @@
 import {
     Client,
     ID,
-    Operator,
     Query,
     TablesDB,
   } from "node-appwrite";
@@ -522,29 +521,31 @@ import {
        * a conflicting inventory change causes the
        * transaction to fail instead of overselling.
        */
-  
       for (
         const item of orderItems
       ) {
         operations.push({
           action:
-            "update",
-  
+            "decrement",
+      
           databaseId:
             DATABASE_ID,
-  
+      
           tableId:
             PRODUCTS_TABLE_ID,
-  
+      
           rowId:
             item.product_ID,
-  
+      
           data: {
-            stockQuantity:
-              Operator.decrement(
-                item.quantity,
-                0,
-              ),
+            value:
+              item.quantity,
+      
+            min:
+              0,
+      
+            column:
+              "stockQuantity",
           },
         });
       }
@@ -740,20 +741,21 @@ import {
     } catch (error) {
       logError(
         `Order creation failed: ${
+          error?.stack ||
           error?.message ||
           "Unknown error"
         }`,
       );
-  
+    
       return res.json(
         {
           success: false,
-  
+    
           error:
             error?.message ||
             "Unable to create order.",
         },
-        409,
+        500,
       );
     }
   };
