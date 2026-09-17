@@ -5,7 +5,7 @@ const PRODUCTS_TABLE_ID = process.env.APPWRITE_PRODUCTS_TABLE_ID;
 const ORDERS_TABLE_ID = process.env.APPWRITE_ORDERS_TABLE_ID;
 const ORDER_ITEMS_TABLE_ID = process.env.APPWRITE_ORDER_ITEMS_TABLE_ID;
 
-const PAYMENT_METHODS = { COD: "cod", ONLINE: "online" };
+const PAYMENT_METHODS = { COD: "cod" };
 const PAYMENT_STATUSES = { PENDING: "pending" };
 const ORDER_STATUSES = { PENDING: "pending" };
 
@@ -131,8 +131,8 @@ export default async ({ req, res, log, error: logError }) => {
   if (!Array.isArray(items) || items.length === 0) {
     return res.json({ error: "At least one order item is required." }, 400);
   }
-  if (!Object.values(PAYMENT_METHODS).includes(payment_Method)) {
-    return res.json({ error: "Invalid payment method." }, 400);
+  if (payment_Method !== PAYMENT_METHODS.COD) {
+    return res.json({ error: "Only Cash on Delivery is currently available." }, 400);
   }
 
   try {
