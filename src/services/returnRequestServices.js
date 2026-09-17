@@ -7,21 +7,8 @@ const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const RETURN_REQUESTS_TABLE_ID = import.meta.env.VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID;
 
 export const RETURN_REQUEST_TYPES = { RETURN: "return", EXCHANGE: "exchange" };
-export const RETURN_REQUEST_STATUSES = {
-  REQUESTED: "requested",
-  APPROVED: "approved",
-  REJECTED: "rejected",
-  PICKUP: "pickup",
-  RECEIVED: "received",
-  COMPLETED: "completed",
-  CANCELLED: "cancelled",
-};
-export const RETURN_RESOLUTIONS = {
-  PENDING: "pending",
-  REFUND: "refund",
-  EXCHANGE: "exchange",
-  REPLACEMENT: "replacement",
-};
+export const RETURN_REQUEST_STATUSES = { REQUESTED: "requested", APPROVED: "approved", REJECTED: "rejected", PICKUP: "pickup", RECEIVED: "received", COMPLETED: "completed", CANCELLED: "cancelled" };
+export const RETURN_RESOLUTIONS = { PENDING: "pending", REFUND: "refund", EXCHANGE: "exchange", REPLACEMENT: "replacement" };
 
 function assertConfigured() {
   if (!RETURN_REQUESTS_TABLE_ID) throw new Error("Return requests are not configured yet.");
@@ -52,12 +39,7 @@ export async function getCustomerReturnRequest(userId, orderId) {
   if (!orderId) throw new Error("Order ID is required.");
 
   try {
-    const request = await tablesDB.getRow({
-      databaseId: DATABASE_ID,
-      tableId: RETURN_REQUESTS_TABLE_ID,
-      rowId: orderId,
-    });
-
+    const request = await tablesDB.getRow({ databaseId: DATABASE_ID, tableId: RETURN_REQUESTS_TABLE_ID, rowId: orderId });
     if (request.customer_ID !== userId) throw new Error("You do not have access to this return request.");
     return request;
   } catch (error) {
@@ -66,11 +48,7 @@ export async function getCustomerReturnRequest(userId, orderId) {
   }
 }
 
-export async function createCustomerReturnRequest(
-  userId,
-  orderId,
-  { requestType, reason, details = "", itemIds = [], exchangeNote = "" } = {},
-) {
+export async function createCustomerReturnRequest(userId, orderId, { requestType, reason, details = "", itemIds = [], exchangeNote = "" } = {}) {
   assertConfigured();
   validateUserId(userId);
 
@@ -92,14 +70,11 @@ export async function createCustomerReturnRequest(
   if (requestedItemIds.length !== itemIds.length || requestedItemIds.length === 0) throw new Error("One or more selected items are invalid.");
 
   const existing = await getCustomerReturnRequest(userId, orderId);
-  if (existing && !["rejected", "cancelled"].includes(existing.status)) {
-    throw new Error("This order already has an active return or exchange request.");
-  }
+  if (existing) throw new Error("This order already has a return or exchange request.");
 
   return tablesDB.createRow({
     databaseId: DATABASE_ID,
     tableId: RETURN_REQUESTS_TABLE_ID,
-    // One request record per original order in the Appwrite development model.
     rowId: orderId,
     data: {
       return_Number: makeReturnNumber(),
