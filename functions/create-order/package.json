@@ -3,6 +3,6 @@
     "private": true,
     "type": "module",
     "dependencies": {
-      "node-appwrite": "^20.0.0"
+      "node-appwrite": "^29.0.0"
     }
   }
