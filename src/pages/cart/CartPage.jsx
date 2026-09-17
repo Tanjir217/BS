@@ -20,7 +20,6 @@ function CartPage() {
     validateCart,
     isValidating,
     hasUnavailableItems,
-    hasCartChanges,
   } = useCart();
 
   useEffect(() => {
@@ -53,8 +52,10 @@ function CartPage() {
     );
   }
 
-  const checkoutDisabled =
-    isValidating || hasUnavailableItems || hasCartChanges;
+  // Cart validation reconciles stale price/stock information with Appwrite.
+  // Those changes are surfaced on each cart item, but they should not create
+  // a dead-end: the customer can continue with the reconciled cart.
+  const checkoutDisabled = isValidating || hasUnavailableItems;
 
   function handleCheckout() {
     if (checkoutDisabled) {
