@@ -11,6 +11,9 @@ const ORDERS_TABLE_ID =
 const ORDER_ITEMS_TABLE_ID =
   import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
 
+const CHECKOUT_IDEMPOTENCY_STORAGE_KEY =
+  "bayzid-checkout-idempotency-key";
+
 export const ORDER_STATUSES = {
   PENDING: "pending",
   CONFIRMED: "confirmed",
@@ -82,10 +85,42 @@ function assertFunctionConfigured(functionId, name) {
   }
 }
 
+function getCheckoutIdempotencyKey() {
+  if (typeof window === "undefined") {
+    return ID.unique();
+  }
+
+  const existingKey = window.sessionStorage.getItem(
+    CHECKOUT_IDEMPOTENCY_STORAGE_KEY,
+  );
+
+  if (existingKey) {
+    return existingKey;
+  }
+
+  const newKey = ID.unique();
+  window.sessionStorage.setItem(
+    CHECKOUT_IDEMPOTENCY_STORAGE_KEY,
+    newKey,
+  );
+
+  return newKey;
+}
+
+function clearCheckoutIdempotencyKey() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(
+    CHECKOUT_IDEMPOTENCY_STORAGE_KEY,
+  );
+}
+
 async function executeOrderManagement(payload) {
   assertFunctionConfigured(
     MANAGE_ORDER_FUNCTION_ID,
-    "Manage-order"
+    "Manage-order",
   );
 
   const execution = await functions.createExecution({
@@ -109,7 +144,7 @@ async function executeOrderManagement(payload) {
     responseBody.success === false
   ) {
     throw new Error(
-      responseBody.error || "Unable to update the order."
+      responseBody.error || "Unable to update the order.",
     );
   }
 
@@ -121,6 +156,7 @@ async function executeOrderManagement(payload) {
 }
 
 export async function createOrder({
+  idempotencyKey,
   customer_Name,
   customer_Email = "",
   customer_Phone,
@@ -135,9 +171,13 @@ export async function createOrder({
 }) {
   assertFunctionConfigured(CREATE_ORDER_FUNCTION_ID, "Create-order");
 
+  const requestIdempotencyKey =
+    idempotencyKey || getCheckoutIdempotencyKey();
+
   const execution = await functions.createExecution({
     functionId: CREATE_ORDER_FUNCTION_ID,
     body: JSON.stringify({
+      idempotencyKey: requestIdempotencyKey,
       customer_Name,
       customer_Email,
       customer_Phone,
@@ -168,13 +208,15 @@ export async function createOrder({
     responseBody.success === false
   ) {
     throw new Error(
-      responseBody.error || "Unable to create the order."
+      responseBody.error || "Unable to create the order.",
     );
   }
 
   if (!responseBody.order?.$id) {
     throw new Error("Order was created but no order ID was returned.");
   }
+
+  clearCheckoutIdempotencyKey();
 
   return {
     order: responseBody.order,
