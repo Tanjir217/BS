@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 
 import "./index.css";
+import "./styles/orderExperience.css";
 import router from "./routes/router";
 
 import { AuthProvider } from "./context/AuthContext";
