@@ -240,7 +240,6 @@ The browser creates a customer profile immediately after an Appwrite Account is 
 - Enable Row Security.
 - Table-level **Create** permission: authenticated users (`Users`).
 - Table-level **Read/Update/Delete**: management team only.
-- Add a key index on `account_ID` because the registration flow checks for an existing profile before creating one.
 - New customer rows are created with the Appwrite account ID as the row ID and a row-level **Read** permission for that same user. The customer cannot update business fields such as tier, totals, or active status.
 
 The `manage-order` Function also serves authenticated customer cancellation requests. Its server-side authorization already checks customer ownership, cancellable order status, and pending payment status. Because the browser invokes this Function directly, its **Execute access** must include authenticated users (`Users`) in addition to the management team. Do not remove the server-side management-role checks; management operations remain protected by the Function.
