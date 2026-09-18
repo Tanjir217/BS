@@ -1,10 +1,11 @@
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import CustomDropdown from "../components/CustomDropdown";
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-  } from "react";
   
   import CustomerRow from "./CustomerRow";
   
