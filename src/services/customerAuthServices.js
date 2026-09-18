@@ -62,9 +62,7 @@ export async function updateCustomerProfile({
 
 export async function getCurrentCustomer() {
   try {
-    const user = await account.get();
-    await ensureCustomerProfile(user);
-    return user;
+    return await account.get();
   } catch (error) {
     if (error?.code === 401) {
       return null;
@@ -151,7 +149,10 @@ export async function loginCustomer(
     password,
   });
 
-  return await account.get();
+  const user = await account.get();
+  await ensureCustomerProfile(user);
+
+  return user;
 }
 
 export async function logoutCustomer() {
