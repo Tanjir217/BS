@@ -7,9 +7,6 @@ import useHorizontalSwipe from "../../../hooks/useHorizontalSwipe";
 import ShowcaseProduct from "./ShowcaseProduct";
 import ShowcaseNavigation from "./ShowcaseNavigation";
 
-import { editorialShowcases } from "../../../data/home/editorialShowcase";
-
-
 /*
 |--------------------------------------------------------------------------
 | Single Editorial Product Showcase Section
