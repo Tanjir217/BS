@@ -84,33 +84,73 @@ export async function createCustomerAddress(userId, addressData) {
   const existingAddresses = await getCustomerAddresses(userId);
   const shouldBeDefault =
     existingAddresses.length === 0 || Boolean(addressData.is_Default);
+  const rowId = ID.unique();
 
-  if (shouldBeDefault) {
-    await Promise.all(
-      existingAddresses
+  const transaction = await tablesDB.createTransaction();
+
+  try {
+    await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+      rowId,
+      data: {
+        customer_ID: userId,
+        ...data,
+        is_Default: false,
+      },
+      permissions: getOwnerPermissions(userId),
+      transactionId: transaction.$id,
+    });
+
+    if (shouldBeDefault) {
+      const operations = existingAddresses
         .filter((address) => address.is_Default)
-        .map((address) =>
-          tablesDB.updateRow({
-            databaseId: DATABASE_ID,
-            tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-            rowId: address.$id,
-            data: { is_Default: false },
-          }),
-        ),
-    );
-  }
+        .map((address) => ({
+          action: "update",
+          databaseId: DATABASE_ID,
+          tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+          rowId: address.$id,
+          data: { is_Default: false },
+        }));
 
-  return tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-    rowId: ID.unique(),
-    data: {
-      customer_ID: userId,
-      ...data,
-      is_Default: shouldBeDefault,
-    },
-    permissions: getOwnerPermissions(userId),
-  });
+      operations.push({
+        action: "update",
+        databaseId: DATABASE_ID,
+        tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+        rowId,
+        data: { is_Default: true },
+      });
+
+      if (operations.length > 0) {
+        await tablesDB.createOperations({
+          transactionId: transaction.$id,
+          operations,
+        });
+      }
+    }
+
+    await tablesDB.updateTransaction({
+      transactionId: transaction.$id,
+      commit: true,
+    });
+
+    return tablesDB.getRow({
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+      rowId,
+    });
+  } catch (error) {
+    try {
+      await tablesDB.updateTransaction({
+        transactionId: transaction.$id,
+        rollback: true,
+      });
+    } catch {
+      // Preserve the original error when rollback is unavailable/already failed.
+    }
+
+    throw error;
+  }
 }
 
 export async function updateCustomerAddress(userId, addressId, addressData) {
