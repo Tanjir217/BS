@@ -6,10 +6,12 @@ import {
   getAllowedOrderStatuses,
   getOrderWithItems,
   updateOrderStatus,
+  cancelOrder,
   updatePaymentStatus,
   PAYMENT_STATUS_LABELS,
   PAYMENT_STATUSES,
   ORDER_STATUS_LABELS,
+  ORDER_STATUSES,
 } from "../../../services/orderServices";
 
 import OrderStatusBadge from "./OrderStatusBadge";
