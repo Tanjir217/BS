@@ -65,9 +65,7 @@ function OrderDetailPage() {
       setOrderData(result);
 
       const customerShipment = await getCustomerShipment(user.$id, orderId);
-      if (!cancelled) {
-        setShipment(customerShipment);
-      }
+      setShipment(customerShipment);
     } catch (loadError) {
       console.error("Failed to load customer order:", loadError);
       setError(loadError?.message || "Unable to load this order.");
