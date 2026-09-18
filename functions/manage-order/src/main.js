@@ -83,7 +83,6 @@ function assertConfigured() {
     APPWRITE_PRODUCTS_TABLE_ID: PRODUCTS_TABLE_ID,
     APPWRITE_ORDERS_TABLE_ID: ORDERS_TABLE_ID,
     APPWRITE_ORDER_ITEMS_TABLE_ID: ORDER_ITEMS_TABLE_ID,
-    APPWRITE_RETURN_REQUESTS_TABLE_ID: RETURN_REQUESTS_TABLE_ID,
     APPWRITE_MANAGEMENT_TEAM_ID: MANAGEMENT_TEAM_ID,
   };
 
@@ -91,6 +90,14 @@ function assertConfigured() {
 
   if (missing.length > 0) {
     throw new Error(`Missing function configuration: ${missing.join(", ")}`);
+  }
+}
+
+function assertReturnRequestsConfigured() {
+  if (!RETURN_REQUESTS_TABLE_ID) {
+    const error = new Error("Return requests are not configured.");
+    error.status = 503;
+    throw error;
   }
 }
 
