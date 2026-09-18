@@ -8,6 +8,9 @@ function CategoryTable({
   onEdit,
   onDelete,
 }) {
+  const categoryById = new Map(
+    categories.map((category) => [category.$id, category]),
+  );
   if (isLoading) {
     return (
       <div className="rounded-2xl border border-black/8 bg-white p-8 text-sm text-black/50">
@@ -68,9 +71,21 @@ function CategoryTable({
                       </div>
                     )}
 
-                    <span className="font-medium">
-                      {category.name}
-                    </span>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      {category.parentCategoryID && (
+                        <span
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white"
+                          title={`Parent: ${categoryById.get(category.parentCategoryID)?.name || "Unknown"}`}
+                          aria-label={`Parent category: ${categoryById.get(category.parentCategoryID)?.name || "Unknown"}`}
+                        >
+                          {(categoryById.get(category.parentCategoryID)?.name || "?").charAt(0).toUpperCase()}
+                        </span>
+                      )}
+
+                      <span className="truncate font-medium">
+                        {category.name}
+                      </span>
+                    </div>
                   </div>
                 </td>
 

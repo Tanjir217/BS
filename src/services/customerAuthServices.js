@@ -1,6 +1,39 @@
+import { Permission, Role } from "appwrite";
 import { account } from "../utils/appwrite";
+import {
+  createCustomer,
+  getCustomerById,
+} from "./customerServices";
 
 
+async function ensureCustomerProfile(user) {
+  if (!user?.$id) {
+    throw new Error("Unable to determine the customer account ID.");
+  }
+
+  const existingById = await getCustomerById(user.$id);
+  if (existingById) {
+    return existingById;
+  }
+
+  const nameParts = String(user.name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const firstName = nameParts.shift() || "Customer";
+  const lastName = nameParts.join(" ");
+
+  return createCustomer({
+    rowId: user.$id,
+    account_ID: user.$id,
+    first_Name: firstName,
+    last_Name: lastName,
+    email: user.email || "",
+    phone: "",
+    permissions: [Permission.read(Role.user(user.$id))],
+  });
+}
 
 export async function updateCustomerProfile({
   name,
@@ -86,7 +119,10 @@ export async function registerCustomer({
     password,
   });
 
-  return await account.get();
+  const user = await account.get();
+  await ensureCustomerProfile(user);
+
+  return user;
 }
 
 export async function loginCustomer(
@@ -113,7 +149,10 @@ export async function loginCustomer(
     password,
   });
 
-  return await account.get();
+  const user = await account.get();
+  await ensureCustomerProfile(user);
+
+  return user;
 }
 
 export async function logoutCustomer() {

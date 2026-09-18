@@ -6,6 +6,7 @@ import {
   Package,
   Tags,
   Home,
+  Megaphone,
   Users,
   BarChart3,
   LogOut,
@@ -20,6 +21,7 @@ const navigation = [
   { label: "Products", to: "/admin/products", icon: Package, area: "products" },
   { label: "Categories", to: "/admin/categories", icon: Tags, area: "categories" },
   { label: "Homepage", to: "/admin/homepage", icon: Home, area: "homepage" },
+  { label: "Promotions", to: "/admin/promotions", icon: Megaphone, area: "homepage" },
   { label: "Customers", to: "/admin/customers", icon: Users, area: "customers" },
   { label: "Analytics", to: "/admin/analytics", icon: BarChart3, area: "analytics" },
 ];

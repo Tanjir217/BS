@@ -9,6 +9,7 @@ import AdminDashboard from "../pages/admin/dashboard/AdminDashboard";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import HomePage from "../pages/admin/home/HomePage";
+import PromotionsPage from "../pages/admin/promotions/PromotionsPage";
 import AdminOrderDetailPage from "../pages/admin/orders/OrderDetailPage";
 import AdminOrdersPage from "../pages/admin/orders/OrdersPage";
 import ReturnRequestsPage from "../pages/admin/orders/ReturnRequestsPage";
@@ -91,7 +92,10 @@ const router = createBrowserRouter([
               },
               {
                 element: <RoleProtectedRoute area="homepage" />,
-                children: [{ path: "homepage", element: <HomePage /> }],
+                children: [
+                  { path: "homepage", element: <HomePage /> },
+                  { path: "promotions", element: <PromotionsPage /> },
+                ],
               },
               {
                 element: <RoleProtectedRoute area="analytics" />,

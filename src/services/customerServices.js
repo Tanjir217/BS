@@ -169,14 +169,14 @@ export async function createCustomer(customerData) {
     throw new Error("Customer email is required.");
   }
 
-  if (!phone) {
+  if (!phone && !customerData.account_ID) {
     throw new Error("Customer phone is required.");
   }
 
-  return tablesDB.createRow({
+  const createOptions = {
     databaseId: DATABASE_ID,
     tableId: CUSTOMERS_TABLE_ID,
-    rowId: ID.unique(),
+    rowId: customerData.rowId || customerData.account_ID || ID.unique(),
     data: {
       first_Name: firstName,
       last_Name: lastName,
@@ -209,7 +209,13 @@ export async function createCustomer(customerData) {
       last_Order_At:
         customerData.last_Order_At || "",
     },
-  });
+  };
+
+  if (Array.isArray(customerData.permissions)) {
+    createOptions.permissions = customerData.permissions;
+  }
+
+  return tablesDB.createRow(createOptions);
 }
 
 /*

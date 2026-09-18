@@ -14,6 +14,7 @@ import {
 } from "../../utils/categoryTree";
 import ProductGrid from "../../components/product/ProductGrid";
 import CustomDropdown from "../../components/ui/CustomDropdown";
+import { getCatalogPromotion } from "../../services/catalogPromotionServices";
 const DEFAULT_FILTERS = {
   minPrice: "",
   maxPrice: "",
@@ -40,6 +41,28 @@ function CategoryPage() {
   const [filterOptions, setFilterOptions] = useState({
     colors: [],
   });
+  const [promotion, setPromotion] = useState(null);
+
+  const promotionHref = promotion?.cta_Href || "";
+  const promotionIsInternal = promotionHref.startsWith("/");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getCatalogPromotion()
+      .then((result) => {
+        if (isMounted) {
+          setPromotion(result);
+        }
+      })
+      .catch((promotionError) => {
+        console.error("Failed to load catalog promotion:", promotionError);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   /*
    * Category context
@@ -318,22 +341,60 @@ function CategoryPage() {
 
   return (
     <main className="mx-auto max-w-[1800px] bg-[#f6f6f4] px-4 py-10 sm:px-6 md:px-8 md:py-14">
-      {/* Header */}
-      <header className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.18em] text-black/40">
-          Catalog
-        </p>
-
-        <h1 className="mt-3 text-4xl font-medium tracking-tight">
-          {category.name}
-        </h1>
-
-        {category.description && (
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-black/55">
-            {category.description}
-          </p>
+      {/* Dynamic promotional banner */}
+      <section className="relative overflow-hidden rounded-[2rem] bg-black text-white shadow-[0_24px_70px_rgba(0,0,0,0.12)]">
+        {promotion?.imageUrl && (
+          <img
+            src={promotion.imageUrl}
+            alt={promotion.editorial_Alt || promotion.title || "Bayzid Shoes promotion"}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
         )}
-      </header>
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/15" />
+
+        <div className="relative flex min-h-[260px] items-end justify-between gap-8 p-7 sm:min-h-[320px] sm:p-10 lg:min-h-[390px] lg:p-14">
+          <div className="max-w-2xl">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-white/55">
+              {category.name}
+            </p>
+
+            <h1 className="mt-3 max-w-2xl font-serif text-4xl font-normal tracking-tight sm:text-5xl lg:text-7xl">
+              {promotion?.title || "Explore " + category.name + "."}
+            </h1>
+
+            <p className="mt-5 max-w-xl text-sm leading-6 text-white/70 sm:text-base">
+              {promotion?.sub_title ||
+                category.description ||
+                "Discover the latest Bayzid Shoes collection."}
+            </p>
+
+            {promotion?.cta_Label && promotionHref && (
+              promotionIsInternal ? (
+                <Link
+                  to={promotionHref}
+                  className="mt-7 inline-flex items-center border border-white/35 bg-white px-5 py-3 text-xs font-medium uppercase tracking-[0.14em] text-black transition hover:bg-transparent hover:text-white"
+                >
+                  {promotion.cta_Label}
+                </Link>
+              ) : (
+                <a
+                  href={promotionHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-7 inline-flex items-center border border-white/35 bg-white px-5 py-3 text-xs font-medium uppercase tracking-[0.14em] text-black transition hover:bg-transparent hover:text-white"
+                >
+                  {promotion.cta_Label}
+                </a>
+              )
+            )}
+          </div>
+
+          <span className="hidden shrink-0 text-[10px] uppercase tracking-[0.2em] text-white/45 lg:block">
+            Bayzid Shoes
+          </span>
+        </div>
+      </section>
 
       {/* Child categories */}
       {category.children.length > 0 && (

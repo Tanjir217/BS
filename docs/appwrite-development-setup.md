@@ -233,6 +233,26 @@ Use one shipment row per order/provider. Customer read access should be row-leve
 
 > The courier Function now persists a structured shipment row and keeps the order marker as a backward-compatible fallback.
 
+## Customer registration and order cancellation access
+
+The browser creates a customer profile immediately after an Appwrite Account is created. The `customers` table must therefore support this secure pattern:
+
+- Enable Row Security.
+- Table-level **Create** permission: authenticated users (`Users`).
+- Table-level **Read/Update/Delete**: management team only.
+- New customer rows are created with the Appwrite account ID as the row ID and a row-level **Read** permission for that same user. The customer cannot update business fields such as tier, totals, or active status.
+
+The `manage-order` Function also serves authenticated customer cancellation requests. Its server-side authorization already checks customer ownership, cancellable order status, and pending payment status. Because the browser invokes this Function directly, its **Execute access** must include authenticated users (`Users`) in addition to the management team. Do not remove the server-side management-role checks; management operations remain protected by the Function.
+
+In Appwrite Console:
+
+1. Open **Functions → manage-order → Settings → Execute access**.
+2. Add **Users** as an execute role.
+3. Keep the management team role available for management users.
+4. Redeploy if Appwrite marks the function configuration as needing deployment.
+
+The error `Missing "execute" permission for role "team:..."` means the client session is reaching the Function with a team-only execute permission, so a normal customer session is rejected before `manage-order` can run.
+
 ## 3. Storage bucket
 
 Create one bucket for product/editorial images.

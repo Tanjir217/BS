@@ -13,6 +13,7 @@ import {
 } from "../../../services/orderServices";
 
 import OrderTable from "./OrderTable";
+import CustomDropdown from "../components/CustomDropdown";
 
 const ORDERS_PER_PAGE = 10;
 
@@ -71,13 +72,13 @@ function OrdersPage() {
     loadOrders();
   }, [loadOrders]);
 
-  function handleOrderStatusChange(event) {
-    setOrderStatus(event.target.value);
+  function handleOrderStatusChange(value) {
+    setOrderStatus(value);
     setPage(1);
   }
 
-  function handlePaymentStatusChange(event) {
-    setPaymentStatus(event.target.value);
+  function handlePaymentStatusChange(value) {
+    setPaymentStatus(value);
     setPage(1);
   }
 
@@ -116,47 +117,33 @@ function OrdersPage() {
 
       {/* Filters */}
       <div className="flex flex-col gap-3 rounded-2xl border border-black/8 bg-white p-4 sm:flex-row sm:items-center">
-        <select
+        <CustomDropdown
           value={orderStatus}
           onChange={handleOrderStatusChange}
-          className="rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm text-black outline-none transition focus:border-black/25"
-        >
-          <option value="all">
-            All order statuses
-          </option>
+          options={[
+            { value: "all", label: "All order statuses" },
+            ...Object.values(ORDER_STATUSES).map((status) => ({
+              value: status,
+              label: ORDER_STATUS_LABELS[status] || status,
+            })),
+          ]}
+          className="w-full sm:min-w-56 sm:w-auto"
+          menuClassName="min-w-full"
+        />
 
-          {Object.values(ORDER_STATUSES).map(
-            (status) => (
-              <option
-                key={status}
-                value={status}
-              >
-                {ORDER_STATUS_LABELS[status]}
-              </option>
-            )
-          )}
-        </select>
-
-        <select
+        <CustomDropdown
           value={paymentStatus}
           onChange={handlePaymentStatusChange}
-          className="rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm text-black outline-none transition focus:border-black/25"
-        >
-          <option value="all">
-            All payment statuses
-          </option>
-
-          {Object.values(PAYMENT_STATUSES).map(
-            (status) => (
-              <option
-                key={status}
-                value={status}
-              >
-                {PAYMENT_STATUS_LABELS[status]}
-              </option>
-            )
-          )}
-        </select>
+          options={[
+            { value: "all", label: "All payment statuses" },
+            ...Object.values(PAYMENT_STATUSES).map((status) => ({
+              value: status,
+              label: PAYMENT_STATUS_LABELS[status] || status,
+            })),
+          ]}
+          className="w-full sm:min-w-56 sm:w-auto"
+          menuClassName="min-w-full"
+        />
 
         {hasActiveFilters && (
           <button
