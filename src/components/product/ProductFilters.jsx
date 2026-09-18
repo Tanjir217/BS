@@ -239,8 +239,8 @@ function ProductFilters({
               <div
                 className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#8ee1e6]"
                 style={{
-                  left: `calc(0% + 4rem)`,
-                  right: `calc(0% + 4rem)`,
+                  left: `calc(${minimumPosition}% + ${4 - 0.08 * minimumPosition}rem)`,
+                  right: `calc(${100 - maximumPosition}% + ${4 - 0.08 * (100 - maximumPosition)}rem)`,
                 }}
               />
 
@@ -257,7 +257,7 @@ function ProductFilters({
               <div
                 className="pointer-events-none absolute top-[calc(50%+22px)] z-20 -translate-x-1/2 rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold text-[#ef4d50] shadow-[0_5px_16px_rgba(0,0,0,0.14)]"
                 style={{
-                  left: `calc(4rem + ${(minimumPosition + maximumPosition) / 2}% * (100% - 8rem))`,
+                  left: `calc(${(minimumPosition + maximumPosition) / 2}% + ${4 - 0.08 * ((minimumPosition + maximumPosition) / 2)}rem)`,
                 }}
               >
                 <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white" />
