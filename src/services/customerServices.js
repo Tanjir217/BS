@@ -138,32 +138,6 @@ export async function getCustomerById(customerId) {
   }
 }
 
-export async function getCustomerByAccountId(accountId) {
-  if (!accountId) {
-    throw new Error("Account ID is required.");
-  }
-
-  try {
-    const response = await tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: CUSTOMERS_TABLE_ID,
-      queries: [
-        Query.equal("account_ID", accountId),
-        Query.limit(1),
-      ],
-      total: false,
-    });
-
-    return response.rows?.[0] || null;
-  } catch (error) {
-    if (error?.code === 404) {
-      return null;
-    }
-
-    throw error;
-  }
-}
-
 /*
 |--------------------------------------------------------------------------
 | Create customer
