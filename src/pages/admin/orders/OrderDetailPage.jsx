@@ -86,7 +86,10 @@ function OrderDetailPage() {
     setError("");
 
     try {
-      const updatedOrder = await updateOrderStatus(orderId, nextStatus);
+      const updatedOrder =
+        nextStatus === ORDER_STATUSES.CANCELLED
+          ? await cancelOrder(orderId)
+          : await updateOrderStatus(orderId, nextStatus);
       setOrder(updatedOrder);
     } catch (err) {
       console.error("Failed to update order status:", err);
