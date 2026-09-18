@@ -1,9 +1,11 @@
 import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-  } from "react";
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import CustomDropdown from "../components/CustomDropdown";
   
   import CustomerRow from "./CustomerRow";
   
@@ -121,13 +123,13 @@ import {
       });
     }, [customers, search]);
   
-    const handleTierChange = (event) => {
-      setTier(event.target.value);
+    const handleTierChange = (value) => {
+      setTier(value);
       setPage(1);
     };
   
-    const handleActiveChange = (event) => {
-      setActive(event.target.value);
+    const handleActiveChange = (value) => {
+      setActive(value);
       setPage(1);
     };
   
@@ -214,46 +216,29 @@ import {
             </div>
   
             {/* Tier */}
-            <select
+            <CustomDropdown
               value={tier}
               onChange={handleTierChange}
-              className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none"
-            >
-              <option value="all">
-                All tiers
-              </option>
-  
-              <option value={CUSTOMER_TIERS.REGULAR}>
-                Regular
-              </option>
-  
-              <option value={CUSTOMER_TIERS.PREMIUM}>
-                Premium
-              </option>
-  
-              <option value={CUSTOMER_TIERS.VIP}>
-                VIP
-              </option>
-            </select>
+              options={[
+                { value: "all", label: "All tiers" },
+                { value: CUSTOMER_TIERS.REGULAR, label: "Regular" },
+                { value: CUSTOMER_TIERS.PREMIUM, label: "Premium" },
+                { value: CUSTOMER_TIERS.VIP, label: "VIP" },
+              ]}
+              className="w-40"
+            />
   
             {/* Active */}
-            <select
+            <CustomDropdown
               value={active}
               onChange={handleActiveChange}
-              className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none"
-            >
-              <option value="all">
-                All customers
-              </option>
-  
-              <option value="active">
-                Active
-              </option>
-  
-              <option value="inactive">
-                Inactive
-              </option>
-            </select>
+              options={[
+                { value: "all", label: "All customers" },
+                { value: "active", label: "Active" },
+                { value: "inactive", label: "Inactive" },
+              ]}
+              className="w-40"
+            />
   
             {/* Refresh */}
             <button

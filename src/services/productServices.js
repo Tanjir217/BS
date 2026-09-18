@@ -44,19 +44,30 @@ export async function getProductBySlug(slug) {
     images,
   };
 }
-export async function getProductById(productId) {
-  const response = await tablesDB.listRows({
-    databaseId: DATABASE_ID,
-    tableId: PRODUCTS_TABLE_ID,
-    queries: [
-      Query.equal("$id", productId),
-      Query.equal("isActive", true),
-      Query.limit(1),
-    ],
-  });
 
-  return response.rows[0] ?? null;
+export async function getProductById(productId) {
+  if (!productId) {
+    return null;
+  }
+
+  try {
+    const product = await tablesDB.getRow({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      rowId: productId,
+    });
+
+    if (!product?.isActive) {
+      return null;
+    }
+
+    return product;
+  } catch (error) {
+    console.error(`Failed to fetch product ${productId}:`, error);
+    return null;
+  }
 }
+
 // Get all products for admin
 export async function getProductsForAdmin({ page = 1, limit = 10 } = {}) {
   const offset = (page - 1) * limit;
@@ -184,6 +195,7 @@ export async function updateProductStatus(productId, isActive) {
 
   return response;
 }
+
 // Delete a product
 export async function deleteProduct(productId) {
   await deleteProductImages(productId);
@@ -197,9 +209,9 @@ export async function deleteProduct(productId) {
   return true;
 }
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | Get active products for a category and all descendants
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 */
 /*
 |-------------------------------------------------------------------------- 
@@ -207,33 +219,12 @@ export async function deleteProduct(productId) {
 |-------------------------------------------------------------------------- 
 */
 
-export async function getProductPriceRange(
-  categoryIds,
-) {
-  if (
-    !Array.isArray(categoryIds) ||
-    categoryIds.length === 0
-  ) {
-    return null;
+export async function getProductPriceRange(categoryIds) {
+  const baseQueries = [Query.equal("isActive", true)];
+
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    baseQueries.unshift(Query.equal("categoryID", categoryIds));
   }
-
-  const baseQueries = [
-    Query.equal(
-      "categoryID",
-      categoryIds,
-    ),
-
-    Query.equal(
-      "isActive",
-      true,
-    ),
-
-    Query.select([
-      "price",
-    ]),
-
-    Query.limit(1),
-  ];
 
   const [
     minimumResponse,
@@ -244,34 +235,29 @@ export async function getProductPriceRange(
       tableId: PRODUCTS_TABLE_ID,
       queries: [
         ...baseQueries,
+        Query.select(["price"]),
         Query.orderAsc("price"),
+        Query.limit(1),
       ],
       total: false,
     }),
-
     tablesDB.listRows({
       databaseId: DATABASE_ID,
       tableId: PRODUCTS_TABLE_ID,
       queries: [
         ...baseQueries,
+        Query.select(["price"]),
         Query.orderDesc("price"),
+        Query.limit(1),
       ],
       total: false,
     }),
   ]);
 
-  const minimumPrice = Number(
-    minimumResponse.rows[0]?.price,
-  );
+  const minimumPrice = Number(minimumResponse.rows[0]?.price);
+  const maximumPrice = Number(maximumResponse.rows[0]?.price);
 
-  const maximumPrice = Number(
-    maximumResponse.rows[0]?.price,
-  );
-
-  if (
-    !Number.isFinite(minimumPrice) ||
-    !Number.isFinite(maximumPrice)
-  ) {
+  if (!Number.isFinite(minimumPrice) || !Number.isFinite(maximumPrice)) {
     return null;
   }
 
@@ -280,113 +266,59 @@ export async function getProductPriceRange(
     max: maximumPrice,
   };
 }
-/*
-|--------------------------------------------------------------------------
-| Get catalog filter options
-|--------------------------------------------------------------------------
-|
-| Returns filter values available for the supplied category tree.
-|
-| This is intentionally loaded at category-context level rather than
-| every time the customer changes a filter.
-|--------------------------------------------------------------------------
-*/
 
-export async function getProductFilterOptions(
-  categoryIds,
-) {
-  if (
-    !Array.isArray(categoryIds) ||
-    categoryIds.length === 0
-  ) {
-    return {
-      colors: [],
-    };
-  }
-
+export async function getProductFilterOptions(categoryIds) {
   const queries = [
-    Query.equal(
-      "categoryID",
-      categoryIds,
-    ),
-
-    Query.equal(
-      "isActive",
-      true,
-    ),
-
-    Query.select([
-      "color",
-      "colorHEX",
-    ]),
-
+    Query.equal("isActive", true),
+    Query.select(["color", "colorHEX"]),
     Query.limit(100),
   ];
 
-  const response =
-    await tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: PRODUCTS_TABLE_ID,
-      queries,
-      total: false,
-    });
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    queries.unshift(Query.equal("categoryID", categoryIds));
+  }
+
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries,
+    total: false,
+  });
 
   const colorMap = new Map();
 
   for (const product of response.rows) {
     const color =
-      typeof product.color === "string"
-        ? product.color.trim()
-        : "";
+      typeof product.color === "string" ? product.color.trim() : "";
 
     if (!color) {
       continue;
     }
 
-    const normalizedColor =
-      color.toLowerCase();
+    const normalizedColor = color.toLowerCase();
 
     if (!colorMap.has(normalizedColor)) {
-      colorMap.set(
-        normalizedColor,
-        {
-          name: color,
-          hex:
-            typeof product.colorHEX ===
-              "string"
-              ? product.colorHEX.trim()
-              : "",
-        },
-      );
+      colorMap.set(normalizedColor, {
+        name: color,
+        hex:
+          typeof product.colorHEX === "string"
+            ? product.colorHEX.trim()
+            : "",
+      });
     }
   }
 
-  const colors = Array.from(
-    colorMap.values(),
-  ).sort((a, b) =>
-    a.name.localeCompare(
-      b.name,
-    ),
-  );
-
   return {
-    colors,
+    colors: Array.from(colorMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    ),
   };
 }
+
 export async function getProductsByCategoryIds(
   categoryIds,
   { page = 1, limit = 24, sort = "newest", filters = {} } = {},
 ) {
-  if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
-    return {
-      products: [],
-      total: 0,
-      page,
-      limit,
-      totalPages: 0,
-    };
-  }
-
   const offset = (page - 1) * limit;
 
   const { minPrice, maxPrice, color, availability } = filters;
@@ -413,10 +345,12 @@ export async function getProductsByCategoryIds(
   }
 
   const queries = [
-    Query.equal("categoryID", categoryIds),
-
     Query.equal("isActive", true),
   ];
+
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    queries.unshift(Query.equal("categoryID", categoryIds));
+  }
 
   /*
    * Price filtering

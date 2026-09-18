@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Check, Edit3, MapPin, Plus, Trash2, X } from "lucide-react";
 
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
+import CustomDropdown from "../../components/ui/CustomDropdown";
 
 import {
   ADDRESS_LABELS,
@@ -29,36 +30,24 @@ const EMPTY_FORM = {
 
 function AddressesPage() {
   const navigate = useNavigate();
-
   const { user, loading, isAuthenticated } = useCustomerAuth();
 
   const [addresses, setAddresses] = useState([]);
-
   const [loadingAddresses, setLoadingAddresses] = useState(true);
-
   const [formOpen, setFormOpen] = useState(false);
-
   const [editingAddressId, setEditingAddressId] = useState(null);
-
   const [form, setForm] = useState(EMPTY_FORM);
-
   const [saving, setSaving] = useState(false);
-
   const [deletingId, setDeletingId] = useState(null);
-
   const [defaultId, setDefaultId] = useState(null);
-
   const [error, setError] = useState("");
-
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       navigate("/account/login", {
         replace: true,
-        state: {
-          from: "/account/addresses",
-        },
+        state: { from: "/account/addresses" },
       });
     }
   }, [loading, isAuthenticated, navigate]);
@@ -73,11 +62,9 @@ function AddressesPage() {
 
     try {
       const rows = await getCustomerAddresses(user.$id);
-
       setAddresses(rows);
     } catch (error) {
       console.error("Failed to load addresses:", error);
-
       setError(error?.message || "Unable to load your addresses.");
     } finally {
       setLoadingAddresses(false);
@@ -92,12 +79,10 @@ function AddressesPage() {
 
   function openCreateForm() {
     setEditingAddressId(null);
-
     setForm({
       ...EMPTY_FORM,
       phone: localStorage.getItem(`bayzid_customer_phone_${user?.$id}`) || "",
     });
-
     setError("");
     setSuccess("");
     setFormOpen(true);
@@ -105,35 +90,21 @@ function AddressesPage() {
 
   function openEditForm(address) {
     setEditingAddressId(address.$id);
-
     setForm({
-        label: Object.values(ADDRESS_LABELS).includes(
-            String(address.label || "")
-              .trim()
-              .toLowerCase()
-          )
-            ? String(address.label || "")
-                .trim()
-                .toLowerCase()
-            : ADDRESS_LABELS.HOME,
-
+      label: Object.values(ADDRESS_LABELS).includes(
+        String(address.label || "").trim().toLowerCase(),
+      )
+        ? String(address.label || "").trim().toLowerCase()
+        : ADDRESS_LABELS.HOME,
       recipient_Name: address.recipient_Name || "",
-
       phone: address.phone || "",
-
       address_Line_1: address.address_Line_1 || "",
-
       address_Line_2: address.address_Line_2 || "",
-
       city: address.city || "",
-
       postal_Code: address.postal_Code || "",
-
       country: address.country || "Bangladesh",
-
       is_Default: Boolean(address.is_Default),
     });
-
     setError("");
     setSuccess("");
     setFormOpen(true);
@@ -173,20 +144,9 @@ function AddressesPage() {
     try {
       if (editingAddressId) {
         await updateCustomerAddress(user.$id, editingAddressId, form);
-
-        if (
-          form.is_Default &&
-          !addresses.find(
-            (address) => address.$id === editingAddressId && address.is_Default,
-          )
-        ) {
-          await setDefaultCustomerAddress(user.$id, editingAddressId);
-        }
-
         setSuccess("Address updated successfully.");
       } else {
         await createCustomerAddress(user.$id, form);
-
         setSuccess("Address added successfully.");
       }
 
@@ -197,7 +157,6 @@ function AddressesPage() {
       setForm(EMPTY_FORM);
     } catch (error) {
       console.error("Address save failed:", error);
-
       setError(error?.message || "Unable to save this address.");
     } finally {
       setSaving(false);
@@ -215,13 +174,10 @@ function AddressesPage() {
 
     try {
       await setDefaultCustomerAddress(user.$id, addressId);
-
       await loadAddresses();
-
       setSuccess("Default address updated.");
     } catch (error) {
       console.error("Default address update failed:", error);
-
       setError(error?.message || "Unable to change the default address.");
     } finally {
       setDefaultId(null);
@@ -247,13 +203,10 @@ function AddressesPage() {
 
     try {
       await deleteCustomerAddress(user.$id, addressId);
-
       await loadAddresses();
-
       setSuccess("Address deleted successfully.");
     } catch (error) {
       console.error("Address deletion failed:", error);
-
       setError(error?.message || "Unable to delete this address.");
     } finally {
       setDeletingId(null);
@@ -271,9 +224,7 @@ function AddressesPage() {
           <div className="account-addresses__header">
             <div className="account-page__intro">
               <p>My Account / Addresses</p>
-
               <h1>Delivery addresses.</h1>
-
               <span>Save your delivery information for a faster checkout.</span>
             </div>
 
@@ -306,7 +257,6 @@ function AddressesPage() {
               <div className="account-address-form__header">
                 <div>
                   <p>{editingAddressId ? "Edit address" : "New address"}</p>
-
                   <h2>Delivery details.</h2>
                 </div>
 
@@ -324,24 +274,23 @@ function AddressesPage() {
               <div className="account-address-form__fields">
                 <label>
                   <span>Address type</span>
-
-                  <select
-                    name="label"
+                  <CustomDropdown
                     value={form.label}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value={ADDRESS_LABELS.HOME}>Home</option>
-
-                    <option value={ADDRESS_LABELS.OFFICE}>Office</option>
-
-                    <option value={ADDRESS_LABELS.OTHER}>Other</option>
-                  </select>
+                    onChange={(value) =>
+                      setForm((current) => ({ ...current, label: value }))
+                    }
+                    options={[
+                      { value: ADDRESS_LABELS.HOME, label: "Home" },
+                      { value: ADDRESS_LABELS.OFFICE, label: "Office" },
+                      { value: ADDRESS_LABELS.OTHER, label: "Other" },
+                    ]}
+                    className="w-full"
+                    menuClassName="w-full"
+                  />
                 </label>
 
                 <label>
                   <span>Recipient name</span>
-
                   <input
                     name="recipient_Name"
                     value={form.recipient_Name}
@@ -353,7 +302,6 @@ function AddressesPage() {
 
                 <label>
                   <span>Phone</span>
-
                   <input
                     name="phone"
                     type="tel"
@@ -367,7 +315,6 @@ function AddressesPage() {
 
                 <label className="account-address-form__wide">
                   <span>Address line 1</span>
-
                   <input
                     name="address_Line_1"
                     value={form.address_Line_1}
@@ -378,10 +325,7 @@ function AddressesPage() {
                 </label>
 
                 <label className="account-address-form__wide">
-                  <span>
-                    Address line 2<small>Optional</small>
-                  </span>
-
+                  <span>Address line 2<small>Optional</small></span>
                   <input
                     name="address_Line_2"
                     value={form.address_Line_2}
@@ -392,7 +336,6 @@ function AddressesPage() {
 
                 <label>
                   <span>City</span>
-
                   <input
                     name="city"
                     value={form.city}
@@ -404,7 +347,6 @@ function AddressesPage() {
 
                 <label>
                   <span>Postal code</span>
-
                   <input
                     name="postal_Code"
                     value={form.postal_Code}
@@ -416,7 +358,6 @@ function AddressesPage() {
 
                 <label>
                   <span>Country</span>
-
                   <input
                     name="country"
                     value={form.country}
@@ -427,24 +368,20 @@ function AddressesPage() {
                 </label>
               </div>
 
-              {!editingAddressId && (
-                <label className="account-address-form__default">
-                  <input
-                    type="checkbox"
-                    name="is_Default"
-                    checked={form.is_Default}
-                    onChange={handleChange}
-                  />
-
-                  <span>Make this my default delivery address</span>
-                </label>
-              )}
+              <label className="account-address-form__default">
+                <input
+                  type="checkbox"
+                  name="is_Default"
+                  checked={form.is_Default}
+                  onChange={handleChange}
+                />
+                <span>Make this my default delivery address</span>
+              </label>
 
               <div className="account-address-form__actions">
                 <button type="button" onClick={closeForm} disabled={saving}>
                   Cancel
                 </button>
-
                 <button type="submit" disabled={saving}>
                   {saving
                     ? "Saving..."
@@ -459,37 +396,25 @@ function AddressesPage() {
           {!formOpen && (
             <>
               {loadingAddresses ? (
-                <div className="account-addresses__loading">
-                  Loading your addresses...
-                </div>
+                <div className="account-addresses__loading">Loading your addresses...</div>
               ) : addresses.length === 0 ? (
                 <div className="account-addresses__empty">
                   <MapPin size={30} />
-
                   <h2>No saved addresses.</h2>
-
-                  <p>
-                    Add your first delivery address to make checkout faster.
-                  </p>
-
-                  <button type="button" onClick={openCreateForm}>
-                    Add your first address
-                  </button>
+                  <p>Add your first delivery address to make checkout faster.</p>
+                  <button type="button" onClick={openCreateForm}>Add your first address</button>
                 </div>
               ) : (
                 <div className="account-addresses__list">
                   {addresses.map((address) => (
                     <article
-                      className={`account-address-card ${
-                        address.is_Default ? "is-default" : ""
-                      }`}
+                      className={`account-address-card ${address.is_Default ? "is-default" : ""}`}
                       key={address.$id}
                     >
                       <div className="account-address-card__top">
                         <div>
                           <div className="account-address-card__label">
                             <MapPin size={15} />
-
                             <span>{address.label}</span>
                           </div>
 
@@ -509,7 +434,6 @@ function AddressesPage() {
                           >
                             <Edit3 size={16} />
                           </button>
-
                           <button
                             type="button"
                             onClick={() => handleDelete(address.$id)}
@@ -523,21 +447,10 @@ function AddressesPage() {
 
                       <div className="account-address-card__body">
                         <strong>{address.recipient_Name}</strong>
-
                         <span>{address.phone}</span>
-
                         <span>{address.address_Line_1}</span>
-
-                        {address.address_Line_2 && (
-                          <span>{address.address_Line_2}</span>
-                        )}
-
-                        <span>
-                          {address.city}
-                          {", "}
-                          {address.postal_Code}
-                        </span>
-
+                        {address.address_Line_2 && <span>{address.address_Line_2}</span>}
+                        <span>{address.city}, {address.postal_Code}</span>
                         <span>{address.country}</span>
                       </div>
 
@@ -548,9 +461,7 @@ function AddressesPage() {
                           onClick={() => handleSetDefault(address.$id)}
                           disabled={defaultId === address.$id}
                         >
-                          {defaultId === address.$id
-                            ? "Updating..."
-                            : "Set as default"}
+                          {defaultId === address.$id ? "Updating..." : "Set as default"}
                         </button>
                       )}
                     </article>

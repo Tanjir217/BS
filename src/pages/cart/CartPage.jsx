@@ -1,18 +1,17 @@
-import { Link } from "react-router-dom";
-import {useEffect} from "react"
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import CartItem from "../../components/cart/CartItem";
 import { useCart } from "../../context/CartContext";
 
 function formatPrice(value) {
-  return Number(value || 0).toLocaleString(
-    "en-BD",
-    {
-      maximumFractionDigits: 0,
-    },
-  );
+  return Number(value || 0).toLocaleString("en-BD", {
+    maximumFractionDigits: 0,
+  });
 }
 
 function CartPage() {
+  const navigate = useNavigate();
+
   const {
     items,
     itemCount,
@@ -20,46 +19,32 @@ function CartPage() {
     clearCart,
     validateCart,
     isValidating,
+    hasUnavailableItems,
   } = useCart();
+
   useEffect(() => {
     if (items.length === 0) {
       return;
     }
-  
+
     validateCart();
-    // Cart validation intentionally runs
-    // when the cart page mounts.
+    // Cart validation intentionally runs when the cart page mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  {isValidating && (
-    <span>
-      Checking availability...
-    </span>
-  )}
+
   if (items.length === 0) {
     return (
-      
       <main className="cart-page">
         <div className="cart-page__empty">
-          <p className="cart-page__eyebrow">
-            Shopping Bag
-          </p>
+          <p className="cart-page__eyebrow">Shopping Bag</p>
 
-          <h1>
-            Your bag is empty
-          </h1>
+          <h1>Your bag is empty</h1>
 
           <p>
-            Discover the latest
-            collection and find
-            something worth taking
-            home.
+            Discover the latest collection and find something worth taking home.
           </p>
 
-          <Link
-            to="/all-products"
-            className="cart-page__continue"
-          >
+          <Link to="/all-products" className="cart-page__continue">
             Continue Shopping
           </Link>
         </div>
@@ -67,39 +52,38 @@ function CartPage() {
     );
   }
 
+  // Cart validation reconciles stale price/stock information with Appwrite.
+  // Those changes are surfaced on each cart item, but they should not create
+  // a dead-end: the customer can continue with the reconciled cart.
+  const checkoutDisabled = isValidating || hasUnavailableItems;
+
+  function handleCheckout() {
+    if (checkoutDisabled) {
+      return;
+    }
+
+    navigate("/checkout");
+  }
+
   return (
     <main className="cart-page">
       <header className="cart-page__header">
         <div>
-          <p className="cart-page__eyebrow">
-            Shopping Bag
-          </p>
+          <p className="cart-page__eyebrow">Shopping Bag</p>
 
-          <h1>
-            Your Bag
-          </h1>
+          <h1>Your Bag</h1>
         </div>
 
         <span>
-          {itemCount}{" "}
-          {itemCount === 1
-            ? "item"
-            : "items"}
+          {itemCount} {itemCount === 1 ? "item" : "items"}
         </span>
       </header>
 
       <div className="cart-page__layout">
         <section className="cart-page__items">
-          {items.map(
-            (item) => (
-              <CartItem
-                key={
-                  item.productId
-                }
-                item={item}
-              />
-            ),
-          )}
+          {items.map((item) => (
+            <CartItem key={item.productId} item={item} />
+          ))}
 
           <button
             type="button"
@@ -112,66 +96,42 @@ function CartPage() {
 
         <aside className="cart-summary">
           <div className="cart-summary__heading">
-            <span>
-              Summary
-            </span>
+            <span>Summary</span>
           </div>
 
           <div className="cart-summary__row">
-            <span>
-              Subtotal
-            </span>
+            <span>Subtotal</span>
 
-            <strong>
-              ৳
-              {formatPrice(
-                subtotal,
-              )}
-            </strong>
+            <strong>৳{formatPrice(subtotal)}</strong>
           </div>
 
           <div className="cart-summary__row">
-            <span>
-              Delivery
-            </span>
+            <span>Delivery</span>
 
-            <span>
-              Calculated at
-              checkout
-            </span>
+            <span>Calculated at checkout</span>
           </div>
 
           <div className="cart-summary__total">
-            <span>
-              Total
-            </span>
+            <span>Total</span>
 
-            <strong>
-              ৳
-              {formatPrice(
-                subtotal,
-              )}
-            </strong>
+            <strong>৳{formatPrice(subtotal)}</strong>
           </div>
 
           <button
             type="button"
             className="cart-summary__checkout"
-            disabled
+            onClick={handleCheckout}
+            disabled={checkoutDisabled}
           >
-            Checkout
+            {isValidating ? "Checking bag..." : "Checkout"}
           </button>
 
           <p className="cart-summary__note">
-            Checkout will be
-            connected in the next
-            commerce section.
+            Cash on Delivery is currently available at checkout. Online payment
+            will be added with the production payment integration.
           </p>
 
-          <Link
-            to="/all-products"
-            className="cart-summary__continue"
-          >
+          <Link to="/all-products" className="cart-summary__continue">
             Continue Shopping
           </Link>
         </aside>

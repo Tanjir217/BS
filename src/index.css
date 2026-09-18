@@ -1361,12 +1361,30 @@ body {
   width: 100%;
   min-height: 3.7rem;
   margin-top: 1.5rem;
-  border: 1px solid #ededed;
-  background: #ededed;
-  color: rgb(23 23 23 / 35%);
+  border: 1px solid #171717;
+  background: #171717;
+  color: #fff;
   font-size: 0.63rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.cart-summary__checkout:hover:not(:disabled) {
+  background: transparent;
+  color: #171717;
+  transform: translateY(-1px);
+}
+
+.cart-summary__checkout:disabled {
+  border-color: #ededed;
+  background: #ededed;
+  color: rgb(23 23 23 / 35%);
   cursor: not-allowed;
 }
 

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Footprints } from "lucide-react";
+import CustomDropdown from "../ui/CustomDropdown";
 
 const CURRENCY_SYMBOL = "৳";
 
@@ -177,8 +179,8 @@ function ProductFilters({
   }
 
   return (
-    <section className="border border-black/10 bg-white">
-      <div className="p-6 md:p-8">
+    <section className="rounded-[1.75rem] bg-white/80 shadow-[0_12px_40px_rgba(0,0,0,0.045)] ring-1 ring-black/[0.025] backdrop-blur">
+      <div className="p-5 md:p-7">
         {/* Header */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -223,7 +225,7 @@ function ProductFilters({
           </div>
 
           {hasPriceRange ? (
-            <div className="catalog-price-range relative mt-10 h-20">
+            <div className="catalog-price-range relative mt-10 h-24">
               {/* Track */}
               <div className="absolute left-0 right-0 top-5 h-1.5 rounded-full bg-black/10" />
 
@@ -238,7 +240,7 @@ function ProductFilters({
 
               {/* Minimum value bubble */}
               <div
-                className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-md border border-black bg-white px-2.5 py-1 text-xs font-medium shadow-sm"
+                className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-md border-0 bg-white px-2.5 py-1 text-xs font-medium shadow-[0_4px_14px_rgba(0,0,0,0.08)]"
                 style={{
                   left: `${minimumPosition}%`,
                 }}
@@ -256,6 +258,16 @@ function ProductFilters({
               >
                 {CURRENCY_SYMBOL}
                 {formatPrice(safeMaximum)}
+              </div>
+
+              <div
+                className="pointer-events-none absolute top-[1.75rem] z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5a1020] p-2 text-white shadow-[0_6px_18px_rgba(90,16,32,0.28)]"
+                style={{
+                  left: `${(minimumPosition + maximumPosition) / 2}%`,
+                }}
+                aria-hidden="true"
+              >
+                <Footprints size={18} strokeWidth={1.8} />
               </div>
 
               {/* Minimum slider */}
@@ -346,30 +358,23 @@ function ProductFilters({
 
           {/* Availability */}
           <div>
-            <label
-              htmlFor="filter-availability"
-              className="mb-2 block text-xs uppercase tracking-[0.14em] text-black/45"
-            >
+            <p className="mb-3 text-xs uppercase tracking-[0.14em] text-black/45">
               Availability
-            </label>
-
-            <select
-              id="filter-availability"
+            </p>
+            <CustomDropdown
               value={draftFilters.availability}
-              onChange={(event) =>
-                updateDraftFilter("availability", event.target.value)
-              }
-              className="w-full border-b border-black/20 bg-transparent py-2 text-sm outline-none transition focus:border-black"
-            >
-              <option value="all">All products</option>
-
-              <option value="in-stock">In stock</option>
-            </select>
+              onChange={(value) => updateDraftFilter("availability", value)}
+              options={[
+                { value: "all", label: "All products" },
+                { value: "in-stock", label: "In stock" },
+              ]}
+              className="w-full"
+            />
           </div>
         </div>
 
         {/* Apply */}
-        <div className="mt-8 flex flex-col gap-3 border-t border-black/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-7 flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-black/40">
             Move the range freely. Products update when you apply the filters.
           </p>
@@ -416,9 +421,9 @@ function ProductFilters({
           margin-top: -9px;
           appearance: none;
           -webkit-appearance: none;
-          border: 2px solid black;
+          border: 0;
           border-radius: 9999px;
-          background: white;
+          background: #fff;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
           pointer-events: auto;
           cursor: grab;

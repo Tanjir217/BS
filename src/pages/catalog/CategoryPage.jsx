@@ -13,6 +13,7 @@ import {
   getDescendantCategoryIds,
 } from "../../utils/categoryTree";
 import ProductGrid from "../../components/product/ProductGrid";
+import CustomDropdown from "../../components/ui/CustomDropdown";
 const DEFAULT_FILTERS = {
   minPrice: "",
   maxPrice: "",
@@ -78,16 +79,27 @@ function CategoryPage() {
          */
         setFilters(DEFAULT_FILTERS);
 
-        const categories = await getCategories();
-
-        const tree = buildCategoryTree(categories);
-
         const segments = location.pathname.split("/").filter(Boolean);
 
         const slugs =
           segments[0] === "all-products" ? segments.slice(1) : segments;
 
-        const resolvedCategory = findCategoryByPath(tree, slugs);
+        const isAllProducts = slugs.length === 0;
+
+        let resolvedCategory;
+
+        if (isAllProducts) {
+          resolvedCategory = {
+            $id: "all-products",
+            name: "All products",
+            description: "Browse every active product in the store.",
+            children: [],
+          };
+        } else {
+          const categories = await getCategories();
+          const tree = buildCategoryTree(categories);
+          resolvedCategory = findCategoryByPath(tree, slugs);
+        }
 
         if (!isMounted) {
           return;
@@ -99,7 +111,9 @@ function CategoryPage() {
           return;
         }
 
-        const resolvedCategoryIds = getDescendantCategoryIds(resolvedCategory);
+        const resolvedCategoryIds = isAllProducts
+          ? []
+          : getDescendantCategoryIds(resolvedCategory);
 
         /*
          * Price range is independent from
@@ -170,7 +184,7 @@ function CategoryPage() {
    * Draft filter changes do NOT reach this effect.
    */
   useEffect(() => {
-    if (categoryIds.length === 0) {
+    if (!category || (!categoryIds.length && category.$id !== "all-products")) {
       return undefined;
     }
 
@@ -238,7 +252,11 @@ function CategoryPage() {
    * them to the existing product list.
    */
   async function handleLoadMore() {
-    if (isLoadingMore || page >= totalPages || categoryIds.length === 0) {
+    if (
+      isLoadingMore ||
+      page >= totalPages ||
+      (!categoryIds.length && category?.$id !== "all-products")
+    ) {
       return;
     }
 
@@ -299,7 +317,7 @@ function CategoryPage() {
   }
 
   return (
-    <main className="mx-auto max-w-360 px-6 py-12 md:px-10 md:py-16">
+    <main className="mx-auto max-w-[1800px] bg-[#f6f6f4] px-4 py-10 sm:px-6 md:px-8 md:py-14">
       {/* Header */}
       <header className="max-w-3xl">
         <p className="text-xs uppercase tracking-[0.18em] text-black/40">
@@ -365,7 +383,7 @@ function CategoryPage() {
 
       {/* Products */}
       <section className="mt-16 border-t border-black/10 pt-10">
-        <div className="mb-8 flex flex-col gap-6 border-b border-black/10 pb-6 md:flex-row md:items-end md:justify-between">
+        <div className="mb-7 flex flex-col gap-5 pb-2 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-black/40">
               Shop
@@ -380,28 +398,22 @@ function CategoryPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <label
-              htmlFor="product-sort"
-              className="text-xs uppercase tracking-[0.14em] text-black/40"
-            >
+          <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
+            <label className="text-xs uppercase tracking-[0.14em] text-black/40">
               Sort by
             </label>
-
-            <select
-              id="product-sort"
+            <CustomDropdown
               value={sort}
-              onChange={(event) => setSort(event.target.value)}
-              className="min-w-44 border-0 border-b border-black/20 bg-transparent py-2 text-sm outline-none"
-            >
-              <option value="newest">Newest</option>
-
-              <option value="featured">Featured</option>
-
-              <option value="price-asc">Price: Low to High</option>
-
-              <option value="price-desc">Price: High to Low</option>
-            </select>
+              onChange={setSort}
+              options={[
+                { value: "newest", label: "Newest" },
+                { value: "featured", label: "Featured" },
+                { value: "price-asc", label: "Price: Low to High" },
+                { value: "price-desc", label: "Price: High to Low" },
+              ]}
+              className="min-w-48"
+              menuClassName="min-w-52"
+            />
           </div>
         </div>
         <div className="mb-8">

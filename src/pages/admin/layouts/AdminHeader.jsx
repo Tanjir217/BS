@@ -1,7 +1,8 @@
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { getPrimaryManagementRole } from "../../../utils/managementRoles";
+
 function formatRole(role) {
   if (!role) {
     return "Management";
@@ -10,39 +11,44 @@ function formatRole(role) {
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
-function AdminHeader() {
+function AdminHeader({ onMenuOpen }) {
   const { user, managementRoles } = useAuth();
 
   const displayName = user?.name || user?.email || "Management";
-
   const primaryRole = getPrimaryManagementRole(managementRoles);
-
   const roleLabel = formatRole(primaryRole);
-
   const avatarLetter = displayName.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-black/8 bg-[#f7f7f5]/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-black/8 bg-[#f7f7f5]/95 backdrop-blur">
       <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Search */}
-        <div className="hidden items-center gap-3 rounded-xl border border-black/8 bg-white px-4 py-2.5 md:flex md:w-80">
-          <Search size={17} className="text-black/35" />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onMenuOpen}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/8 bg-white text-black/65 transition hover:bg-black/5 hover:text-black lg:hidden"
+            aria-label="Open management navigation"
+          >
+            <Menu size={19} strokeWidth={1.8} />
+          </button>
 
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full bg-transparent text-sm outline-none placeholder:text-black/35"
-          />
+          <div className="hidden items-center gap-3 rounded-xl border border-black/8 bg-white px-4 py-2.5 md:flex md:w-80">
+            <Search size={17} className="text-black/35" />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full bg-transparent text-sm outline-none placeholder:text-black/35"
+            />
+          </div>
         </div>
 
-        {/* Right side */}
         <div className="ml-auto flex items-center gap-3">
           <button
             type="button"
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-black/8 bg-white text-black/55 transition hover:text-black"
+            aria-label="Notifications"
           >
             <Bell size={17} strokeWidth={1.8} />
-
             <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-black" />
           </button>
 
@@ -53,7 +59,6 @@ function AdminHeader() {
 
             <div className="hidden sm:block">
               <p className="text-sm font-medium">{displayName}</p>
-
               <p className="text-xs text-black/40">{roleLabel}</p>
             </div>
           </div>

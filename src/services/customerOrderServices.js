@@ -269,3 +269,22 @@ export {
   ORDER_STATUSES,
   ORDER_STATUS_LABELS,
 };
+
+export async function getCustomerShipment(userId, orderId) {
+  validateUserId(userId);
+  if (!orderId) throw new Error("Order ID is required.");
+
+  const shipmentTableId = import.meta.env.VITE_APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID;
+  if (!shipmentTableId) return null;
+
+  try {
+    return await tablesDB.getRow({
+      databaseId: DATABASE_ID,
+      tableId: shipmentTableId,
+      rowId: orderId,
+    });
+  } catch (error) {
+    if (error?.code === 404 || error?.code === 401 || error?.code === 403) return null;
+    throw error;
+  }
+}
