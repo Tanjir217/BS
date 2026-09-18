@@ -1,4 +1,4 @@
-import { Client, Query, TablesDB, Teams } from "node-appwrite";
+import { Client, ID, Permission, Query, Role, TablesDB, Teams } from "node-appwrite";
 
 function getEnv(primaryName, legacyName) {
   return process.env[primaryName] || process.env[legacyName];
@@ -8,6 +8,7 @@ const DATABASE_ID = getEnv("APPWRITE_DATABASE_ID", "VITE_APPWRITE_DATABASE_ID");
 const PRODUCTS_TABLE_ID = getEnv("APPWRITE_PRODUCTS_TABLE_ID", "VITE_APPWRITE_PRODUCTS_TABLE_ID");
 const ORDERS_TABLE_ID = getEnv("APPWRITE_ORDERS_TABLE_ID", "VITE_APPWRITE_ORDERS_TABLE_ID");
 const ORDER_ITEMS_TABLE_ID = getEnv("APPWRITE_ORDER_ITEMS_TABLE_ID", "VITE_APPWRITE_ORDER_ITEMS_TABLE_ID");
+const RETURN_REQUESTS_TABLE_ID = getEnv("APPWRITE_RETURN_REQUESTS_TABLE_ID", "VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID");
 const MANAGEMENT_TEAM_ID = getEnv("APPWRITE_MANAGEMENT_TEAM_ID", "VITE_APPWRITE_MANAGEMENT_TEAM_ID");
 
 const PATHAO_API_BASE_URL = getEnv("PATHAO_API_BASE_URL", "VITE_PATHAO_API_BASE_URL");
@@ -81,6 +82,7 @@ function assertConfigured() {
     APPWRITE_PRODUCTS_TABLE_ID: PRODUCTS_TABLE_ID,
     APPWRITE_ORDERS_TABLE_ID: ORDERS_TABLE_ID,
     APPWRITE_ORDER_ITEMS_TABLE_ID: ORDER_ITEMS_TABLE_ID,
+    APPWRITE_RETURN_REQUESTS_TABLE_ID: RETURN_REQUESTS_TABLE_ID,
     APPWRITE_MANAGEMENT_TEAM_ID: MANAGEMENT_TEAM_ID,
   };
 
@@ -321,6 +323,182 @@ async function cancelOrderForCustomer(tablesDB, orderId, userId) {
   return restoreStockAndCancel(tablesDB, order);
 }
 
+const RETURN_REQUEST_STATUSES = {
+  REQUESTED: "requested",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  PICKUP: "pickup",
+  RECEIVED: "received",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+};
+
+const RETURN_STATUS_TRANSITIONS = {
+  requested: ["requested", "approved", "rejected", "cancelled"],
+  approved: ["approved", "pickup", "rejected", "cancelled"],
+  pickup: ["pickup", "received", "cancelled"],
+  received: ["received", "completed", "rejected"],
+  completed: ["completed"],
+  rejected: ["rejected"],
+  cancelled: ["cancelled"],
+};
+
+const RETURN_RESOLUTIONS = new Set(["pending", "refund", "exchange", "replacement"]);
+
+function validateReturnTransition(currentStatus, nextStatus) {
+  const allowed = RETURN_STATUS_TRANSITIONS[currentStatus] || [];
+  if (!allowed.includes(nextStatus)) {
+    const error = new Error(`Cannot change return status from "${currentStatus}" to "${nextStatus}".`);
+    error.status = 409;
+    throw error;
+  }
+}
+
+async function getReturnRequest(tablesDB, requestId) {
+  return tablesDB.getRow({
+    databaseId: DATABASE_ID,
+    tableId: RETURN_REQUESTS_TABLE_ID,
+    rowId: requestId,
+  });
+}
+
+async function createCustomerReturnRequest(tablesDB, orderId, userId, payload) {
+  if (!userId) {
+    const error = new Error("Customer authentication is required.");
+    error.status = 401;
+    throw error;
+  }
+
+  const order = await getOrder(tablesDB, orderId);
+  if (!order) {
+    const error = new Error("Order not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  if (order.customer_ID !== userId) {
+    const error = new Error("You do not have access to this order.");
+    error.status = 403;
+    throw error;
+  }
+
+  if (order.order_Status !== ORDER_STATUSES.DELIVERED) {
+    const error = new Error("A return or exchange can only be requested after delivery.");
+    error.status = 409;
+    throw error;
+  }
+
+  const requestType = String(payload.requestType || "").trim();
+  const reason = String(payload.reason || "").trim();
+  const details = String(payload.details || "").trim();
+  const exchangeNote = String(payload.exchangeNote || "").trim();
+  const itemIds = Array.isArray(payload.itemIds) ? [...new Set(payload.itemIds.map(String))] : [];
+
+  if (!["return", "exchange"].includes(requestType)) {
+    const error = new Error("Please select a valid request type.");
+    error.status = 400;
+    throw error;
+  }
+  if (!reason) {
+    const error = new Error("Please select a return reason.");
+    error.status = 400;
+    throw error;
+  }
+  if (itemIds.length === 0) {
+    const error = new Error("Select at least one item.");
+    error.status = 400;
+    throw error;
+  }
+
+  const items = await getOrderItems(tablesDB, orderId);
+  const validIds = new Set(items.map((item) => item.$id));
+  if (itemIds.some((id) => !validIds.has(id))) {
+    const error = new Error("One or more selected items are invalid.");
+    error.status = 400;
+    throw error;
+  }
+
+  try {
+    const existing = await getReturnRequest(tablesDB, orderId);
+    if (existing) {
+      const error = new Error("This order already has a return or exchange request.");
+      error.status = 409;
+      throw error;
+    }
+  } catch (error) {
+    if (error?.code !== 404) throw error;
+  }
+
+  const suffix = ID.unique().slice(-6).toUpperCase();
+  const returnNumber = `RET-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${suffix}`;
+
+  return tablesDB.createRow({
+    databaseId: DATABASE_ID,
+    tableId: RETURN_REQUESTS_TABLE_ID,
+    rowId: orderId,
+    data: {
+      return_Number: returnNumber,
+      order_ID: orderId,
+      customer_ID: userId,
+      request_Type: requestType,
+      reason,
+      details,
+      requested_Item_IDs: itemIds.join(","),
+      exchange_Note: requestType === "exchange" ? exchangeNote : "",
+      status: RETURN_REQUEST_STATUSES.REQUESTED,
+      resolution: "pending",
+      refund_Amount: 0,
+      management_Note: "",
+    },
+    permissions: [Permission.read(Role.user(userId))],
+  });
+}
+
+async function updateReturnRequest(tablesDB, requestId, payload) {
+  const request = await getReturnRequest(tablesDB, requestId);
+  const nextStatus = String(payload.status || "").trim();
+  validateReturnTransition(request.status, nextStatus);
+
+  const data = { status: nextStatus };
+
+  if (payload.resolution !== undefined) {
+    const resolution = String(payload.resolution || "").trim();
+    if (!RETURN_RESOLUTIONS.has(resolution)) {
+      const error = new Error("Invalid return resolution.");
+      error.status = 400;
+      throw error;
+    }
+    data.resolution = resolution;
+  }
+
+  if (payload.refundAmount !== undefined) {
+    const amount = Number(payload.refundAmount);
+    if (!Number.isSafeInteger(amount) || amount < 0) {
+      const error = new Error("Refund amount must be a non-negative integer.");
+      error.status = 400;
+      throw error;
+    }
+    const order = await getOrder(tablesDB, request.order_ID);
+    if (!order || amount > Number(order.total || 0)) {
+      const error = new Error("Refund amount cannot exceed the order total.");
+      error.status = 400;
+      throw error;
+    }
+    data.refund_Amount = amount;
+  }
+
+  if (payload.managementNote !== undefined) {
+    data.management_Note = String(payload.managementNote || "").trim().slice(0, 255);
+  }
+
+  return tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: RETURN_REQUESTS_TABLE_ID,
+    rowId: requestId,
+    data,
+  });
+}
+
 function getPathaoConsignmentId(payload) {
   return payload?.data?.consignment_id || payload?.data?.consignmentId || payload?.consignment_id || payload?.consignmentId || null;
 }
@@ -451,6 +629,15 @@ export default async ({ req, res, log, error: logError }) => {
     switch (action) {
       case "cancel_order_customer":
         order = await cancelOrderForCustomer(tablesDB, orderId, userId);
+        break;
+
+      case "create_return_customer":
+        order = await createCustomerReturnRequest(tablesDB, orderId, userId, payload);
+        break;
+
+      case "update_return_request":
+        await assertManagementAccess(client, userId);
+        order = await updateReturnRequest(tablesDB, orderId, payload);
         break;
 
       case "update_order_status":
