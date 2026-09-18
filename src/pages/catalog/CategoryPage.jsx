@@ -87,7 +87,15 @@ function CategoryPage() {
         const slugs =
           segments[0] === "all-products" ? segments.slice(1) : segments;
 
-        const resolvedCategory = findCategoryByPath(tree, slugs);
+        const isAllProducts = slugs.length === 0;
+        const resolvedCategory = isAllProducts
+          ? {
+              $id: "all-products",
+              name: "All products",
+              description: "Browse every active product in the store.",
+              children: [],
+            }
+          : findCategoryByPath(tree, slugs);
 
         if (!isMounted) {
           return;
@@ -99,7 +107,9 @@ function CategoryPage() {
           return;
         }
 
-        const resolvedCategoryIds = getDescendantCategoryIds(resolvedCategory);
+        const resolvedCategoryIds = isAllProducts
+          ? []
+          : getDescendantCategoryIds(resolvedCategory);
 
         /*
          * Price range is independent from
@@ -170,7 +180,7 @@ function CategoryPage() {
    * Draft filter changes do NOT reach this effect.
    */
   useEffect(() => {
-    if (categoryIds.length === 0) {
+    if (!category || (!categoryIds.length && category.$id !== "all-products")) {
       return undefined;
     }
 
@@ -238,7 +248,11 @@ function CategoryPage() {
    * them to the existing product list.
    */
   async function handleLoadMore() {
-    if (isLoadingMore || page >= totalPages || categoryIds.length === 0) {
+    if (
+      isLoadingMore ||
+      page >= totalPages ||
+      (!categoryIds.length && category?.$id !== "all-products")
+    ) {
       return;
     }
 
