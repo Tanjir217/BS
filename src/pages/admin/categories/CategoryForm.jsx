@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CustomDropdown from "../components/CustomDropdown";
 import { getCategoriesForAdmin } from "../../../services/categoryServices";
 
 function CategoryForm({
@@ -141,25 +142,20 @@ function CategoryForm({
             Parent Category
           </label>
 
-          <select
-            name="parentCategoryID"
+          <CustomDropdown
             value={formData.parentCategoryID}
-            onChange={handleChange}
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-black"
-          >
-            <option value="">
-              No parent — top level category
-            </option>
-
-            {availableParents.map((parent) => (
-              <option
-                key={parent.$id}
-                value={parent.$id}
-              >
-                {parent.name}
-              </option>
-            ))}
-          </select>
+            onChange={(value) =>
+              handleChange({ target: { name: "parentCategoryID", value } })
+            }
+            options={[
+              { value: "", label: "No parent — top level category" },
+              ...availableParents.map((parent) => ({
+                value: parent.$id,
+                label: parent.name,
+              })),
+            ]}
+            className="w-full"
+          />
 
           <p className="mt-2 text-xs text-black/45">
             Leave empty for a top-level category.
