@@ -7,7 +7,7 @@ function AdminLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
+    <div className="admin-shell min-h-screen text-[#171717]">
       <div className="flex min-h-screen">
         <AdminSidebar
           mobileOpen={mobileNavOpen}
