@@ -8,6 +8,7 @@ import {
 } from "../../../services/homeAdminServices";
 import AddProductToSection from "./AddProductToSection";
 import CustomDropdown from "../../../components/ui/CustomDropdown";
+import { uploadProductImage } from "../../../services/productImageServices";
 
 function SectionProductManager({ section, onClose }) {
   const [products, setProducts] = useState([]);
@@ -53,6 +54,51 @@ function SectionProductManager({ section, onClose }) {
       console.error("Failed to remove product:", error);
 
       setError("Failed to remove product.");
+    }
+  }
+
+  async function handleImageUpload(item, event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file || !item.product?.$id) {
+      return;
+    }
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Use JPG, PNG or WebP for product images.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Product image must be smaller than 5MB.");
+      return;
+    }
+
+    try {
+      setError("");
+
+      const nextSortOrder =
+        item.productImages?.length > 0
+          ? Math.max(...item.productImages.map((image) => Number(image.sortOrder) || 0)) + 1
+          : 0;
+
+      const uploaded = await uploadProductImage({
+        productId: item.product.$id,
+        file,
+        alt: item.product.name || "",
+        sortOrder: nextSortOrder,
+        isPrimary: false,
+      });
+
+      await updateSectionProduct(item.$id, {
+        imageId: uploaded.id,
+      });
+
+      await loadProducts();
+    } catch (error) {
+      console.error("Failed to upload editorial product image:", error);
+      setError("Failed to upload the product image.");
     }
   }
 
@@ -198,6 +244,16 @@ function SectionProductManager({ section, onClose }) {
                         className="w-full"
                         menuClassName="min-w-full"
                       />
+
+                      <label className="mt-2 inline-flex cursor-pointer items-center rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                        Upload new product image
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(event) => handleImageUpload(item, event)}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                   )}
                 </div>
