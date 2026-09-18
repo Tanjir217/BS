@@ -88,7 +88,29 @@ Required fields:
 - `scene`
 - `sort_Order`
 - `is_Active`
+- `image_ID` (optional selected product-image row ID for editorial sliders)
 
+### category_promotions
+
+Create one row per storefront category that needs an independent banner. The project currently uses the special `all-products` key plus normal root category IDs such as the Men and Women category IDs.
+
+Required fields:
+
+| Column | Type | Required |
+| --- | --- | --- |
+| `category_ID` | varchar | yes |
+| `title` | varchar | yes |
+| `sub_title` | text | no |
+| `image_File_ID` | varchar | no |
+| `image_Alt` | varchar | no |
+| `cta_Label` | varchar | no |
+| `cta_Href` | varchar | no |
+| `is_Active` | boolean | yes |
+| `sort_Order` | integer | yes |
+
+Create a unique index on `category_ID` so each category has at most one banner configuration. The `image_File_ID` points to a file in the existing editorial/product Storage bucket.
+
+The frontend reads this table for the current category; it does not use localStorage.
 ### customers
 
 The existing management/customer analytics code expects:
@@ -134,6 +156,8 @@ Required fields:
 - `postal_Code`
 - `country`
 - `is_Default`
+
+Customer addresses are already database-backed by `customerAddressServices.js`; there is no address data persistence in browser localStorage. If saved addresses disappear after a browser restart, the Appwrite table permissions/security configuration is the first thing to verify.
 
 Customer rows should use row-level permissions:
 
@@ -331,6 +355,7 @@ VITE_APPWRITE_PRODUCT_IMAGES_TABLE_ID=...
 VITE_APPWRITE_CATEGORIES_TABLE_ID=...
 VITE_APPWRITE_HOME_SECTIONS_TABLE_ID=...
 VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID=...
+VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID=...
 VITE_APPWRITE_CUSTOMERS_TABLE_ID=...
 VITE_APPWRITE_CUSTOMER_TIER_RULES_TABLE_ID=...
 VITE_APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID=...
