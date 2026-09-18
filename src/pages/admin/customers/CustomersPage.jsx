@@ -123,13 +123,13 @@ import CustomDropdown from "../components/CustomDropdown";
       });
     }, [customers, search]);
   
-    const handleTierChange = (event) => {
-      setTier(event.target.value);
+    const handleTierChange = (value) => {
+      setTier(value);
       setPage(1);
     };
   
-    const handleActiveChange = (event) => {
-      setActive(event.target.value);
+    const handleActiveChange = (value) => {
+      setActive(value);
       setPage(1);
     };
   
