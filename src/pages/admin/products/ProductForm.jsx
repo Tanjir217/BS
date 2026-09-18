@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CustomDropdown from "../components/CustomDropdown";
 import ProductImageManager from "./ProductImageManager";
 const EMPTY_FORM = {
   name: "",
@@ -187,22 +188,22 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
       <section className="mt-8 border-t border-black/8 pt-6">
         <h3 className="mb-4 text-sm font-semibold">Category</h3>
 
-        <select
-          name="categoryID"
+        <CustomDropdown
           value={formData.categoryID}
-          onChange={handleChange}
-          className="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-black"
-        >
-          <option value="">Select a category</option>
-
-          {categories
-            .filter((category) => category.isActive)
-            .map((category) => (
-              <option key={category.$id} value={category.$id}>
-                {category.name}
-              </option>
-            ))}
-        </select>
+          onChange={(value) =>
+            handleChange({ target: { name: "categoryID", value } })
+          }
+          options={[
+            { value: "", label: "Select a category" },
+            ...categories
+              .filter((category) => category.isActive)
+              .map((category) => ({
+                value: category.$id,
+                label: category.name,
+              })),
+          ]}
+          className="w-full"
+        />
       </section>
 
       {/* Product Details */}
