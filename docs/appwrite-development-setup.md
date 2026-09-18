@@ -157,15 +157,16 @@ Required fields:
 - `country`
 - `is_Default`
 
-Customer addresses are already database-backed by `customerAddressServices.js`; there is no address data persistence in browser localStorage. If saved addresses disappear after a browser restart, the Appwrite table permissions/security configuration is the first thing to verify.
+Customer address reads/writes now go through the existing `manage-order` Function so the browser never needs table-wide read permission. The Function scopes every operation to the authenticated Appwrite user ID.
 
-Customer rows should use row-level permissions:
+Recommended table security:
 
-- read → owning customer
-- update → owning customer
-- delete → owning customer
+- Enable Row Security.
+- Do **not** grant customers table-wide read/update/delete access.
+- Management/server access is provided through the Function's server integration.
+- Address rows may retain row-level permissions for the owning customer as defense in depth.
 
-Table-level create permission must allow authenticated customers to create their own rows; the service always writes the authenticated user's ID.
+This avoids exposing other customers' addresses through a client-side `listRows` query.
 
 ### orders
 
@@ -325,6 +326,7 @@ APPWRITE_ORDERS_TABLE_ID
 APPWRITE_ORDER_ITEMS_TABLE_ID
 APPWRITE_RETURN_REQUESTS_TABLE_ID
 APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID
+APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID
 APPWRITE_MANAGEMENT_TEAM_ID
 ```
 
