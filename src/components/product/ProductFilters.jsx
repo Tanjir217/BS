@@ -234,7 +234,7 @@ function ProductFilters({
                 {CURRENCY_SYMBOL}{formatPrice(maximumPrice)}
               </span>
 
-              <div className="absolute left-16 right-16 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/90 sm:left-20 sm:right-20" />
+              <div className="absolute left-16 right-16 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/90" />
 
               <div
                 className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#8ee1e6]"
