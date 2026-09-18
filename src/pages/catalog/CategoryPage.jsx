@@ -78,24 +78,27 @@ function CategoryPage() {
          */
         setFilters(DEFAULT_FILTERS);
 
-        const categories = await getCategories();
-
-        const tree = buildCategoryTree(categories);
-
         const segments = location.pathname.split("/").filter(Boolean);
 
         const slugs =
           segments[0] === "all-products" ? segments.slice(1) : segments;
 
         const isAllProducts = slugs.length === 0;
-        const resolvedCategory = isAllProducts
-          ? {
-              $id: "all-products",
-              name: "All products",
-              description: "Browse every active product in the store.",
-              children: [],
-            }
-          : findCategoryByPath(tree, slugs);
+
+        let resolvedCategory;
+
+        if (isAllProducts) {
+          resolvedCategory = {
+            $id: "all-products",
+            name: "All products",
+            description: "Browse every active product in the store.",
+            children: [],
+          };
+        } else {
+          const categories = await getCategories();
+          const tree = buildCategoryTree(categories);
+          resolvedCategory = findCategoryByPath(tree, slugs);
+        }
 
         if (!isMounted) {
           return;
