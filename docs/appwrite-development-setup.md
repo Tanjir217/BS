@@ -231,7 +231,7 @@ For the courier phase, create a table with:
 
 Use one shipment row per order/provider. Customer read access should be row-level to the order owner. Management access should be restricted to the management team.
 
-> The current courier implementation still stores the Pathao consignment marker on the order while the Appwrite shipment table is being connected. Do not remove the marker until the shipment table integration is verified.
+> The courier Function now persists a structured shipment row and keeps the order marker as a backward-compatible fallback.
 
 ## 3. Storage bucket
 
@@ -280,6 +280,7 @@ APPWRITE_PRODUCTS_TABLE_ID
 APPWRITE_ORDERS_TABLE_ID
 APPWRITE_ORDER_ITEMS_TABLE_ID
 APPWRITE_RETURN_REQUESTS_TABLE_ID
+APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID
 APPWRITE_MANAGEMENT_TEAM_ID
 ```
 
