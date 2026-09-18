@@ -1,16 +1,23 @@
-import { 
+import {
   Client,
   Account,
-  TablesDB, 
-  Teams, 
+  TablesDB,
+  Teams,
   Storage,
-  Functions
+  Functions,
 } from "appwrite";
+
 const client = new Client();
 
-client
-  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+const endpoint =
+  import.meta.env.VITE_APPWRITE_ENDPOINT ||
+  import.meta.env.VITE_APPWRITE_URL;
+
+const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID;
+
+if (endpoint && projectId) {
+  client.setEndpoint(endpoint).setProject(projectId);
+}
 
 export const account = new Account(client);
 export const tablesDB = new TablesDB(client);
