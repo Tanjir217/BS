@@ -7,6 +7,7 @@ import {
   moveSectionProduct,
 } from "../../../services/homeAdminServices";
 import AddProductToSection from "./AddProductToSection";
+import CustomDropdown from "../../../components/ui/CustomDropdown";
 
 function SectionProductManager({ section, onClose }) {
   const [products, setProducts] = useState([]);
@@ -52,6 +53,17 @@ function SectionProductManager({ section, onClose }) {
       console.error("Failed to remove product:", error);
 
       setError("Failed to remove product.");
+    }
+  }
+
+  async function handleImageChange(item, imageId) {
+    try {
+      setError("");
+      await updateSectionProduct(item.$id, { imageId });
+      await loadProducts();
+    } catch (error) {
+      console.error("Failed to update editorial product image:", error);
+      setError("Failed to update the product image.");
     }
   }
 
@@ -168,8 +180,26 @@ function SectionProductManager({ section, onClose }) {
                   </p>
 
                   <p className="text-sm font-medium text-gray-900">
-                    ${item.product?.price ?? "—"}
+                    ৳{item.product?.price ?? "—"}
                   </p>
+
+                  {item.productImages?.length > 0 && (
+                    <div className="mt-3 max-w-sm">
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
+                        Slider image
+                      </p>
+                      <CustomDropdown
+                        value={item.selectedImage?.id || ""}
+                        onChange={(value) => handleImageChange(item, value)}
+                        options={item.productImages.map((image, imageIndex) => ({
+                          value: image.id,
+                          label: "Image " + (imageIndex + 1) + (image.isPrimary ? " · Primary" : ""),
+                        }))}
+                        className="w-full"
+                        menuClassName="min-w-full"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1">
