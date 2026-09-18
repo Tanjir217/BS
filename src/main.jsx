@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 import "./styles/orderExperience.css";
 import "./styles/returnExperience.css";
+import "./styles/ui-polish.css";
 import router from "./routes/router";
 
 import { AuthProvider } from "./context/AuthContext";
