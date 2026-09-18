@@ -625,6 +625,7 @@ export default async ({ req, res, log, error: logError }) => {
 
     const tablesDB = new TablesDB(client);
     let order;
+    let returnRequest;
 
     switch (action) {
       case "cancel_order_customer":
@@ -632,12 +633,12 @@ export default async ({ req, res, log, error: logError }) => {
         break;
 
       case "create_return_customer":
-        order = await createCustomerReturnRequest(tablesDB, orderId, userId, payload);
+        returnRequest = await createCustomerReturnRequest(tablesDB, orderId, userId, payload);
         break;
 
       case "update_return_request":
         await assertManagementAccess(client, userId);
-        order = await updateReturnRequest(tablesDB, orderId, payload);
+        returnRequest = await updateReturnRequest(tablesDB, orderId, payload);
         break;
 
       case "update_order_status":
@@ -672,7 +673,10 @@ export default async ({ req, res, log, error: logError }) => {
 
     log(`Order ${orderId} action ${action} by ${userId || "anonymous"}`);
 
-    return res.json({ success: true, order });
+    return res.json({
+      success: true,
+      ...(returnRequest ? { returnRequest } : { order }),
+    });
   } catch (error) {
     logError(`Order management failed: ${error?.stack || error?.message || "Unknown error"}`);
 
