@@ -28,13 +28,13 @@ export async function getCatalogPromotion() {
     tableId: HOME_SECTIONS_TABLE_ID,
     queries: [
       Query.equal("section_key", CATALOG_PROMOTION_KEY),
-      Query.equal("is_Active", true),
       Query.limit(1),
     ],
     total: false,
   });
 
-  return toPromotion(response.rows?.[0] || null);
+  const section = response.rows?.[0] || null;
+  return section?.is_Active ? toPromotion(section) : null;
 }
 
 export async function getCatalogPromotionForAdmin() {
