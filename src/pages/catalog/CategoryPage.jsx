@@ -43,6 +43,9 @@ function CategoryPage() {
   });
   const [promotion, setPromotion] = useState(null);
 
+  const promotionHref = promotion?.cta_Href || "";
+  const promotionIsInternal = promotionHref.startsWith("/");
+
   useEffect(() => {
     let isMounted = true;
 
@@ -366,13 +369,24 @@ function CategoryPage() {
                 "Discover the latest Bayzid Shoes collection."}
             </p>
 
-            {promotion?.cta_Label && promotion?.cta_Href && (
-              <Link
-                to={promotion.cta_Href}
-                className="mt-7 inline-flex items-center border border-white/35 bg-white px-5 py-3 text-xs font-medium uppercase tracking-[0.14em] text-black transition hover:bg-transparent hover:text-white"
-              >
-                {promotion.cta_Label}
-              </Link>
+            {promotion?.cta_Label && promotionHref && (
+              promotionIsInternal ? (
+                <Link
+                  to={promotionHref}
+                  className="mt-7 inline-flex items-center border border-white/35 bg-white px-5 py-3 text-xs font-medium uppercase tracking-[0.14em] text-black transition hover:bg-transparent hover:text-white"
+                >
+                  {promotion.cta_Label}
+                </Link>
+              ) : (
+                <a
+                  href={promotionHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-7 inline-flex items-center border border-white/35 bg-white px-5 py-3 text-xs font-medium uppercase tracking-[0.14em] text-black transition hover:bg-transparent hover:text-white"
+                >
+                  {promotion.cta_Label}
+                </a>
+              )
             )}
           </div>
 
