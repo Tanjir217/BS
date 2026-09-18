@@ -3,7 +3,10 @@ import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import { getProductsForAdmin } from "./productServices";
 import { getProductByIdAdmin } from "./productServices";
-import { getPrimaryProductImage } from "./productImageServices";
+import {
+  getPrimaryProductImage,
+  getProductImages,
+} from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
