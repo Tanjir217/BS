@@ -157,9 +157,9 @@ function SectionProductManager({ section, onClose }) {
                 className="flex items-center gap-4 rounded-lg border border-gray-200 p-3"
               >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
-                  {item.primaryImage?.url ? (
+                  {item.selectedImage?.url ? (
                     <img
-                      src={item.primaryImage.url}
+                      src={item.selectedImage.url}
                       alt={item.product?.name || ""}
                       className="h-full w-full object-cover"
                     />
