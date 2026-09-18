@@ -186,6 +186,10 @@ export async function updateSectionProduct(
     updateData.is_Active = Boolean(data.isActive);
   }
 
+  if (data.imageId !== undefined) {
+    updateData.image_ID = data.imageId || "";
+  }
+
   const response = await tablesDB.updateRow({
     databaseId: DATABASE_ID,
     tableId: HOME_SECTIONS_PRODUCTS_TABLE_ID,
