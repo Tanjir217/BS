@@ -1,11 +1,6 @@
-import { ID, Query } from "appwrite";
-
-import { tablesDB } from "../utils/appwrite";
+import { functions } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const CUSTOMER_ADDRESSES_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID;
-
 export const ADDRESS_LABELS = {
   HOME: "home",
   OFFICE: "office",
@@ -53,98 +48,58 @@ function normalizeAddressData(addressData = {}) {
 }
 
 
+async function executeAddressAction(payload) {
+  const functionId = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
+
+  if (!functionId) {
+    throw new Error("Manage-order function is not configured.");
+  }
+
+  const execution = await functions.createExecution({
+    functionId,
+    body: JSON.stringify(payload),
+    async: false,
+    path: "/",
+    method: "POST",
+  });
+
+  let response;
+
+  try {
+    response = JSON.parse(execution.responseBody || "{}");
+  } catch {
+    throw new Error("The address service returned an invalid response.");
+  }
+
+  if (!response.success) {
+    throw new Error(response.error || "Unable to manage the saved address.");
+  }
+
+  return response;
+}
+
 export async function getCustomerAddresses(userId) {
   validateUserId(userId);
 
-  const response = await tablesDB.listRows({
-    databaseId: DATABASE_ID,
-    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-    queries: [Query.equal("customer_ID", userId), Query.limit(50)],
-    total: false,
+  const response = await executeAddressAction({
+    action: "get_customer_addresses",
   });
 
-  return [...response.rows].sort((a, b) => {
-    if (Boolean(a.is_Default) !== Boolean(b.is_Default)) {
-      return a.is_Default ? -1 : 1;
-    }
-
-    return new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime();
-  });
+  return response.addresses || [];
 }
 
 export async function createCustomerAddress(userId, addressData) {
   validateUserId(userId);
 
   const data = normalizeAddressData(addressData);
-  const existingAddresses = await getCustomerAddresses(userId);
-  const shouldBeDefault =
-    existingAddresses.length === 0 || Boolean(addressData.is_Default);
-  const rowId = ID.unique();
 
-  const transaction = await tablesDB.createTransaction();
+  const response = await executeAddressAction({
+    action: "create_customer_address",
+    ...data,
+    is_Default: Boolean(addressData.is_Default),
+  });
 
-  try {
-    await tablesDB.createRow({
-      databaseId: DATABASE_ID,
-      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-      rowId,
-      data: {
-        customer_ID: userId,
-        ...data,
-        is_Default: false,
-      },
-      transactionId: transaction.$id,
-    });
-
-    if (shouldBeDefault) {
-      const operations = existingAddresses
-        .filter((address) => address.is_Default)
-        .map((address) => ({
-          action: "update",
-          databaseId: DATABASE_ID,
-          tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-          rowId: address.$id,
-          data: { is_Default: false },
-        }));
-
-      operations.push({
-        action: "update",
-        databaseId: DATABASE_ID,
-        tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-        rowId,
-        data: { is_Default: true },
-      });
-
-      if (operations.length > 0) {
-        await tablesDB.createOperations({
-          transactionId: transaction.$id,
-          operations,
-        });
-      }
-    }
-
-    await tablesDB.updateTransaction({
-      transactionId: transaction.$id,
-      commit: true,
-    });
-
-    return tablesDB.getRow({
-      databaseId: DATABASE_ID,
-      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-      rowId,
-    });
-  } catch (error) {
-    try {
-      await tablesDB.updateTransaction({
-        transactionId: transaction.$id,
-        rollback: true,
-      });
-    } catch {
-      // Preserve the original error when rollback is unavailable/already failed.
-    }
-
-    throw error;
-  }
+  return response.address;
 }
 
 export async function updateCustomerAddress(userId, addressId, addressData) {
@@ -156,26 +111,14 @@ export async function updateCustomerAddress(userId, addressId, addressData) {
 
   const data = normalizeAddressData(addressData);
 
-  const existing = await tablesDB.getRow({
-    databaseId: DATABASE_ID,
-    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-    rowId: addressId,
+  const response = await executeAddressAction({
+    action: "update_customer_address",
+    addressId,
+    ...data,
+    is_Default: Boolean(addressData.is_Default),
   });
 
-  if (existing.customer_ID !== userId) {
-    throw new Error("You do not have permission to update this address.");
-  }
-
-  if (Boolean(addressData.is_Default) && !existing.is_Default) {
-    await setDefaultCustomerAddress(userId, addressId);
-  }
-
-  return tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-    rowId: addressId,
-    data,
-  });
+  return response.address;
 }
 
 export async function setDefaultCustomerAddress(userId, addressId) {
@@ -185,38 +128,12 @@ export async function setDefaultCustomerAddress(userId, addressId) {
     throw new Error("Address ID is required.");
   }
 
-  const addresses = await getCustomerAddresses(userId);
-  const target = addresses.find((address) => address.$id === addressId);
-
-  if (!target) {
-    throw new Error("Address not found.");
-  }
-
-  const currentDefaults = addresses.filter(
-    (address) => address.is_Default && address.$id !== addressId,
-  );
-
-  await Promise.all(
-    currentDefaults.map((address) =>
-      tablesDB.updateRow({
-        databaseId: DATABASE_ID,
-        tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-        rowId: address.$id,
-        data: { is_Default: false },
-      }),
-    ),
-  );
-
-  if (target.is_Default) {
-    return target;
-  }
-
-  return tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-    rowId: addressId,
-    data: { is_Default: true },
+  const response = await executeAddressAction({
+    action: "set_default_customer_address",
+    addressId,
   });
+
+  return response.address;
 }
 
 export async function deleteCustomerAddress(userId, addressId) {
@@ -226,31 +143,10 @@ export async function deleteCustomerAddress(userId, addressId) {
     throw new Error("Address ID is required.");
   }
 
-  const addresses = await getCustomerAddresses(userId);
-  const target = addresses.find((address) => address.$id === addressId);
-
-  if (!target) {
-    throw new Error("Address not found.");
-  }
-
-  await tablesDB.deleteRow({
-    databaseId: DATABASE_ID,
-    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-    rowId: addressId,
+  await executeAddressAction({
+    action: "delete_customer_address",
+    addressId,
   });
-
-  if (target.is_Default) {
-    const nextAddress = addresses.find((address) => address.$id !== addressId);
-
-    if (nextAddress) {
-      await tablesDB.updateRow({
-        databaseId: DATABASE_ID,
-        tableId: CUSTOMER_ADDRESSES_TABLE_ID,
-        rowId: nextAddress.$id,
-        data: { is_Default: true },
-      });
-    }
-  }
 
   return true;
 }

@@ -129,8 +129,15 @@ export async function getEditorialSections() {
 
           const images = await getProductImages(product.$id);
 
+          const selectedImage =
+            sectionProduct.image_ID
+              ? images.find((image) => image.id === sectionProduct.image_ID)
+              : null;
+
           const primaryImage =
-            images.find((image) => image.isPrimary) ?? images[0];
+            selectedImage ||
+            images.find((image) => image.isPrimary) ||
+            images[0];
 
           return {
             id: product.$id,

@@ -81,7 +81,6 @@ function AddressesPage() {
     setEditingAddressId(null);
     setForm({
       ...EMPTY_FORM,
-      phone: localStorage.getItem(`bayzid_customer_phone_${user?.$id}`) || "",
     });
     setError("");
     setSuccess("");

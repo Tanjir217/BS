@@ -14,7 +14,7 @@ import {
 } from "../../utils/categoryTree";
 import ProductGrid from "../../components/product/ProductGrid";
 import CustomDropdown from "../../components/ui/CustomDropdown";
-import { getCatalogPromotion } from "../../services/catalogPromotionServices";
+import { getCategoryPromotion } from "../../services/categoryPromotionServices";
 const DEFAULT_FILTERS = {
   minPrice: "",
   maxPrice: "",
@@ -49,20 +49,23 @@ function CategoryPage() {
   useEffect(() => {
     let isMounted = true;
 
-    getCatalogPromotion()
+    const promotionCategoryId =
+      category?.$id || "all-products";
+
+    getCategoryPromotion(promotionCategoryId)
       .then((result) => {
         if (isMounted) {
           setPromotion(result);
         }
       })
       .catch((promotionError) => {
-        console.error("Failed to load catalog promotion:", promotionError);
+        console.error("Failed to load category promotion:", promotionError);
       });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [category?.$id]);
 
   /*
    * Category context

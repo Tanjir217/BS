@@ -88,7 +88,29 @@ Required fields:
 - `scene`
 - `sort_Order`
 - `is_Active`
+- `image_ID` (optional selected product-image row ID for editorial sliders)
 
+### category_promotions
+
+Create one row per storefront category that needs an independent banner. The project currently uses the special `all-products` key plus normal root category IDs such as the Men and Women category IDs.
+
+Required fields:
+
+| Column | Type | Required |
+| --- | --- | --- |
+| `category_ID` | varchar | yes |
+| `title` | varchar | yes |
+| `sub_title` | text | no |
+| `image_File_ID` | varchar | no |
+| `image_Alt` | varchar | no |
+| `cta_Label` | varchar | no |
+| `cta_Href` | varchar | no |
+| `is_Active` | boolean | yes |
+| `sort_Order` | integer | yes |
+
+Create a unique index on `category_ID` so each category has at most one banner configuration. The `image_File_ID` points to a file in the existing editorial/product Storage bucket.
+
+The frontend reads this table for the current category; it does not use localStorage.
 ### customers
 
 The existing management/customer analytics code expects:
@@ -135,13 +157,16 @@ Required fields:
 - `country`
 - `is_Default`
 
-Customer rows should use row-level permissions:
+Customer address reads/writes now go through the existing `manage-order` Function so the browser never needs table-wide read permission. The Function scopes every operation to the authenticated Appwrite user ID.
 
-- read → owning customer
-- update → owning customer
-- delete → owning customer
+Recommended table security:
 
-Table-level create permission must allow authenticated customers to create their own rows; the service always writes the authenticated user's ID.
+- Enable Row Security.
+- Do **not** grant customers table-wide read/update/delete access.
+- Management/server access is provided through the Function's server integration.
+- Address rows may retain row-level permissions for the owning customer as defense in depth.
+
+This avoids exposing other customers' addresses through a client-side `listRows` query.
 
 ### orders
 
@@ -301,6 +326,7 @@ APPWRITE_ORDERS_TABLE_ID
 APPWRITE_ORDER_ITEMS_TABLE_ID
 APPWRITE_RETURN_REQUESTS_TABLE_ID
 APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID
+APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID
 APPWRITE_MANAGEMENT_TEAM_ID
 ```
 
@@ -331,9 +357,9 @@ VITE_APPWRITE_PRODUCT_IMAGES_TABLE_ID=...
 VITE_APPWRITE_CATEGORIES_TABLE_ID=...
 VITE_APPWRITE_HOME_SECTIONS_TABLE_ID=...
 VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID=...
+VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID=...
 VITE_APPWRITE_CUSTOMERS_TABLE_ID=...
 VITE_APPWRITE_CUSTOMER_TIER_RULES_TABLE_ID=...
-VITE_APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID=...
 VITE_APPWRITE_ORDERS_TABLE_ID=...
 VITE_APPWRITE_ORDER_ITEMS_TABLE_ID=...
 VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID=...

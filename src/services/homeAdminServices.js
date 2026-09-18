@@ -3,7 +3,10 @@ import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import { getProductsForAdmin } from "./productServices";
 import { getProductByIdAdmin } from "./productServices";
-import { getPrimaryProductImage } from "./productImageServices";
+import {
+  getPrimaryProductImage,
+  getProductImages,
+} from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
@@ -81,11 +84,22 @@ export async function getSectionProductsWithDetails(sectionId) {
         const primaryImage = await getPrimaryProductImage(
           product.$id
         );
-  
+
+        const productImages = await getProductImages(product.$id);
+
+        const selectedImage =
+          sectionProduct.image_ID
+            ? productImages.find(
+                (image) => image.id === sectionProduct.image_ID,
+              )
+            : null;
+
         return {
           ...sectionProduct,
           product,
           primaryImage,
+          productImages,
+          selectedImage: selectedImage || primaryImage,
         };
       })
     );
@@ -184,6 +198,10 @@ export async function updateSectionProduct(
 
   if (data.isActive !== undefined) {
     updateData.is_Active = Boolean(data.isActive);
+  }
+
+  if (data.imageId !== undefined) {
+    updateData.image_ID = data.imageId || "";
   }
 
   const response = await tablesDB.updateRow({
