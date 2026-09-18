@@ -51,8 +51,9 @@ function CustomDropdown({
 
       {open && (
         <div
-          className={`absolute left-0 right-0 z-[80] mt-2 overflow-hidden rounded-2xl border-0 bg-white/95 p-1.5 shadow-[0_18px_50px_rgba(0,0,0,0.12)] backdrop-blur-xl ${menuClassName}`}
+          className={`absolute left-0 right-0 z-[100] mt-2 max-h-72 overflow-y-auto overscroll-contain rounded-2xl border-0 bg-white/95 p-1.5 shadow-[0_18px_50px_rgba(0,0,0,0.12)] backdrop-blur-xl ${menuClassName}`}
           role="listbox"
+          aria-label={placeholder}
         >
           {options.map((option) => {
             const isSelected = option.value === value;
