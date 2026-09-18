@@ -98,7 +98,6 @@ export async function createCustomerAddress(userId, addressData) {
         ...data,
         is_Default: false,
       },
-      permissions: getOwnerPermissions(userId),
       transactionId: transaction.$id,
     });
 
