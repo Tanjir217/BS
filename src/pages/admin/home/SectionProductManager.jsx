@@ -183,7 +183,7 @@ function SectionProductManager({ section, onClose }) {
                     ৳{item.product?.price ?? "—"}
                   </p>
 
-                  {item.productImages?.length > 0 && (
+                  {section.type === "editorial-section" && item.productImages?.length > 0 && (
                     <div className="mt-3 max-w-sm">
                       <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
                         Slider image
