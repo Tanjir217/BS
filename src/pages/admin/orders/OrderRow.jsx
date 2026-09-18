@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import OrderStatusBadge from "./OrderStatusBadge";
 
 function formatPrice(value) {
@@ -24,8 +24,28 @@ function formatDate(value) {
 }
 
 function OrderRow({ order }) {
+  const navigate = useNavigate();
+
+  function openOrder() {
+    navigate(`/admin/orders/${order.$id}`);
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openOrder();
+    }
+  }
+
   return (
-    <tr className="border-b border-black/6 last:border-b-0 transition hover:bg-black/1.5">
+    <tr
+      className="cursor-pointer border-b border-black/6 last:border-b-0 transition hover:bg-black/[0.025] focus:bg-black/[0.025] focus:outline-none"
+      onClick={openOrder}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="link"
+      aria-label={`Open order ${order.order_Number || order.$id}`}
+    >
       {/* Order */}
       <td className="px-6 py-4">
         <div>
@@ -34,12 +54,9 @@ function OrderRow({ order }) {
           <p className="mt-0.5 text-xs text-black/40">
             {formatDate(order.$createdAt)}
           </p>
-          <Link
-            to={`/admin/orders/${order.$id}`}
-            className="mt-1 inline-block text-sm font-medium underline underline-offset-2"
-          >
-            View
-          </Link>
+          <p className="mt-1 text-xs font-medium text-black/35">
+            Click anywhere to view
+          </p>
         </div>
       </td>
 
