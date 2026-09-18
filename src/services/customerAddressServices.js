@@ -1,4 +1,4 @@
-import { ID, Permission, Query, Role } from "appwrite";
+import { ID, Query } from "appwrite";
 
 import { tablesDB } from "../utils/appwrite";
 
@@ -52,11 +52,6 @@ function normalizeAddressData(addressData = {}) {
   };
 }
 
-function getOwnerPermissions(userId) {
-  const owner = Role.user(userId);
-
-  return [Permission.read(owner), Permission.update(owner), Permission.delete(owner)];
-}
 
 export async function getCustomerAddresses(userId) {
   validateUserId(userId);
