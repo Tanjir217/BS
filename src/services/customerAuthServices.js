@@ -2,7 +2,6 @@ import { Permission, Role } from "appwrite";
 import { account } from "../utils/appwrite";
 import {
   createCustomer,
-  getCustomerByAccountId,
   getCustomerById,
 } from "./customerServices";
 
@@ -15,11 +14,6 @@ async function ensureCustomerProfile(user) {
   const existingById = await getCustomerById(user.$id);
   if (existingById) {
     return existingById;
-  }
-
-  const existingByAccount = await getCustomerByAccountId(user.$id);
-  if (existingByAccount) {
-    return existingByAccount;
   }
 
   const nameParts = String(user.name || "")
