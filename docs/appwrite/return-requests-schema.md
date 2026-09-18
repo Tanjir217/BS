@@ -4,20 +4,20 @@ Create a new table named `return_requests` in the existing Appwrite database.
 
 ## Columns
 
-| Key | Type | Size | Required | Purpose |
-|---|---|---:|---|---|
-| `return_Number` | varchar | 255 | yes | Human-facing return/exchange reference |
-| `order_ID` | varchar | 255 | yes | Original order ID |
-| `customer_ID` | varchar | 255 | yes | Appwrite customer user ID |
-| `request_Type` | varchar | 32 | yes | `return` or `exchange` |
-| `reason` | varchar | 255 | yes | Customer-selected reason |
-| `details` | text | — | no | Customer explanation |
-| `requested_Item_IDs` | text | — | yes | Comma-separated Order Item row IDs |
-| `exchange_Note` | text | — | no | Desired exchange details |
-| `status` | varchar | 32 | yes | `requested`, `approved`, `rejected`, `pickup`, `received`, `completed`, `cancelled` |
-| `resolution` | varchar | 32 | yes | `pending`, `refund`, `exchange`, `replacement` |
-| `refund_Amount` | integer | — | yes | Approved refund amount in BDT, default 0 |
-| `management_Note` | text | — | no | Internal management note |
+| Key                  | Type    | Size | Required | Purpose                                                                             |
+| -------------------- | ------- | ---: | -------- | ----------------------------------------------------------------------------------- |
+| `return_Number`      | varchar |  255 | yes      | Human-facing return/exchange reference                                              |
+| `order_ID`           | varchar |  255 | yes      | Original order ID                                                                   |
+| `customer_ID`        | varchar |  255 | yes      | Appwrite customer user ID                                                           |
+| `request_Type`       | varchar |   32 | yes      | `return` or `exchange`                                                              |
+| `reason`             | varchar |  255 | yes      | Customer-selected reason                                                            |
+| `details`            | text    |    — | no       | Customer explanation                                                                |
+| `requested_Item_IDs` | text    |    — | yes      | Comma-separated Order Item row IDs                                                  |
+| `exchange_Note`      | text    |    — | no       | Desired exchange details                                                            |
+| `status`             | varchar |   32 | yes      | `requested`, `approved`, `rejected`, `pickup`, `received`, `completed`, `cancelled` |
+| `resolution`         | varchar |   32 | yes      | `pending`, `refund`, `exchange`, `replacement`                                      |
+| `refund_Amount`      | integer |    — | yes      | Approved refund amount in BDT, default 0                                            |
+| `management_Note`    | text    |    — | no       | Internal management note                                                            |
 
 ## Indexes
 

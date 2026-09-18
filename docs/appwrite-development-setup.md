@@ -20,20 +20,20 @@ Put the public IDs in the Vite environment file. Never put Function API keys, Pa
 
 Required columns:
 
-| Column | Type | Required |
-|---|---|---|
-| name | varchar | yes |
-| slug | varchar | yes |
-| sku | varchar | yes |
-| description | string/long text | no |
-| price | integer/double | yes |
-| compareAtPrice | double | no |
-| categoryID | varchar | yes |
-| color | varchar | no |
-| colorHEX | varchar | no |
-| stockQuantity | integer | yes |
-| isFeatured | boolean | yes |
-| isActive | boolean | yes |
+| Column         | Type             | Required |
+| -------------- | ---------------- | -------- |
+| name           | varchar          | yes      |
+| slug           | varchar          | yes      |
+| sku            | varchar          | yes      |
+| description    | string/long text | no       |
+| price          | integer/double   | yes      |
+| compareAtPrice | double           | no       |
+| categoryID     | varchar          | yes      |
+| color          | varchar          | no       |
+| colorHEX       | varchar          | no       |
+| stockQuantity  | integer          | yes      |
+| isFeatured     | boolean          | yes      |
+| isActive       | boolean          | yes      |
 
 Customers must have read access to active product rows. Management users need the permissions required by the existing admin product UI.
 
@@ -41,13 +41,13 @@ Customers must have read access to active product rows. Management users need th
 
 Required columns:
 
-| Column | Type | Required |
-|---|---|---|
-| product_ID | varchar | yes |
-| fileID | varchar | yes |
-| alt | varchar | no |
-| sortOrder | integer | yes |
-| isPrimary | boolean | yes |
+| Column     | Type    | Required |
+| ---------- | ------- | -------- |
+| product_ID | varchar | yes      |
+| fileID     | varchar | yes      |
+| alt        | varchar | no       |
+| sortOrder  | integer | yes      |
+| isPrimary  | boolean | yes      |
 
 Customers need read access. The storage bucket must allow the storefront to view product images.
 
@@ -55,14 +55,14 @@ Customers need read access. The storage bucket must allow the storefront to view
 
 Required columns:
 
-| Column | Type | Required |
-|---|---|---|
-| name | varchar | yes |
-| slug | varchar | yes |
-| description | string | no |
-| imageUrl | varchar | no |
-| parentCategoryID | varchar | no |
-| isActive | boolean | yes |
+| Column           | Type    | Required |
+| ---------------- | ------- | -------- |
+| name             | varchar | yes      |
+| slug             | varchar | yes      |
+| description      | string  | no       |
+| imageUrl         | varchar | no       |
+| parentCategoryID | varchar | no       |
+| isActive         | boolean | yes      |
 
 ### home_sections
 
