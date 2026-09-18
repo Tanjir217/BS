@@ -638,6 +638,7 @@ async function createPathaoDelivery(tablesDB, orderId) {
         item_quantity: itemQuantity,
       }),
     },
+    permissions: [Permission.read(Role.user(order.customer_ID))],
   });
 
   const updatedOrder = await tablesDB.updateRow({
