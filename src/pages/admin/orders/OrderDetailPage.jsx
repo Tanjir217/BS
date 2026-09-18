@@ -15,6 +15,7 @@ import {
 } from "../../../services/orderServices";
 
 import OrderStatusBadge from "./OrderStatusBadge";
+import CustomDropdown from "../components/CustomDropdown";
 
 function formatPrice(value) {
   return `৳${Number(value || 0).toLocaleString("en-BD")}`;
@@ -81,7 +82,7 @@ function OrderDetailPage() {
   }, [loadOrder]);
 
   const handleOrderStatusChange = async (event) => {
-    const nextStatus = event.target.value;
+    const nextStatus = event;
     if (!nextStatus || nextStatus === order.order_Status) return;
 
     setUpdatingOrderStatus(true);
@@ -102,7 +103,7 @@ function OrderDetailPage() {
   };
 
   const handlePaymentStatusChange = async (event) => {
-    const nextStatus = event.target.value;
+    const nextStatus = event;
     if (!nextStatus || nextStatus === order.payment_Status) return;
 
     setUpdatingPaymentStatus(true);
@@ -179,17 +180,31 @@ function OrderDetailPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <h2 className="mb-2 text-sm font-semibold text-black">Order status</h2>
-            <select value={order.order_Status} onChange={handleOrderStatusChange} disabled={updatingOrderStatus || allowedStatuses.length <= 1} className="w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none">
-              {allowedStatuses.map((status) => <option key={status} value={status}>{ORDER_STATUS_LABELS[status] || status}</option>)}
-            </select>
+            <CustomDropdown
+              value={order.order_Status}
+              onChange={handleOrderStatusChange}
+              disabled={updatingOrderStatus || allowedStatuses.length <= 1}
+              options={allowedStatuses.map((status) => ({
+                value: status,
+                label: ORDER_STATUS_LABELS[status] || status,
+              }))}
+              className="w-full"
+            />
             {updatingOrderStatus && <p className="mt-2 text-xs text-black/45">Updating order status...</p>}
           </div>
 
           <div>
             <h2 className="mb-2 text-sm font-semibold text-black">Payment status</h2>
-            <select value={order.payment_Status} onChange={handlePaymentStatusChange} disabled={updatingPaymentStatus} className="w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none">
-              {Object.values(PAYMENT_STATUSES).map((status) => <option key={status} value={status}>{PAYMENT_STATUS_LABELS[status] || status}</option>)}
-            </select>
+            <CustomDropdown
+              value={order.payment_Status}
+              onChange={handlePaymentStatusChange}
+              disabled={updatingPaymentStatus}
+              options={Object.values(PAYMENT_STATUSES).map((status) => ({
+                value: status,
+                label: PAYMENT_STATUS_LABELS[status] || status,
+              }))}
+              className="w-full"
+            />
             {updatingPaymentStatus && <p className="mt-2 text-xs text-black/45">Updating payment status...</p>}
           </div>
         </div>
