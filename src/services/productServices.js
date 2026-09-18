@@ -222,23 +222,21 @@ export async function deleteProduct(productId) {
 export async function getProductPriceRange(
   categoryIds,
 ) {
-  if (
-    !Array.isArray(categoryIds) ||
-    categoryIds.length === 0
-  ) {
-    return null;
-  }
-
   const baseQueries = [
-    Query.equal(
-      "categoryID",
-      categoryIds,
-    ),
-
     Query.equal(
       "isActive",
       true,
     ),
+  ];
+
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    baseQueries.unshift(
+      Query.equal(
+        "categoryID",
+        categoryIds,
+      ),
+    );
+  }
 
     Query.select([
       "price",
@@ -307,25 +305,21 @@ export async function getProductPriceRange(
 export async function getProductFilterOptions(
   categoryIds,
 ) {
-  if (
-    !Array.isArray(categoryIds) ||
-    categoryIds.length === 0
-  ) {
-    return {
-      colors: [],
-    };
-  }
-
   const queries = [
-    Query.equal(
-      "categoryID",
-      categoryIds,
-    ),
-
     Query.equal(
       "isActive",
       true,
     ),
+  ];
+
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    queries.unshift(
+      Query.equal(
+        "categoryID",
+        categoryIds,
+      ),
+    );
+  }
 
     Query.select([
       "color",
@@ -390,16 +384,6 @@ export async function getProductsByCategoryIds(
   categoryIds,
   { page = 1, limit = 24, sort = "newest", filters = {} } = {},
 ) {
-  if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
-    return {
-      products: [],
-      total: 0,
-      page,
-      limit,
-      totalPages: 0,
-    };
-  }
-
   const offset = (page - 1) * limit;
 
   const { minPrice, maxPrice, color, availability } = filters;
@@ -426,10 +410,12 @@ export async function getProductsByCategoryIds(
   }
 
   const queries = [
-    Query.equal("categoryID", categoryIds),
-
     Query.equal("isActive", true),
   ];
+
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    queries.unshift(Query.equal("categoryID", categoryIds));
+  }
 
   /*
    * Price filtering
