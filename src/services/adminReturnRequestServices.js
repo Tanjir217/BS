@@ -1,9 +1,10 @@
 import { Query } from "appwrite";
 
-import { tablesDB } from "../utils/appwrite";
+import { functions, tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const RETURN_REQUESTS_TABLE_ID = import.meta.env.VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID;
+const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
 
 export const ADMIN_RETURN_STATUS_TRANSITIONS = {
   requested: ["requested", "approved", "rejected", "cancelled"],
@@ -16,9 +17,8 @@ export const ADMIN_RETURN_STATUS_TRANSITIONS = {
 };
 
 function assertConfigured() {
-  if (!RETURN_REQUESTS_TABLE_ID) {
-    throw new Error("Return requests are not configured yet.");
-  }
+  if (!RETURN_REQUESTS_TABLE_ID) throw new Error("Return requests are not configured yet.");
+  if (!MANAGE_ORDER_FUNCTION_ID) throw new Error("Manage-order function is not configured.");
 }
 
 export async function getAdminReturnRequests({ status = "all" } = {}) {
@@ -42,6 +42,35 @@ export async function getAdminReturnRequests({ status = "all" } = {}) {
   return response.rows || [];
 }
 
+async function executeManagementReturn(payload) {
+  assertConfigured();
+
+  const execution = await functions.createExecution({
+    functionId: MANAGE_ORDER_FUNCTION_ID,
+    body: JSON.stringify(payload),
+    async: false,
+    path: "/",
+    method: "POST",
+  });
+
+  let responseBody;
+  try {
+    responseBody = JSON.parse(execution.responseBody || "{}");
+  } catch {
+    throw new Error("The return service returned an invalid response.");
+  }
+
+  if (execution.responseStatusCode >= 400 || responseBody.success === false) {
+    throw new Error(responseBody.error || "Unable to update return request.");
+  }
+
+  if (!responseBody.returnRequest?.$id) {
+    throw new Error("The updated return request was not returned.");
+  }
+
+  return responseBody.returnRequest;
+}
+
 export async function updateAdminReturnRequest(
   requestId,
   currentStatus,
@@ -55,22 +84,12 @@ export async function updateAdminReturnRequest(
     throw new Error(`Cannot change return status from "${currentStatus}" to "${nextStatus}".`);
   }
 
-  const data = { status: nextStatus };
-
-  if (resolution !== undefined) data.resolution = resolution;
-  if (refundAmount !== undefined) {
-    const amount = Number(refundAmount);
-    if (!Number.isSafeInteger(amount) || amount < 0) {
-      throw new Error("Refund amount must be a non-negative integer.");
-    }
-    data.refund_Amount = amount;
-  }
-  if (managementNote !== undefined) data.management_Note = String(managementNote).trim();
-
-  return tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: RETURN_REQUESTS_TABLE_ID,
-    rowId: requestId,
-    data,
+  return executeManagementReturn({
+    action: "update_return_request",
+    orderId: requestId,
+    status: nextStatus,
+    resolution,
+    refundAmount,
+    managementNote,
   });
 }
