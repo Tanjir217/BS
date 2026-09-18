@@ -687,10 +687,12 @@ export default async ({ req, res, log, error: logError }) => {
         break;
 
       case "create_return_customer":
+        assertReturnRequestsConfigured();
         returnRequest = await createCustomerReturnRequest(tablesDB, orderId, userId, payload);
         break;
 
       case "update_return_request":
+        assertReturnRequestsConfigured();
         await assertManagementAccess(client, userId);
         returnRequest = await updateReturnRequest(tablesDB, orderId, payload);
         break;
