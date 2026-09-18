@@ -84,11 +84,22 @@ export async function getSectionProductsWithDetails(sectionId) {
         const primaryImage = await getPrimaryProductImage(
           product.$id
         );
-  
+
+        const productImages = await getProductImages(product.$id);
+
+        const selectedImage =
+          sectionProduct.image_ID
+            ? productImages.find(
+                (image) => image.id === sectionProduct.image_ID,
+              )
+            : null;
+
         return {
           ...sectionProduct,
           product,
           primaryImage,
+          productImages,
+          selectedImage: selectedImage || primaryImage,
         };
       })
     );
