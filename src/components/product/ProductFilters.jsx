@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CustomDropdown from "../ui/CustomDropdown";
 
 const CURRENCY_SYMBOL = "৳";
 
@@ -346,25 +347,18 @@ function ProductFilters({
 
           {/* Availability */}
           <div>
-            <label
-              htmlFor="filter-availability"
-              className="mb-2 block text-xs uppercase tracking-[0.14em] text-black/45"
-            >
+            <p className="mb-3 text-xs uppercase tracking-[0.14em] text-black/45">
               Availability
-            </label>
-
-            <select
-              id="filter-availability"
+            </p>
+            <CustomDropdown
               value={draftFilters.availability}
-              onChange={(event) =>
-                updateDraftFilter("availability", event.target.value)
-              }
-              className="w-full border-b border-black/20 bg-transparent py-2 text-sm outline-none transition focus:border-black"
-            >
-              <option value="all">All products</option>
-
-              <option value="in-stock">In stock</option>
-            </select>
+              onChange={(value) => updateDraftFilter("availability", value)}
+              options={[
+                { value: "all", label: "All products" },
+                { value: "in-stock", label: "In stock" },
+              ]}
+              className="w-full"
+            />
           </div>
         </div>
 
