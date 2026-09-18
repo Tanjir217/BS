@@ -255,7 +255,7 @@ function ProductFilters({
               </div>
 
               <div
-                className="pointer-events-none absolute top-[calc(50%+22px)] z-20 -translate-x-1/2 rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold text-[#ef4d50] shadow-[0_5px_16px_rgba(0,0,0,0.14)]"
+                className="pointer-events-none absolute top-1/2 z-20 -translate-x-1/2 translate-y-7 rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold text-[#ef4d50] shadow-[0_5px_16px_rgba(0,0,0,0.14)]"
                 style={{
                   left: `calc(${(minimumPosition + maximumPosition) / 2}% + ${4 - 0.08 * ((minimumPosition + maximumPosition) / 2)}rem)`,
                 }}
