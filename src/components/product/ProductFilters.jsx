@@ -225,7 +225,7 @@ function ProductFilters({
           </div>
 
           {hasPriceRange ? (
-            <div className="catalog-price-range relative mt-10 h-28 overflow-hidden rounded-2xl bg-[#ef4d50] px-7 sm:px-10">
+            <div className="catalog-price-range relative mt-10 h-28 overflow-hidden rounded-2xl bg-[#5A1020] px-7 sm:px-10">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[11px] font-medium text-white sm:left-5">
                 {CURRENCY_SYMBOL}{formatPrice(minimumPrice)}
               </span>
@@ -234,36 +234,36 @@ function ProductFilters({
                 {CURRENCY_SYMBOL}{formatPrice(maximumPrice)}
               </span>
 
-              <div className="absolute left-16 right-16 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/90" />
+              <div className="catalog-price-range__track absolute left-16 right-16 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/85">
+                <div
+                  className="absolute inset-y-0 rounded-full bg-[#D9A7B0]"
+                  style={{
+                    left: `${minimumPosition}%`,
+                    right: `${100 - maximumPosition}%`,
+                  }}
+                />
 
-              <div
-                className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#8ee1e6]"
-                style={{
-                  left: `calc(${minimumPosition}% + ${4 - 0.08 * minimumPosition}rem)`,
-                  right: `calc(${100 - maximumPosition}% + ${4 - 0.08 * (100 - maximumPosition)}rem)`,
-                }}
-              />
+                <div
+                  className="pointer-events-none absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-8 text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.28)]"
+                  style={{
+                    left: `${(minimumPosition + maximumPosition) / 2}%`,
+                  }}
+                  aria-hidden="true"
+                >
+                  <Footprints size={30} strokeWidth={1.8} />
+                </div>
 
-              <div
-                className="pointer-events-none absolute top-[calc(50%-18px)] z-10 -translate-x-1/2 -translate-y-1/2 text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.2)]"
-                style={{
-                  left: `calc(${(minimumPosition + maximumPosition) / 2}% + ${4 - 0.08 * ((minimumPosition + maximumPosition) / 2)}rem)`,
-                }}
-                aria-hidden="true"
-              >
-                <Footprints size={28} strokeWidth={1.8} />
-              </div>
-
-              <div
-                className="pointer-events-none absolute top-1/2 z-20 -translate-x-1/2 translate-y-7 rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold text-[#ef4d50] shadow-[0_5px_16px_rgba(0,0,0,0.14)]"
-                style={{
-                  left: `calc(${(minimumPosition + maximumPosition) / 2}% + ${4 - 0.08 * ((minimumPosition + maximumPosition) / 2)}rem)`,
-                }}
-              >
-                <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white" />
-                <span className="relative">
-                  {CURRENCY_SYMBOL}{formatPrice(safeMinimum)} — {CURRENCY_SYMBOL}{formatPrice(safeMaximum)}
-                </span>
+                <div
+                  className="pointer-events-none absolute left-0 top-1/2 z-20 -translate-x-1/2 translate-y-6 whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold text-[#5A1020] shadow-[0_5px_16px_rgba(0,0,0,0.16)]"
+                  style={{
+                    left: `${(minimumPosition + maximumPosition) / 2}%`,
+                  }}
+                >
+                  <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white" />
+                  <span className="relative">
+                    {CURRENCY_SYMBOL}{formatPrice(safeMinimum)} — {CURRENCY_SYMBOL}{formatPrice(safeMaximum)}
+                  </span>
+                </div>
               </div>
 
               <input
@@ -275,7 +275,7 @@ function ProductFilters({
                 value={safeMinimum}
                 onChange={handleMinimumChange}
                 className={`catalog-price-range__input ${
-                  safeMinimum >= maximumPrice ? "z-30" : "z-40"
+                  safeMinimum >= maximumPrice ? "z-40" : "z-30"
                 }`}
               />
 
@@ -287,7 +287,7 @@ function ProductFilters({
                 step="1"
                 value={safeMaximum}
                 onChange={handleMaximumChange}
-                className="catalog-price-range__input z-30"
+                className="catalog-price-range__input z-20"
               />
             </div>
           ) : (
@@ -390,13 +390,13 @@ function ProductFilters({
           left: 4rem;
           top: 50%;
           width: calc(100% - 8rem);
-          height: 32px;
+          height: 34px;
           transform: translateY(-50%);
           margin: 0;
           appearance: none;
           -webkit-appearance: none;
           background: transparent;
-          pointer-events: none;
+          pointer-events: auto;
           outline: none;
         }
 
@@ -411,9 +411,9 @@ function ProductFilters({
         }
 
         .catalog-price-range__input::-webkit-slider-thumb {
-          width: 24px;
-          height: 24px;
-          margin-top: -9px;
+          width: 30px;
+          height: 30px;
+          margin-top: -13px;
           appearance: none;
           -webkit-appearance: none;
           border: 0;
@@ -426,13 +426,12 @@ function ProductFilters({
 
         .catalog-price-range__input::-webkit-slider-thumb:active {
           cursor: grabbing;
-          transform: scale(1.08);
         }
 
         .catalog-price-range__input::-moz-range-thumb {
-          width: 20px;
-          height: 20px;
-          border: 2px solid black;
+          width: 30px;
+          height: 30px;
+          border: 0;
           border-radius: 9999px;
           background: transparent;
           box-shadow: none;
@@ -445,12 +444,12 @@ function ProductFilters({
         }
 
         .catalog-price-range__input:focus-visible::-webkit-slider-thumb {
-          outline: 3px solid rgba(0, 0, 0, 0.15);
+          outline: 3px solid rgba(217, 167, 176, 0.65);
           outline-offset: 3px;
         }
 
         .catalog-price-range__input:focus-visible::-moz-range-thumb {
-          outline: 3px solid rgba(0, 0, 0, 0.15);
+          outline: 3px solid rgba(217, 167, 176, 0.65);
           outline-offset: 3px;
         }
       `}</style>
