@@ -9,6 +9,7 @@ const PRODUCTS_TABLE_ID = getEnv("APPWRITE_PRODUCTS_TABLE_ID", "VITE_APPWRITE_PR
 const ORDERS_TABLE_ID = getEnv("APPWRITE_ORDERS_TABLE_ID", "VITE_APPWRITE_ORDERS_TABLE_ID");
 const ORDER_ITEMS_TABLE_ID = getEnv("APPWRITE_ORDER_ITEMS_TABLE_ID", "VITE_APPWRITE_ORDER_ITEMS_TABLE_ID");
 const RETURN_REQUESTS_TABLE_ID = getEnv("APPWRITE_RETURN_REQUESTS_TABLE_ID", "VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID");
+const DELIVERY_SHIPMENTS_TABLE_ID = getEnv("APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID", "VITE_APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID");
 const MANAGEMENT_TEAM_ID = getEnv("APPWRITE_MANAGEMENT_TEAM_ID", "VITE_APPWRITE_MANAGEMENT_TEAM_ID");
 
 const PATHAO_API_BASE_URL = getEnv("PATHAO_API_BASE_URL", "VITE_PATHAO_API_BASE_URL");
@@ -90,6 +91,14 @@ function assertConfigured() {
 
   if (missing.length > 0) {
     throw new Error(`Missing function configuration: ${missing.join(", ")}`);
+  }
+}
+
+function assertDeliveryShipmentsConfigured() {
+  if (!DELIVERY_SHIPMENTS_TABLE_ID) {
+    const error = new Error("Delivery shipments are not configured.");
+    error.status = 503;
+    throw error;
   }
 }
 
@@ -505,6 +514,7 @@ function getPathaoConsignmentId(payload) {
 
 async function createPathaoDelivery(tablesDB, orderId) {
   assertPathaoConfigured();
+  assertDeliveryShipmentsConfigured();
 
   const order = await getOrder(tablesDB, orderId);
 
@@ -518,6 +528,22 @@ async function createPathaoDelivery(tablesDB, orderId) {
     const error = new Error("A Pathao shipment can only be created after the order is confirmed.");
     error.status = 409;
     throw error;
+  }
+
+  try {
+    const existingShipment = await tablesDB.getRow({
+      databaseId: DATABASE_ID,
+      tableId: DELIVERY_SHIPMENTS_TABLE_ID,
+      rowId: orderId,
+    });
+
+    if (existingShipment?.consignment_ID) {
+      const error = new Error("A courier shipment is already attached to this order.");
+      error.status = 409;
+      throw error;
+    }
+  } catch (error) {
+    if (error?.code !== 404) throw error;
   }
 
   if (String(order.notes || "").includes("[Pathao:")) {
@@ -592,16 +618,36 @@ async function createPathaoDelivery(tablesDB, orderId) {
     throw error;
   }
 
+  const trackingUrl = `https://merchant.pathao.com/tracking?consignment_id=${encodeURIComponent(consignmentId)}&phone=${encodeURIComponent(order.customer_Phone || "")}`;
   const deliveryMarker = `[Pathao:${consignmentId}]`;
   const notes = String(order.notes || "").trim();
   const nextNotes = `${notes ? `${notes} ` : ""}${deliveryMarker}`.slice(0, 255);
 
-  return tablesDB.updateRow({
+  const shipment = await tablesDB.createRow({
+    databaseId: DATABASE_ID,
+    tableId: DELIVERY_SHIPMENTS_TABLE_ID,
+    rowId: orderId,
+    data: {
+      order_ID: orderId,
+      provider: "pathao",
+      consignment_ID: consignmentId,
+      tracking_URL: trackingUrl,
+      status: "created",
+      payload: JSON.stringify({
+        merchant_order_id: order.order_Number || order.$id,
+        item_quantity: itemQuantity,
+      }),
+    },
+  });
+
+  const updatedOrder = await tablesDB.updateRow({
     databaseId: DATABASE_ID,
     tableId: ORDERS_TABLE_ID,
     rowId: orderId,
     data: { notes: nextNotes },
   });
+
+  return { ...updatedOrder, deliveryShipment: shipment };
 }
 
 export default async ({ req, res, log, error: logError }) => {
