@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Check, Edit3, MapPin, Plus, Trash2, X } from "lucide-react";
 
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
+import CustomDropdown from "../../components/ui/CustomDropdown";
 
 import {
   ADDRESS_LABELS,
@@ -273,11 +274,19 @@ function AddressesPage() {
               <div className="account-address-form__fields">
                 <label>
                   <span>Address type</span>
-                  <select name="label" value={form.label} onChange={handleChange} required>
-                    <option value={ADDRESS_LABELS.HOME}>Home</option>
-                    <option value={ADDRESS_LABELS.OFFICE}>Office</option>
-                    <option value={ADDRESS_LABELS.OTHER}>Other</option>
-                  </select>
+                  <CustomDropdown
+                    value={form.label}
+                    onChange={(value) =>
+                      setForm((current) => ({ ...current, label: value }))
+                    }
+                    options={[
+                      { value: ADDRESS_LABELS.HOME, label: "Home" },
+                      { value: ADDRESS_LABELS.OFFICE, label: "Office" },
+                      { value: ADDRESS_LABELS.OTHER, label: "Other" },
+                    ]}
+                    className="w-full"
+                    menuClassName="w-full"
+                  />
                 </label>
 
                 <label>
