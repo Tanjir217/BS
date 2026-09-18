@@ -85,13 +85,20 @@ function assertConfigured() {
     APPWRITE_ORDERS_TABLE_ID: ORDERS_TABLE_ID,
     APPWRITE_ORDER_ITEMS_TABLE_ID: ORDER_ITEMS_TABLE_ID,
     APPWRITE_MANAGEMENT_TEAM_ID: MANAGEMENT_TEAM_ID,
-    APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID: CUSTOMER_ADDRESSES_TABLE_ID,
   };
 
   const missing = Object.entries(required).filter(([, value]) => !value).map(([key]) => key);
 
   if (missing.length > 0) {
     throw new Error(`Missing function configuration: ${missing.join(", ")}`);
+  }
+}
+
+function assertCustomerAddressesConfigured() {
+  if (!CUSTOMER_ADDRESSES_TABLE_ID) {
+    const error = new Error("Customer addresses are not configured.");
+    error.status = 503;
+    throw error;
   }
 }
 
@@ -921,6 +928,7 @@ export default async ({ req, res, log, error: logError }) => {
         break;
 
       case "get_customer_addresses":
+        assertCustomerAddressesConfigured();
         if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
         return res.json({
           success: true,
@@ -928,6 +936,7 @@ export default async ({ req, res, log, error: logError }) => {
         });
 
       case "create_customer_address":
+        assertCustomerAddressesConfigured();
         if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
         return res.json({
           success: true,
@@ -935,6 +944,7 @@ export default async ({ req, res, log, error: logError }) => {
         });
 
       case "update_customer_address":
+        assertCustomerAddressesConfigured();
         if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
         return res.json({
           success: true,
@@ -947,6 +957,7 @@ export default async ({ req, res, log, error: logError }) => {
         });
 
       case "set_default_customer_address":
+        assertCustomerAddressesConfigured();
         if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
         return res.json({
           success: true,
@@ -958,6 +969,7 @@ export default async ({ req, res, log, error: logError }) => {
         });
 
       case "delete_customer_address":
+        assertCustomerAddressesConfigured();
         if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
         return res.json({
           success: true,
