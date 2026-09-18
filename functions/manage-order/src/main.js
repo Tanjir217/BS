@@ -10,6 +10,7 @@ const ORDERS_TABLE_ID = getEnv("APPWRITE_ORDERS_TABLE_ID", "VITE_APPWRITE_ORDERS
 const ORDER_ITEMS_TABLE_ID = getEnv("APPWRITE_ORDER_ITEMS_TABLE_ID", "VITE_APPWRITE_ORDER_ITEMS_TABLE_ID");
 const RETURN_REQUESTS_TABLE_ID = getEnv("APPWRITE_RETURN_REQUESTS_TABLE_ID", "VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID");
 const DELIVERY_SHIPMENTS_TABLE_ID = getEnv("APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID", "VITE_APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID");
+const CUSTOMER_ADDRESSES_TABLE_ID = getEnv("APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID", "VITE_APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID");
 const MANAGEMENT_TEAM_ID = getEnv("APPWRITE_MANAGEMENT_TEAM_ID", "VITE_APPWRITE_MANAGEMENT_TEAM_ID");
 
 const PATHAO_API_BASE_URL = getEnv("PATHAO_API_BASE_URL", "VITE_PATHAO_API_BASE_URL");
@@ -84,6 +85,7 @@ function assertConfigured() {
     APPWRITE_ORDERS_TABLE_ID: ORDERS_TABLE_ID,
     APPWRITE_ORDER_ITEMS_TABLE_ID: ORDER_ITEMS_TABLE_ID,
     APPWRITE_MANAGEMENT_TEAM_ID: MANAGEMENT_TEAM_ID,
+    APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID: CUSTOMER_ADDRESSES_TABLE_ID,
   };
 
   const missing = Object.entries(required).filter(([, value]) => !value).map(([key]) => key);
@@ -161,7 +163,231 @@ async function getOrder(tablesDB, orderId) {
   return response.rows[0] || null;
 }
 
-async function getOrderItems(tablesDB, orderId) {
+async 
+async function getCustomerAddresses(tablesDB, userId) {
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+    queries: [
+      Query.equal("customer_ID", userId),
+      Query.limit(50),
+    ],
+    total: false,
+  });
+
+  return [...response.rows].sort((a, b) => {
+    if (Boolean(a.is_Default) !== Boolean(b.is_Default)) {
+      return a.is_Default ? -1 : 1;
+    }
+
+    return new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime();
+  });
+}
+
+function normalizeCustomerAddress(payload) {
+  const label = String(payload.label || "").trim().toLowerCase();
+  const recipientName = String(payload.recipient_Name || "").trim();
+  const phone = String(payload.phone || "").trim();
+  const addressLine1 = String(payload.address_Line_1 || "").trim();
+  const addressLine2 = String(payload.address_Line_2 || "").trim();
+  const city = String(payload.city || "").trim();
+  const postalCode = String(payload.postal_Code || "").trim();
+  const country = String(payload.country || "").trim();
+
+  if (!["home", "office", "other"].includes(label)) {
+    throw Object.assign(new Error("Please select a valid address type."), { status: 400 });
+  }
+
+  if (!recipientName || !phone || !addressLine1 || !city || !postalCode || !country) {
+    throw Object.assign(new Error("Please complete all required address fields."), { status: 400 });
+  }
+
+  return {
+    label,
+    recipient_Name: recipientName,
+    phone,
+    address_Line_1: addressLine1,
+    address_Line_2: addressLine2,
+    city,
+    postal_Code: postalCode,
+    country,
+  };
+}
+
+async function createCustomerAddress(tablesDB, userId, payload) {
+  const existing = await getCustomerAddresses(tablesDB, userId);
+  const data = normalizeCustomerAddress(payload);
+  const shouldBeDefault = existing.length === 0 || Boolean(payload.is_Default);
+  const rowId = ID.unique();
+
+  const permissions = [
+    Permission.read(Role.user(userId)),
+    Permission.update(Role.user(userId)),
+    Permission.delete(Role.user(userId)),
+  ];
+
+  if (shouldBeDefault) {
+    const operations = existing
+      .filter((address) => address.is_Default)
+      .map((address) => ({
+        action: "update",
+        databaseId: DATABASE_ID,
+        tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+        rowId: address.$id,
+        data: { is_Default: false },
+      }));
+
+    operations.push({
+      action: "update",
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+      rowId,
+      data: { is_Default: true },
+    });
+
+    const transaction = await tablesDB.createTransaction();
+
+    await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+      rowId,
+      data: {
+        customer_ID: userId,
+        ...data,
+        is_Default: false,
+      },
+      permissions,
+      transactionId: transaction.$id,
+    });
+
+    await tablesDB.createOperations({
+      transactionId: transaction.$id,
+      operations,
+    });
+
+    await tablesDB.updateTransaction({
+      transactionId: transaction.$id,
+      commit: true,
+    });
+  } else {
+    await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+      rowId,
+      data: {
+        customer_ID: userId,
+        ...data,
+        is_Default: false,
+      },
+      permissions,
+    });
+  }
+
+  return tablesDB.getRow({
+    databaseId: DATABASE_ID,
+    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+    rowId,
+  });
+}
+
+async function getOwnedCustomerAddress(tablesDB, userId, addressId) {
+  const address = await tablesDB.getRow({
+    databaseId: DATABASE_ID,
+    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+    rowId: addressId,
+  });
+
+  if (address.customer_ID !== userId) {
+    throw Object.assign(new Error("You do not have access to this address."), { status: 403 });
+  }
+
+  return address;
+}
+
+async function updateCustomerAddress(tablesDB, userId, addressId, payload) {
+  const existing = await getOwnedCustomerAddress(tablesDB, userId, addressId);
+  const data = normalizeCustomerAddress(payload);
+
+  if (Boolean(payload.is_Default) && !existing.is_Default) {
+    const addresses = await getCustomerAddresses(tablesDB, userId);
+
+    await Promise.all(
+      addresses
+        .filter((address) => address.is_Default && address.$id !== addressId)
+        .map((address) =>
+          tablesDB.updateRow({
+            databaseId: DATABASE_ID,
+            tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+            rowId: address.$id,
+            data: { is_Default: false },
+          }),
+        ),
+    );
+  }
+
+  return tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+    rowId: addressId,
+    data: {
+      ...data,
+      is_Default: Boolean(payload.is_Default),
+    },
+  });
+}
+
+async function setDefaultCustomerAddress(tablesDB, userId, addressId) {
+  await getOwnedCustomerAddress(tablesDB, userId, addressId);
+  const addresses = await getCustomerAddresses(tablesDB, userId);
+
+  await Promise.all(
+    addresses
+      .filter((address) => address.$id !== addressId && address.is_Default)
+      .map((address) =>
+        tablesDB.updateRow({
+          databaseId: DATABASE_ID,
+          tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+          rowId: address.$id,
+          data: { is_Default: false },
+        }),
+      ),
+  );
+
+  return tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+    rowId: addressId,
+    data: { is_Default: true },
+  });
+}
+
+async function deleteCustomerAddress(tablesDB, userId, addressId) {
+  const target = await getOwnedCustomerAddress(tablesDB, userId, addressId);
+  const addresses = await getCustomerAddresses(tablesDB, userId);
+
+  await tablesDB.deleteRow({
+    databaseId: DATABASE_ID,
+    tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+    rowId: addressId,
+  });
+
+  if (target.is_Default) {
+    const nextAddress = addresses.find((address) => address.$id !== addressId);
+
+    if (nextAddress) {
+      await tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: CUSTOMER_ADDRESSES_TABLE_ID,
+        rowId: nextAddress.$id,
+        data: { is_Default: true },
+      });
+    }
+  }
+
+  return { success: true };
+}
+
+function getOrderItems(tablesDB, orderId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: ORDER_ITEMS_TABLE_ID,
@@ -671,13 +897,21 @@ export default async ({ req, res, log, error: logError }) => {
     const payload = parseBody(req);
     const { action, orderId } = payload;
 
-    if (!orderId || typeof orderId !== "string") {
+    const tablesDB = new TablesDB(client);
+
+    const addressActions = new Set([
+      "get_customer_addresses",
+      "create_customer_address",
+      "update_customer_address",
+      "set_default_customer_address",
+      "delete_customer_address",
+    ]);
+
+    if (!addressActions.has(action) && (!orderId || typeof orderId !== "string")) {
       const error = new Error("Order ID is required.");
       error.status = 400;
       throw error;
     }
-
-    const tablesDB = new TablesDB(client);
     let order;
     let returnRequest;
 
@@ -685,6 +919,54 @@ export default async ({ req, res, log, error: logError }) => {
       case "cancel_order_customer":
         order = await cancelOrderForCustomer(tablesDB, orderId, userId);
         break;
+
+      case "get_customer_addresses":
+        if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
+        return res.json({
+          success: true,
+          addresses: await getCustomerAddresses(tablesDB, userId),
+        });
+
+      case "create_customer_address":
+        if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
+        return res.json({
+          success: true,
+          address: await createCustomerAddress(tablesDB, userId, payload),
+        });
+
+      case "update_customer_address":
+        if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
+        return res.json({
+          success: true,
+          address: await updateCustomerAddress(
+            tablesDB,
+            userId,
+            String(payload.addressId || ""),
+            payload,
+          ),
+        });
+
+      case "set_default_customer_address":
+        if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
+        return res.json({
+          success: true,
+          address: await setDefaultCustomerAddress(
+            tablesDB,
+            userId,
+            String(payload.addressId || ""),
+          ),
+        });
+
+      case "delete_customer_address":
+        if (!userId) throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
+        return res.json({
+          success: true,
+          ...(await deleteCustomerAddress(
+            tablesDB,
+            userId,
+            String(payload.addressId || ""),
+          )),
+        });
 
       case "create_return_customer":
         assertReturnRequestsConfigured();
