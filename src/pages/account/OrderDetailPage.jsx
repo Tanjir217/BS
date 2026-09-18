@@ -14,7 +14,10 @@ import {
 
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { cancelCustomerOrder, ORDER_STATUS_LABELS } from "../../services/orderServices";
-import { getCustomerOrderWithItems } from "../../services/customerOrderServices";
+import {
+  getCustomerOrderWithItems,
+  getCustomerShipment,
+} from "../../services/customerOrderServices";
 
 const ORDER_TIMELINE = [
   { status: "pending", label: "Order placed", description: "Your order has been received." },
@@ -41,6 +44,7 @@ function OrderDetailPage() {
   const { user, loading, isAuthenticated } = useCustomerAuth();
 
   const [orderData, setOrderData] = useState(null);
+  const [shipment, setShipment] = useState(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
@@ -59,6 +63,11 @@ function OrderDetailPage() {
         return;
       }
       setOrderData(result);
+
+      const customerShipment = await getCustomerShipment(user.$id, orderId);
+      if (!cancelled) {
+        setShipment(customerShipment);
+      }
     } catch (loadError) {
       console.error("Failed to load customer order:", loadError);
       setError(loadError?.message || "Unable to load this order.");
@@ -204,6 +213,16 @@ function OrderDetailPage() {
               </div>
 
               {canCancel && <button type="button" className="customer-order-cancel-button" onClick={handleCancelOrder} disabled={cancelling}><XCircle size={17} />{cancelling ? "Cancelling..." : "Cancel order"}</button>}
+
+              {shipment?.consignment_ID && (
+                <div className="customer-order-summary__shipment">
+                  <div><span>Courier</span><strong>{shipment.provider === "pathao" ? "Pathao" : shipment.provider}</strong></div>
+                  <div><span>Consignment</span><strong>{shipment.consignment_ID}</strong></div>
+                  {shipment.tracking_URL && (
+                    <a href={shipment.tracking_URL} target="_blank" rel="noreferrer">Track shipment</a>
+                  )}
+                </div>
+              )}
 
               {status === "delivered" && (
                 <>
