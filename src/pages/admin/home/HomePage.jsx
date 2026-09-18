@@ -7,6 +7,7 @@ import HomeSectionCard from "./HomeSectionCard";
 import SectionProductManager from "./SectionProductManager.jsx";
 
 import EditorialManager from "./EditorialManager";
+import CatalogPromotionManager from "./CatalogPromotionManager";
 
 function HomePage() {
   const [sections, setSections] = useState([]);
@@ -59,6 +60,10 @@ function HomePage() {
         <p className="mt-1 text-sm text-gray-500">
           Manage the sections and products displayed on your homepage.
         </p>
+      </div>
+
+      <div className="mb-6">
+        <CatalogPromotionManager />
       </div>
 
       {sections.length === 0 ? (
