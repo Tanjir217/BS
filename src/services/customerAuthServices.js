@@ -65,7 +65,13 @@ export async function updateCustomerProfile({
 
 export async function getCurrentCustomer() {
   try {
-    return await account.get();
+    const user = await account.get();
+
+    // Repair accounts created before the customer-profile
+    // bootstrap was moved behind the server Function.
+    await ensureCustomerProfile(user);
+
+    return user;
   } catch (error) {
     if (error?.code === 401) {
       return null;
