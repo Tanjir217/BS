@@ -11,6 +11,7 @@ const ORDER_ITEMS_TABLE_ID = getEnv("APPWRITE_ORDER_ITEMS_TABLE_ID", "VITE_APPWR
 const RETURN_REQUESTS_TABLE_ID = getEnv("APPWRITE_RETURN_REQUESTS_TABLE_ID", "VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID");
 const DELIVERY_SHIPMENTS_TABLE_ID = getEnv("APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID", "VITE_APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID");
 const CUSTOMER_ADDRESSES_TABLE_ID = getEnv("APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID", "VITE_APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID");
+const CUSTOMERS_TABLE_ID = getEnv("APPWRITE_CUSTOMERS_TABLE_ID", "VITE_APPWRITE_CUSTOMERS_TABLE_ID");
 const MANAGEMENT_TEAM_ID = getEnv("APPWRITE_MANAGEMENT_TEAM_ID", "VITE_APPWRITE_MANAGEMENT_TEAM_ID");
 
 const PATHAO_API_BASE_URL = getEnv("PATHAO_API_BASE_URL", "VITE_PATHAO_API_BASE_URL");
@@ -91,6 +92,85 @@ function assertConfigured() {
 
   if (missing.length > 0) {
     throw new Error(`Missing function configuration: ${missing.join(", ")}`);
+  }
+}
+
+function assertCustomerProfilesConfigured() {
+  if (!CUSTOMERS_TABLE_ID) {
+    const error = new Error("Customer profiles are not configured.");
+    error.status = 503;
+    throw error;
+  }
+}
+
+async function ensureCustomerProfile(tablesDB, userId, payload) {
+  if (!userId) {
+    throw Object.assign(new Error("Customer authentication is required."), { status: 401 });
+  }
+
+  assertCustomerProfilesConfigured();
+
+  try {
+    return await tablesDB.getRow({
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMERS_TABLE_ID,
+      rowId: userId,
+    });
+  } catch (error) {
+    if (error?.code !== 404) {
+      throw error;
+    }
+  }
+
+  const nameParts = String(payload.name || "Customer")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const firstName = nameParts.shift() || "Customer";
+  const lastName = nameParts.join(" ");
+  const email = String(payload.email || "").trim();
+
+  if (!email) {
+    throw Object.assign(new Error("Customer email is required."), { status: 400 });
+  }
+
+  const data = {
+    first_Name: firstName,
+    last_Name: lastName,
+    email,
+    phone: "",
+    account_ID: userId,
+    profile_Image_File_ID: "",
+    address: "",
+    city: "",
+    postal_Code: "",
+    whatsapp_Number: "",
+    customer_Tire: "regular",
+    is_Active: true,
+    total_Orders: 0,
+    total_Spent: 0,
+    last_Order_At: "",
+  };
+
+  try {
+    return await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: CUSTOMERS_TABLE_ID,
+      rowId: userId,
+      data,
+      permissions: [Permission.read(Role.user(userId))],
+    });
+  } catch (error) {
+    if (error?.code === 409) {
+      return tablesDB.getRow({
+        databaseId: DATABASE_ID,
+        tableId: CUSTOMERS_TABLE_ID,
+        rowId: userId,
+      });
+    }
+
+    throw error;
   }
 }
 
@@ -907,6 +987,7 @@ export default async ({ req, res, log, error: logError }) => {
     const tablesDB = new TablesDB(client);
 
     const addressActions = new Set([
+      "ensure_customer_profile",
       "get_customer_addresses",
       "create_customer_address",
       "update_customer_address",
@@ -923,6 +1004,12 @@ export default async ({ req, res, log, error: logError }) => {
     let returnRequest;
 
     switch (action) {
+      case "ensure_customer_profile":
+        return res.json({
+          success: true,
+          customer: await ensureCustomerProfile(tablesDB, userId, payload),
+        });
+
       case "cancel_order_customer":
         order = await cancelOrderForCustomer(tablesDB, orderId, userId);
         break;
