@@ -3,7 +3,7 @@ import ProductCard from "./ProductCard";
 function ProductGrid({ products = [], isLoading = false }) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {Array.from({ length: 10 }).map((_, index) => (
           <div key={index} className="animate-pulse rounded-[1.75rem] bg-white p-2.5">
             <div className="aspect-[0.92] rounded-[1.35rem] bg-black/5" />
@@ -24,7 +24,7 @@ function ProductGrid({ products = [], isLoading = false }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((product) => (
         <ProductCard key={product.$id} product={product} />
       ))}
