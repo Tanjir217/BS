@@ -246,7 +246,7 @@ function ProductFilters({
                 <div
                   className="pointer-events-none absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-8 text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.28)]"
                   style={{
-                    left: `${(minimumPosition + maximumPosition) / 2}%`,
+                    left: `${minimumPosition}%`,
                   }}
                   aria-hidden="true"
                 >
@@ -396,7 +396,7 @@ function ProductFilters({
           appearance: none;
           -webkit-appearance: none;
           background: transparent;
-          pointer-events: auto;
+          pointer-events: none;
           outline: none;
         }
 
