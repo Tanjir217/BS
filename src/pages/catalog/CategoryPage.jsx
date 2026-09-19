@@ -399,52 +399,6 @@ function CategoryPage() {
         </div>
       </section>
 
-      {/* Child categories */}
-      {category.children.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-xs uppercase tracking-[0.18em] text-black/40">
-            Explore
-          </h2>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {category.children.map((child) => (
-              <Link
-                key={child.$id}
-                to={`/all-products/${[
-                  ...location.pathname
-                    .split("/")
-                    .filter(Boolean)
-                    .filter((segment) => segment !== "all-products"),
-                  child.slug,
-                ].join("/")}`}
-                className="group border border-black/10 p-5 no-underline transition hover:border-black"
-              >
-                {child.imageUrl && (
-                  <img
-                    src={child.imageUrl}
-                    alt={child.name}
-                    loading="lazy"
-                    className="aspect-4/5 w-full object-cover"
-                  />
-                )}
-
-                <div className="mt-4">
-                  <h3 className="text-sm font-medium text-black">
-                    {child.name}
-                  </h3>
-
-                  {child.description && (
-                    <p className="mt-2 text-xs leading-5 text-black/50">
-                      {child.description}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Products */}
       <section className="mt-16 border-t border-black/10 pt-10">
         <div className="mb-7 flex flex-col gap-5 pb-2 md:flex-row md:items-end md:justify-between">
