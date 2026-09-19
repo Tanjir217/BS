@@ -260,21 +260,26 @@ Use one shipment row per order/provider. Customer read access should be row-leve
 
 ## Customer registration and order cancellation access
 
-The browser creates a customer profile immediately after an Appwrite Account is created. The `customers` table must therefore support this secure pattern:
+Customer Account creation and customer-profile creation are separate Appwrite operations. The browser creates the Account, then invokes the existing `manage-order` Function with an authenticated session to idempotently create the matching `customers` row. This avoids requiring customer-facing table-wide Create permission.
+
+Recommended customer-table security:
 
 - Enable Row Security.
-- Table-level **Create** permission: authenticated users (`Users`).
-- Table-level **Read/Update/Delete**: management team only.
-- New customer rows are created with the Appwrite account ID as the row ID and a row-level **Read** permission for that same user. The customer cannot update business fields such as tier, totals, or active status.
+- Do **not** grant customer table-wide Read/Update/Delete access to normal customers.
+- Server-side profile creation is performed by `manage-order`.
+- New customer rows use the Appwrite account ID as the row ID and receive a row-level **Read** permission for that same user.
+- Business fields such as tier, totals, and active status are controlled by server/admin workflows.
 
-The `manage-order` Function also serves authenticated customer cancellation requests. Its server-side authorization already checks customer ownership, cancellable order status, and pending payment status. Because the browser invokes this Function directly, its **Execute access** must include authenticated users (`Users`) in addition to the management team. Do not remove the server-side management-role checks; management operations remain protected by the Function.
+The `manage-order` Function also serves authenticated customer cancellation, address, and profile-bootstrap requests. Its server-side authorization checks customer ownership for private operations and management membership for management operations. Because normal customers invoke this Function directly, its **Execute access** must include authenticated users (`Users`) in addition to the management team.
 
 In Appwrite Console:
 
 1. Open **Functions → manage-order → Settings → Execute access**.
 2. Add **Users** as an execute role.
 3. Keep the management team role available for management users.
-4. Redeploy if Appwrite marks the function configuration as needing deployment.
+4. Add `APPWRITE_CUSTOMERS_TABLE_ID` to the Function environment.
+5. Confirm the Function has database scopes to read/write the `customers` and `customer_addresses` tables.
+6. Redeploy `manage-order` after code or environment changes.
 
 The error `Missing "execute" permission for role "team:..."` means the client session is reaching the Function with a team-only execute permission, so a normal customer session is rejected before `manage-order` can run.
 
@@ -327,6 +332,7 @@ APPWRITE_ORDER_ITEMS_TABLE_ID
 APPWRITE_RETURN_REQUESTS_TABLE_ID
 APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID
 APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID
+APPWRITE_CUSTOMERS_TABLE_ID
 APPWRITE_MANAGEMENT_TEAM_ID
 ```
 
