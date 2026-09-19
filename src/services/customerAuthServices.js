@@ -1,38 +1,41 @@
-import { Permission, Role } from "appwrite";
-import { account } from "../utils/appwrite";
-import {
-  createCustomer,
-  getCustomerById,
-} from "./customerServices";
-
+import { account, functions } from "../utils/appwrite";
 
 async function ensureCustomerProfile(user) {
   if (!user?.$id) {
     throw new Error("Unable to determine the customer account ID.");
   }
 
-  const existingById = await getCustomerById(user.$id);
-  if (existingById) {
-    return existingById;
+  const functionId = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
+
+  if (!functionId) {
+    throw new Error("Customer profile service is not configured.");
   }
 
-  const nameParts = String(user.name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  const firstName = nameParts.shift() || "Customer";
-  const lastName = nameParts.join(" ");
-
-  return createCustomer({
-    rowId: user.$id,
-    account_ID: user.$id,
-    first_Name: firstName,
-    last_Name: lastName,
-    email: user.email || "",
-    phone: "",
-    permissions: [Permission.read(Role.user(user.$id))],
+  const execution = await functions.createExecution({
+    functionId,
+    body: JSON.stringify({
+      action: "ensure_customer_profile",
+      name: user.name || "Customer",
+      email: user.email || "",
+    }),
+    async: false,
+    path: "/",
+    method: "POST",
   });
+
+  let response;
+
+  try {
+    response = JSON.parse(execution.responseBody || "{}");
+  } catch {
+    throw new Error("The customer profile service returned an invalid response.");
+  }
+
+  if (!response.success || !response.customer) {
+    throw new Error(response.error || "Unable to create your customer profile.");
+  }
+
+  return response.customer;
 }
 
 export async function updateCustomerProfile({
