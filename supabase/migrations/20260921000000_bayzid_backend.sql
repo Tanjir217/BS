@@ -258,6 +258,11 @@ after update of email, raw_user_meta_data on auth.users
 for each row
 execute function public.sync_auth_user_to_customer();
 
+-- These are trigger entry points, not client-callable APIs.
+revoke execute on function public.handle_new_auth_user() from public, anon, authenticated;
+revoke execute on function public.sync_auth_user_to_customer() from public, anon, authenticated;
+revoke execute on function public.set_updated_at() from public, anon, authenticated;
+
 -- ---------------------------------------------------------------------------
 -- Catalog
 -- ---------------------------------------------------------------------------
