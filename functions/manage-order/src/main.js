@@ -79,14 +79,28 @@ function parseBody(req) {
   }
 }
 
-function assertConfigured() {
+const CUSTOMER_ADDRESS_ACTIONS = new Set([
+  "ensure_customer_profile",
+  "get_customer_addresses",
+  "create_customer_address",
+  "update_customer_address",
+  "set_default_customer_address",
+  "delete_customer_address",
+]);
+
+function assertConfigured(action) {
   const required = {
     APPWRITE_DATABASE_ID: DATABASE_ID,
-    APPWRITE_PRODUCTS_TABLE_ID: PRODUCTS_TABLE_ID,
-    APPWRITE_ORDERS_TABLE_ID: ORDERS_TABLE_ID,
-    APPWRITE_ORDER_ITEMS_TABLE_ID: ORDER_ITEMS_TABLE_ID,
-    APPWRITE_MANAGEMENT_TEAM_ID: MANAGEMENT_TEAM_ID,
   };
+
+  if (CUSTOMER_ADDRESS_ACTIONS.has(action)) {
+    required.APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID = CUSTOMER_ADDRESSES_TABLE_ID;
+  } else {
+    required.APPWRITE_PRODUCTS_TABLE_ID = PRODUCTS_TABLE_ID;
+    required.APPWRITE_ORDERS_TABLE_ID = ORDERS_TABLE_ID;
+    required.APPWRITE_ORDER_ITEMS_TABLE_ID = ORDER_ITEMS_TABLE_ID;
+    required.APPWRITE_MANAGEMENT_TEAM_ID = MANAGEMENT_TEAM_ID;
+  }
 
   const missing = Object.entries(required).filter(([, value]) => !value).map(([key]) => key);
 
@@ -250,7 +264,6 @@ async function getOrder(tablesDB, orderId) {
   return response.rows[0] || null;
 }
 
-async 
 async function getCustomerAddresses(tablesDB, userId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -977,25 +990,16 @@ export default async ({ req, res, log, error: logError }) => {
   }
 
   try {
-    assertConfigured();
+    const payload = parseBody(req);
+    const { action, orderId } = payload;
+    assertConfigured(action);
 
     const userId = getUserId(req);
     const client = getServerClient(req);
-    const payload = parseBody(req);
-    const { action, orderId } = payload;
 
     const tablesDB = new TablesDB(client);
 
-    const addressActions = new Set([
-      "ensure_customer_profile",
-      "get_customer_addresses",
-      "create_customer_address",
-      "update_customer_address",
-      "set_default_customer_address",
-      "delete_customer_address",
-    ]);
-
-    if (!addressActions.has(action) && (!orderId || typeof orderId !== "string")) {
+    if (!CUSTOMER_ADDRESS_ACTIONS.has(action) && (!orderId || typeof orderId !== "string")) {
       const error = new Error("Order ID is required.");
       error.status = 400;
       throw error;
