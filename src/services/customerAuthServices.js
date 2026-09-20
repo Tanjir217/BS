@@ -1,41 +1,58 @@
-import { account, functions } from "../utils/appwrite";
+import { Permission, Role } from "appwrite";
+import { account } from "../utils/appwrite";
+import { createCustomer, getCustomerById } from "./customerServices";
 
 async function ensureCustomerProfile(user) {
   if (!user?.$id) {
     throw new Error("Unable to determine the customer account ID.");
   }
 
-  const functionId = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
+  const existingCustomer = await getCustomerById(user.$id);
 
-  if (!functionId) {
-    throw new Error("Customer profile service is not configured.");
+  if (existingCustomer) {
+    return existingCustomer;
   }
 
-  const execution = await functions.createExecution({
-    functionId,
-    body: JSON.stringify({
-      action: "ensure_customer_profile",
-      name: user.name || "Customer",
-      email: user.email || "",
-    }),
-    async: false,
-    path: "/",
-    method: "POST",
-  });
+  const nameParts = String(user.name || "Customer")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
-  let response;
+  const firstName = nameParts.shift() || "Customer";
+  const lastName = nameParts.join(" ");
 
   try {
-    response = JSON.parse(execution.responseBody || "{}");
-  } catch {
-    throw new Error("The customer profile service returned an invalid response.");
-  }
+    return await createCustomer({
+      rowId: user.$id,
+      account_ID: user.$id,
+      first_Name: firstName,
+      last_Name: lastName,
+      email: user.email || "",
+      phone: "",
+      permissions: [
+        Permission.read(Role.user(user.$id)),
+      ],
+    });
+  } catch (error) {
+    // If two auth/profile requests race, the second request can see
+    // the row immediately after the first request creates it.
+    if (error?.code === 409) {
+      const customer = await getCustomerById(user.$id);
 
-  if (!response.success || !response.customer) {
-    throw new Error(response.error || "Unable to create your customer profile.");
-  }
+      if (customer) {
+        return customer;
+      }
+    }
 
-  return response.customer;
+    if (error?.code === 401 || error?.code === 403) {
+      throw new Error(
+        "Your account was created, but the customer profile could not be saved. " +
+        "In Appwrite, enable Row Security on the customers table and grant the Users role CREATE permission only.",
+      );
+    }
+
+    throw error;
+  }
 }
 
 export async function updateCustomerProfile({
