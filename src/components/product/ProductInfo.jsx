@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import ProductAccordion from "./ProductAccordion";
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 function formatPrice(value) {
   const numericValue = Number(value);
@@ -18,9 +19,11 @@ function formatPrice(value) {
 
 function ProductInfo({ product }) {
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
 
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const wishlisted = isWishlisted(product.$id);
+
 
   const stockQuantity = Number(product.stockQuantity) || 0;
 
@@ -61,18 +64,18 @@ function ProductInfo({ product }) {
 
           <button
             className={`product-info__wishlist ${
-              isWishlisted ? "is-active" : ""
+              wishlisted ? "is-active" : ""
             }`}
             type="button"
-            onClick={() => setIsWishlisted((current) => !current)}
+            onClick={() => toggleWishlist(product)}
             aria-label={
-              isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+              wishlisted ? "Remove from wishlist" : "Add to wishlist"
             }
           >
             <Heart
               size={21}
               strokeWidth={1.25}
-              fill={isWishlisted ? "currentColor" : "none"}
+              fill={wishlisted ? "currentColor" : "none"}
             />
           </button>
         </div>
