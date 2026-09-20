@@ -2,7 +2,7 @@ import { Heart, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import ProductGrid from "../components/product/ProductGrid";
+import ProductCard from "../components/product/ProductCard";
 import { useWishlist } from "../context/WishlistContext";
 import { getProductsByIds } from "../services/productServices";
 
@@ -77,7 +77,15 @@ function WishlistPage() {
 
         {loading ? (
           <div className="mt-10">
-            <ProductGrid products={[]} isLoading />
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <div key={index} className="animate-pulse rounded-[1.75rem] bg-white p-2.5">
+                  <div className="aspect-[0.92] rounded-[1.35rem] bg-black/5" />
+                  <div className="mt-4 h-4 w-2/3 rounded bg-black/5" />
+                  <div className="mt-2 h-3 w-1/3 rounded bg-black/5" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : products.length === 0 ? (
           <div className="mt-10 rounded-[2rem] bg-white px-6 py-20 text-center shadow-[0_18px_50px_rgba(0,0,0,0.05)]">
@@ -108,7 +116,7 @@ function WishlistPage() {
             <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {products.map((product) => (
                 <div key={product.$id} className="relative min-w-0">
-                  <ProductGrid products={[product]} />
+                  <ProductCard product={product} />
                   <button
                     type="button"
                     onClick={() => removeFromWishlist(product.$id)}
