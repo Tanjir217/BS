@@ -114,11 +114,13 @@ function HomePage() {
 
       {selectedSection && (
         <div className="mt-6 space-y-6">
-          <EditorialManager
-            key={`editorial-${selectedSection.$id}`}
-            section={selectedSection}
-            onClose={() => setSelectedSection(null)}
-          />
+          {selectedSection.type === "editorial-section" && (
+            <EditorialManager
+              key={`editorial-${selectedSection.$id}`}
+              section={selectedSection}
+              onClose={() => setSelectedSection(null)}
+            />
+          )}
 
           <SectionProductManager
             key={`products-${selectedSection.$id}`}
