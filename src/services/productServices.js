@@ -459,6 +459,7 @@ export async function searchProducts(searchTerm, { limit = 48 } = {}) {
         Query.contains("name", term),
         Query.contains("slug", term),
         Query.contains("sku", term),
+        Query.contains("color", term),
         Query.contains("description", term),
       ]),
       Query.orderDesc("$createdAt"),
