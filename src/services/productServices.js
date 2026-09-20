@@ -409,3 +409,70 @@ export async function getProductsByCategoryIds(
     totalPages: Math.ceil(response.total / limit),
   };
 }
+
+
+export async function getProductsByIds(productIds = []) {
+  const ids = [...new Set(productIds.filter(Boolean))];
+
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries: [
+      Query.equal("$id", ids),
+      Query.equal("isActive", true),
+      Query.limit(Math.min(100, ids.length)),
+    ],
+    total: false,
+  });
+
+  const primaryImages = await getPrimaryProductImages(
+    response.rows.map((product) => product.$id),
+  );
+
+  const products = response.rows.map((product) => ({
+    ...product,
+    primaryImage: primaryImages[product.$id] ?? null,
+  }));
+
+  const byId = new Map(products.map((product) => [product.$id, product]));
+
+  return ids.map((id) => byId.get(id)).filter(Boolean);
+}
+
+export async function searchProducts(searchTerm, { limit = 48 } = {}) {
+  const term = String(searchTerm || "").trim();
+
+  if (!term) {
+    return [];
+  }
+
+  const response = await tablesDB.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCTS_TABLE_ID,
+    queries: [
+      Query.equal("isActive", true),
+      Query.or([
+        Query.contains("name", term),
+        Query.contains("slug", term),
+        Query.contains("sku", term),
+        Query.contains("description", term),
+      ]),
+      Query.orderDesc("$createdAt"),
+      Query.limit(limit),
+    ],
+    total: false,
+  });
+
+  const primaryImages = await getPrimaryProductImages(
+    response.rows.map((product) => product.$id),
+  );
+
+  return response.rows.map((product) => ({
+    ...product,
+    primaryImage: primaryImages[product.$id] ?? null,
+  }));
+}
