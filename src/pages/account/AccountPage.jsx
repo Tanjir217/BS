@@ -114,18 +114,7 @@ import {
               <span>
                 Manage your account information.
               </span>
-            </Link>
-
-            <Link to="/wishlist">
-              <strong>
-                Wishlist
-              </strong>
-
-              <span>
-                View products you saved for later.
-              </span>
-            </Link>
-          </div>
+            </Link>          </div>
   
           <button
             type="button"
