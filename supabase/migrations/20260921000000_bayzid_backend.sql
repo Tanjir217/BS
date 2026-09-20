@@ -16,6 +16,7 @@
 -- return_requests, delivery_shipments, and the new server-side wishlists.
 
 create extension if not exists pgcrypto;
+create extension if not exists pg_trgm;
 
 create schema if not exists private;
 
@@ -317,6 +318,21 @@ create index products_low_stock_idx
   on public.products(stock_quantity)
   where is_active = true;
 
+create index products_name_trgm_idx
+  on public.products using gin (lower(name) gin_trgm_ops);
+
+create index products_slug_trgm_idx
+  on public.products using gin (lower(slug) gin_trgm_ops);
+
+create index products_sku_trgm_idx
+  on public.products using gin (lower(sku) gin_trgm_ops);
+
+create index products_color_trgm_idx
+  on public.products using gin (lower(color) gin_trgm_ops);
+
+create index products_description_trgm_idx
+  on public.products using gin (lower(description) gin_trgm_ops);
+
 create table public.product_images (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references public.products(id) on delete cascade,
@@ -383,7 +399,7 @@ create index home_sections_products_product_idx
 
 create table public.category_promotions (
   id uuid primary key default gen_random_uuid(),
-  category_id uuid,
+  category_id uuid references public.categories(id) on delete cascade,
   promotion_key text,
   title text not null,
   sub_title text not null default '',
@@ -620,6 +636,40 @@ create index wishlists_product_idx
 -- ---------------------------------------------------------------------------
 -- Updated-at triggers
 -- ---------------------------------------------------------------------------
+
+create or replace function public.protect_customer_system_fields()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+begin
+  if current_user in ('postgres', 'service_role') then
+    return new;
+  end if;
+
+  if (select private.has_management_role('manager')) then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.account_id is distinct from old.account_id
+     or new.customer_tier is distinct from old.customer_tier
+     or new.total_orders is distinct from old.total_orders
+     or new.total_spent is distinct from old.total_spent
+     or new.last_order_at is distinct from old.last_order_at
+     or new.is_active is distinct from old.is_active
+  then
+    raise exception 'Customer system fields cannot be changed by this role';
+  end if;
+
+  return new;
+end;
+$;
+
+create trigger customers_protect_system_fields
+before update on public.customers
+for each row execute function public.protect_customer_system_fields();
 
 create trigger customers_set_updated_at
 before update on public.customers
@@ -1458,9 +1508,13 @@ to authenticated;
 
 grant update on table public.customers to authenticated;
 grant update, delete on table public.customer_addresses to authenticated;
-grant update on table public.orders to authenticated;
-grant update on table public.return_requests to authenticated;
-grant update on table public.delivery_shipments to authenticated;
+-- Order, return, and shipment mutations are performed through
+-- authenticated database functions / Edge Functions, not direct table updates.
+-- This prevents a browser client from changing financial or courier state
+-- by writing rows directly.
+revoke update on table public.orders from authenticated;
+revoke update on table public.return_requests from authenticated;
+revoke update on table public.delivery_shipments from authenticated;
 
 -- Owner-only membership management.
 grant insert, update, delete on table public.management_memberships to authenticated;
