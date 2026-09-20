@@ -260,29 +260,33 @@ Use one shipment row per order/provider. Customer read access should be row-leve
 
 ## Customer registration and order cancellation access
 
-Customer Account creation and customer-profile creation are separate Appwrite operations. The browser creates the Account, then invokes the existing `manage-order` Function with an authenticated session to idempotently create the matching `customers` row. This avoids requiring customer-facing table-wide Create permission.
+Customer Account creation and the matching `customers` row are created from the authenticated browser session. This keeps registration independent from the order-management Function, so an outdated or unavailable `manage-order` deployment cannot break sign-in/sign-up.
 
-Recommended customer-table security:
+Configure the `customers` table with this private-row pattern:
 
-- Enable Row Security.
-- Do **not** grant customer table-wide Read/Update/Delete access to normal customers.
-- Server-side profile creation is performed by `manage-order`.
-- New customer rows use the Appwrite account ID as the row ID and receive a row-level **Read** permission for that same user.
-- Business fields such as tier, totals, and active status are controlled by server/admin workflows.
+1. Enable **Row Security**.
+2. Under table **Permissions**, grant **Users → Create** only.
+3. Do not grant table-level Read/Update/Delete to normal customers.
+4. The frontend creates each row with a row-level Read permission for that account.
+5. Management access can remain at the table/team level as required by the admin screens.
 
-The `manage-order` Function also serves authenticated customer cancellation, address, and profile-bootstrap requests. Its server-side authorization checks customer ownership for private operations and management membership for management operations. Because normal customers invoke this Function directly, its **Execute access** must include authenticated users (`Users`) in addition to the management team.
+This is the Appwrite-recommended pattern for private user-owned rows: table-level Create lets authenticated users create their own rows, while Row Security plus row-level permissions prevents them from reading other customers' rows.
+
+The `manage-order` Function is still used for customer cancellation, addresses, returns, and courier/order-management operations. Its **Execute access** must include authenticated users (`Users`) for customer actions.
 
 In Appwrite Console:
 
-1. Open **Functions → manage-order → Settings → Execute access**.
-2. Add **Users** as an execute role.
-3. Keep the management team role available for management users.
-4. Add `APPWRITE_CUSTOMERS_TABLE_ID` to the Function environment.
-5. Confirm the Function has database scopes to read/write the `customers` and `customer_addresses` tables.
-6. Redeploy `manage-order` after code or environment changes.
+1. Open **Databases → customers → Settings → Permissions**.
+2. Add **Users** with **Create** only.
+3. Enable **Row Security**.
+4. Keep management-team permissions needed by the admin application.
+5. Open **Functions → manage-order → Settings → Execute access**.
+6. Add **Users** as an execute role.
+7. Keep the management team role for management users.
+8. Ensure `APPWRITE_CUSTOMERS_TABLE_ID` and `APPWRITE_CUSTOMER_ADDRESSES_TABLE_ID` are configured for the Function.
+9. Redeploy `manage-order` when its code/environment changes.
 
-The error `Missing "execute" permission for role "team:..."` means the client session is reaching the Function with a team-only execute permission, so a normal customer session is rejected before `manage-order` can run.
-
+The browser no longer calls `manage-order` merely to initialize authentication or create the customer profile.
 ## 3. Storage bucket
 
 Create one bucket for product/editorial images.
