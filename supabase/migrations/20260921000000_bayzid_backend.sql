@@ -647,7 +647,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $protect_customer_system_fields$
 begin
   if current_user in ('postgres', 'service_role') then
     return new;
@@ -670,7 +670,7 @@ begin
 
   return new;
 end;
-$;
+$protect_customer_system_fields$;
 
 create trigger customers_protect_system_fields
 before update on public.customers
