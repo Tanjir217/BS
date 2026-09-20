@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import ProductGrid from "../components/product/ProductGrid";
+import InspiredProductSlider from "../components/sections/InspiredProductSlider";
+import { getInspiredProducts } from "../services/homeServices";
 import { searchProducts } from "../services/productServices";
 
 function SearchPage() {
@@ -12,10 +14,32 @@ function SearchPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(Boolean(query));
   const [error, setError] = useState("");
+  const [inspiredProducts, setInspiredProducts] = useState([]);
 
   useEffect(() => {
     setInput(query);
   }, [query]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInspiredProducts() {
+      try {
+        const results = await getInspiredProducts();
+        if (isMounted) {
+          setInspiredProducts(results);
+        }
+      } catch (inspiredError) {
+        console.error("Inspired products failed to load:", inspiredError);
+      }
+    }
+
+    loadInspiredProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,7 +124,7 @@ function SearchPage() {
               onChange={(event) => setInput(event.target.value)}
               placeholder="Search by product name, colour, SKU..."
               aria-label="Search products"
-              className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none placeholder:text-black/30"
+              className="min-w-0 flex-1 bg-transparent px-2 py-3 text-sm outline-none placeholder:text-black/30"
               autoFocus
             />
             {input && (
@@ -159,6 +183,12 @@ function SearchPage() {
             </>
           )}
         </section>
+
+        {inspiredProducts.length > 0 && (
+          <div className="mt-14 -mx-4 sm:-mx-6 md:-mx-8">
+            <InspiredProductSlider products={inspiredProducts} />
+          </div>
+        )}
       </div>
     </main>
   );
