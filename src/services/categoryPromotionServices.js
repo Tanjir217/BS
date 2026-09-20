@@ -10,6 +10,31 @@ const STORAGE_BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
 
 export const ALL_PRODUCTS_PROMOTION_KEY = "all-products";
 
+function requireCategoryPromotionConfig() {
+  if (!DATABASE_ID) {
+    throw new Error(
+      "Appwrite database is not configured. Set VITE_APPWRITE_DATABASE_ID.",
+    );
+  }
+
+  if (!CATEGORY_PROMOTIONS_TABLE_ID) {
+    throw new Error(
+      "Category promotions table is not configured. Set VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID to the Appwrite table ID for category_promotions.",
+    );
+  }
+
+  if (!STORAGE_BUCKET_ID) {
+    throw new Error(
+      "Appwrite storage is not configured. Set VITE_APPWRITE_BUCKET_ID.",
+    );
+  }
+
+  return {
+    databaseId: DATABASE_ID,
+    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+  };
+}
+
 function toPromotion(row) {
   if (!row) return null;
 
@@ -25,11 +50,12 @@ function toPromotion(row) {
 }
 
 export async function getCategoryPromotion(categoryId) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
   const key = categoryId || ALL_PRODUCTS_PROMOTION_KEY;
 
   const response = await tablesDB.listRows({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+    databaseId,
+    tableId,
     queries: [Query.equal("category_ID", key), Query.limit(1)],
     total: false,
   });
@@ -39,9 +65,11 @@ export async function getCategoryPromotion(categoryId) {
 }
 
 export async function getCategoryPromotionsForAdmin() {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
+
   const response = await tablesDB.listRows({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+    databaseId,
+    tableId,
     queries: [Query.orderAsc("sort_Order")],
     total: false,
   });
@@ -50,9 +78,11 @@ export async function getCategoryPromotionsForAdmin() {
 }
 
 export async function getPromotionForAdmin(categoryId) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
+
   const response = await tablesDB.listRows({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+    databaseId,
+    tableId,
     queries: [Query.equal("category_ID", categoryId), Query.limit(1)],
     total: false,
   });
@@ -61,6 +91,7 @@ export async function getPromotionForAdmin(categoryId) {
 }
 
 export async function createCategoryPromotion(categoryId) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
   const existing = await getPromotionForAdmin(categoryId);
 
   if (existing) {
@@ -68,8 +99,8 @@ export async function createCategoryPromotion(categoryId) {
   }
 
   const response = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+    databaseId,
+    tableId,
     rowId: ID.unique(),
     data: {
       category_ID: categoryId,
@@ -88,9 +119,11 @@ export async function createCategoryPromotion(categoryId) {
 }
 
 export async function updateCategoryPromotion(promotionId, data) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
+
   const response = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+    databaseId,
+    tableId,
     rowId: promotionId,
     data: {
       title: String(data.title || "").trim(),
@@ -106,6 +139,8 @@ export async function updateCategoryPromotion(promotionId, data) {
 }
 
 export async function uploadCategoryPromotionImage(promotionId, file) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
+
   if (!file) throw new Error("No image selected.");
 
   const uploadedFile = await storage.createFile({
@@ -116,8 +151,8 @@ export async function uploadCategoryPromotionImage(promotionId, file) {
 
   try {
     const updated = await tablesDB.updateRow({
-      databaseId: DATABASE_ID,
-      tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+      databaseId,
+      tableId,
       rowId: promotionId,
       data: { image_File_ID: uploadedFile.$id },
     });
@@ -141,6 +176,8 @@ export async function replaceCategoryPromotionImage(
   oldFileId,
   file,
 ) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
+
   if (!file) throw new Error("No image selected.");
 
   const uploadedFile = await storage.createFile({
@@ -151,8 +188,8 @@ export async function replaceCategoryPromotionImage(
 
   try {
     const updated = await tablesDB.updateRow({
-      databaseId: DATABASE_ID,
-      tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+      databaseId,
+      tableId,
       rowId: promotionId,
       data: { image_File_ID: uploadedFile.$id },
     });
@@ -183,9 +220,11 @@ export async function replaceCategoryPromotionImage(
 }
 
 export async function removeCategoryPromotionImage(promotionId, fileId) {
+  const { databaseId, tableId } = requireCategoryPromotionConfig();
+
   const updated = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORY_PROMOTIONS_TABLE_ID,
+    databaseId,
+    tableId,
     rowId: promotionId,
     data: { image_File_ID: "" },
   });
@@ -201,6 +240,18 @@ export async function removeCategoryPromotionImage(promotionId, fileId) {
 }
 
 export async function getPromotionCategories() {
+  if (!DATABASE_ID) {
+    throw new Error(
+      "Appwrite database is not configured. Set VITE_APPWRITE_DATABASE_ID.",
+    );
+  }
+
+  if (!CATEGORIES_TABLE_ID) {
+    throw new Error(
+      "Categories table is not configured. Set VITE_APPWRITE_CATEGORIES_TABLE_ID.",
+    );
+  }
+
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
