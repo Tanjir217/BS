@@ -30,6 +30,10 @@ import AddressesPage from "../pages/account/AddressesPage";
 import OrdersPage from "../pages/account/OrdersPage";
 import OrderDetailPage from "../pages/account/OrderDetailPage";
 import ReturnRequestPage from "../pages/account/ReturnRequestPage";
+import WishlistPage from "../pages/WishlistPage";
+import SearchPage from "../pages/SearchPage";
+import AboutPage from "../pages/content/AboutPage";
+import CustomerServicesPage from "../pages/content/CustomerServicesPage";
 
 const router = createBrowserRouter([
   {
@@ -43,6 +47,10 @@ const router = createBrowserRouter([
       { path: "women/*", element: <CategoryPage /> },
       { path: "men/*", element: <CategoryPage /> },
       { path: "products/:slug", element: <ProductDetail /> },
+      { path: "search", element: <SearchPage /> },
+      { path: "wishlist", element: <WishlistPage /> },
+      { path: "about", element: <AboutPage /> },
+      { path: "customer-services", element: <CustomerServicesPage /> },
       { path: "cart", element: <CartPage /> },
       { path: "checkout", element: <CheckoutPage /> },
       { path: "account/login", element: <LoginPage /> },

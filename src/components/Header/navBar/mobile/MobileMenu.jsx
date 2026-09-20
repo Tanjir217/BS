@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
 
 function MobileMenu({
   navigation = [],
@@ -143,6 +144,15 @@ function MobileMenu({
 
                 <div className="mt-5 space-y-3">
                   <Link
+                    to="/search"
+                    onClick={closeMenu}
+                    className="flex h-12 items-center justify-center gap-2 rounded-md border border-gray-900 text-[12px] no-underline"
+                  >
+                    <Search size={15} />
+                    SEARCH
+                  </Link>
+
+                  <Link
                     to="/wishlist"
                     onClick={closeMenu}
                     className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
@@ -151,7 +161,7 @@ function MobileMenu({
                   </Link>
 
                   <Link
-                    to="/login"
+                    to="/account/login"
                     onClick={closeMenu}
                     className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
                   >

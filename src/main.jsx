@@ -10,6 +10,7 @@ import router from "./routes/router";
 
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import { CustomerAuthProvider } from "./context/CustomerAuthContext";
 import ErrorBoundary from "./components/system/ErrorBoundary";
 
@@ -19,7 +20,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <CustomerAuthProvider>
           <CartProvider>
-            <RouterProvider router={router} />
+            <WishlistProvider>
+              <RouterProvider router={router} />
+            </WishlistProvider>
           </CartProvider>
         </CustomerAuthProvider>
       </AuthProvider>

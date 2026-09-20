@@ -114,8 +114,7 @@ import {
               <span>
                 Manage your account information.
               </span>
-            </Link>
-          </div>
+            </Link>          </div>
   
           <button
             type="button"

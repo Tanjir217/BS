@@ -8,6 +8,7 @@ import MobileMenu from "./mobile/MobileMenu";
 import AccountButton from "./shared/AccountButton";
 import CartButton from "./shared/CartButton";
 import SearchButton from "./shared/SearchButton";
+import WishlistButton from "./shared/WishlistButton";
 
 import { getCategories } from "../../../services/categoryServices";
 
@@ -134,6 +135,8 @@ function NavBar() {
             aria-label="Account"
             className=""
           />
+
+          <WishlistButton />
 
           <CartButton
             type="button"
