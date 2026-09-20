@@ -20,13 +20,9 @@ function SectionProductManager({ section, onClose }) {
     try {
       setLoading(true);
       setError("");
-
-      const data = await getSectionProductsWithDetails(section.$id);
-
-      setProducts(data);
+      setProducts(await getSectionProductsWithDetails(section.$id));
     } catch (error) {
       console.error("Failed to load section products:", error);
-
       setError("Failed to load products.");
     } finally {
       setLoading(false);
@@ -38,22 +34,29 @@ function SectionProductManager({ section, onClose }) {
   }, [section.$id]);
 
   async function handleRemove(sectionProductId) {
-    const confirmed = window.confirm(
-      `Remove this product from ${(
-        section.title || section.section_key
-      )}?`,
-    );
-
-    if (!confirmed) return;
+    if (!window.confirm(`Remove this product from ${section.title || section.section_key}?`)) {
+      return;
+    }
 
     try {
       await removeProductFromSection(sectionProductId);
-
       await loadProducts();
     } catch (error) {
       console.error("Failed to remove product:", error);
-
       setError("Failed to remove product.");
+    }
+  }
+
+  async function handleToggleActive(item) {
+    try {
+      setError("");
+      await updateSectionProduct(item.$id, {
+        isActive: !item.is_Active,
+      });
+      await loadProducts();
+    } catch (error) {
+      console.error("Failed to update section product visibility:", error);
+      setError("Failed to update product visibility.");
     }
   }
 
@@ -61,9 +64,7 @@ function SectionProductManager({ section, onClose }) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file || !item.product?.$id) {
-      return;
-    }
+    if (!file || !item.product?.$id) return;
 
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setError("Use JPG, PNG or WebP for product images.");
@@ -77,7 +78,6 @@ function SectionProductManager({ section, onClose }) {
 
     try {
       setError("");
-
       const nextSortOrder =
         item.productImages?.length > 0
           ? Math.max(...item.productImages.map((image) => Number(image.sortOrder) || 0)) + 1
@@ -91,10 +91,7 @@ function SectionProductManager({ section, onClose }) {
         isPrimary: false,
       });
 
-      await updateSectionProduct(item.$id, {
-        imageId: uploaded.id,
-      });
-
+      await updateSectionProduct(item.$id, { imageId: uploaded.id });
       await loadProducts();
     } catch (error) {
       console.error("Failed to upload editorial product image:", error);
@@ -115,39 +112,17 @@ function SectionProductManager({ section, onClose }) {
 
   async function handleMove(index, direction) {
     const current = products[index];
-  
-    if (!current) {
-      return;
-    }
-  
-    const targetIndex =
-      direction === "up"
-        ? index - 1
-        : index + 1;
-  
-    if (
-      targetIndex < 0 ||
-      targetIndex >= products.length
-    ) {
-      return;
-    }
-  
+    if (!current) return;
+
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= products.length) return;
+
     try {
       setError("");
-  
-      await moveSectionProduct(
-        section.$id,
-        current.$id,
-        direction
-      );
-  
+      await moveSectionProduct(section.$id, current.$id, direction);
       await loadProducts();
     } catch (error) {
-      console.error(
-        "Failed to reorder products:",
-        error
-      );
-  
+      console.error("Failed to reorder products:", error);
       setError("Failed to reorder products.");
     }
   }
@@ -157,13 +132,13 @@ function SectionProductManager({ section, onClose }) {
       <div className="flex items-center justify-between border-b border-gray-200 p-5">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            {section.title || "New Collection"}
+            {section.title || "Homepage section"}
           </h2>
-
           <p className="mt-1 text-sm text-gray-500">
-            Manage products in this homepage section.
+            Manage products, visibility, order, and editorial imagery.
           </p>
         </div>
+
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -183,16 +158,11 @@ function SectionProductManager({ section, onClose }) {
       </div>
 
       <div className="p-5">
-        {loading && (
-          <p className="text-sm text-gray-500">Loading products...</p>
-        )}
-
+        {loading && <p className="text-sm text-gray-500">Loading products...</p>}
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
         {!loading && products.length === 0 && (
-          <p className="text-sm text-gray-500">
-            No products assigned to this section.
-          </p>
+          <p className="text-sm text-gray-500">No products assigned to this section.</p>
         )}
 
         {!loading && products.length > 0 && (
@@ -200,7 +170,7 @@ function SectionProductManager({ section, onClose }) {
             {products.map((item, index) => (
               <div
                 key={item.$id}
-                className="flex items-center gap-4 rounded-lg border border-gray-200 p-3"
+                className="flex items-start gap-4 rounded-lg border border-gray-200 p-3"
               >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
                   {item.selectedImage?.url ? (
@@ -220,26 +190,37 @@ function SectionProductManager({ section, onClose }) {
                   <p className="font-medium text-gray-900">
                     {item.product?.name || "Product not found"}
                   </p>
-
-                  <p className="text-sm text-gray-500">
-                    {item.product?.sku || "—"}
-                  </p>
-
+                  <p className="text-sm text-gray-500">{item.product?.sku || "—"}</p>
                   <p className="text-sm font-medium text-gray-900">
                     ৳{item.product?.price ?? "—"}
                   </p>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <label className="flex items-center gap-2 text-xs text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(item.is_Active)}
+                        onChange={() => handleToggleActive(item)}
+                      />
+                      Show in section
+                    </label>
+                  </div>
 
                   {section.type === "editorial-section" && item.productImages?.length > 0 && (
                     <div className="mt-3 max-w-sm">
                       <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
                         Slider image
                       </p>
+
                       <CustomDropdown
                         value={item.selectedImage?.id || ""}
                         onChange={(value) => handleImageChange(item, value)}
                         options={item.productImages.map((image, imageIndex) => ({
                           value: image.id,
-                          label: "Image " + (imageIndex + 1) + (image.isPrimary ? " · Primary" : ""),
+                          label:
+                            "Image " +
+                            (imageIndex + 1) +
+                            (image.isPrimary ? " · Primary" : ""),
                         }))}
                         className="w-full"
                         menuClassName="min-w-full"
@@ -258,7 +239,7 @@ function SectionProductManager({ section, onClose }) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     disabled={index === 0}
@@ -267,7 +248,6 @@ function SectionProductManager({ section, onClose }) {
                   >
                     ↑
                   </button>
-
                   <button
                     type="button"
                     disabled={index === products.length - 1}
@@ -276,7 +256,6 @@ function SectionProductManager({ section, onClose }) {
                   >
                     ↓
                   </button>
-
                   <button
                     type="button"
                     onClick={() => handleRemove(item.$id)}
@@ -289,6 +268,7 @@ function SectionProductManager({ section, onClose }) {
             ))}
           </div>
         )}
+
         {showAddProduct && (
           <AddProductToSection
             section={section}
