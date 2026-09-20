@@ -1,6 +1,6 @@
 import HomeSectionStatusBadge from "./HomeSectionStatusBadge";
 
-function HomeSectionCard({ section, onManage }) {
+function HomeSectionCard({ section, onManage, onToggleActive }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -20,23 +20,31 @@ function HomeSectionCard({ section, onManage }) {
           )}
         </div>
 
-        <HomeSectionStatusBadge
-          isActive={section.is_Active}
-        />
+        <HomeSectionStatusBadge isActive={section.is_Active} />
       </div>
 
-      <div className="mt-5 flex items-center justify-between">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm text-gray-500">
           Position: {section.sort_Order}
         </span>
 
-        <button
-          type="button"
-          onClick={onManage}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Manage
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onToggleActive(section)}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            {section.is_Active ? "Disable" : "Enable"}
+          </button>
+
+          <button
+            type="button"
+            onClick={onManage}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Manage
+          </button>
+        </div>
       </div>
     </div>
   );
