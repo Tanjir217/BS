@@ -134,12 +134,27 @@ export async function registerCustomer({
     );
   }
 
-  await account.create({
-    userId: "unique()",
-    email: normalizedEmail,
-    password,
-    name: normalizedName,
-  });
+  try {
+    await account.create({
+      userId: "unique()",
+      email: normalizedEmail,
+      password,
+      name: normalizedName,
+    });
+  } catch (error) {
+    if (
+      error?.code === 409 ||
+      error?.type === "user_already_exists" ||
+      error?.type === "user_email_already_exists" ||
+      error?.type === "user_phone_already_exists"
+    ) {
+      throw new Error(
+        "An account with this email already exists. Please sign in instead.",
+      );
+    }
+
+    throw error;
+  }
 
   await account.createEmailPasswordSession({
     email: normalizedEmail,
