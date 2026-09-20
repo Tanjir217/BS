@@ -30,10 +30,7 @@ export async function getCategoryPromotion(categoryId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: CATEGORY_PROMOTIONS_TABLE_ID,
-    queries: [
-      Query.equal("category_ID", key),
-      Query.limit(1),
-    ],
+    queries: [Query.equal("category_ID", key), Query.limit(1)],
     total: false,
   });
 
@@ -56,10 +53,7 @@ export async function getPromotionForAdmin(categoryId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: CATEGORY_PROMOTIONS_TABLE_ID,
-    queries: [
-      Query.equal("category_ID", categoryId),
-      Query.limit(1),
-    ],
+    queries: [Query.equal("category_ID", categoryId), Query.limit(1)],
     total: false,
   });
 
@@ -67,6 +61,12 @@ export async function getPromotionForAdmin(categoryId) {
 }
 
 export async function createCategoryPromotion(categoryId) {
+  const existing = await getPromotionForAdmin(categoryId);
+
+  if (existing) {
+    return existing;
+  }
+
   const response = await tablesDB.createRow({
     databaseId: DATABASE_ID,
     tableId: CATEGORY_PROMOTIONS_TABLE_ID,
@@ -119,9 +119,7 @@ export async function uploadCategoryPromotionImage(promotionId, file) {
       databaseId: DATABASE_ID,
       tableId: CATEGORY_PROMOTIONS_TABLE_ID,
       rowId: promotionId,
-      data: {
-        image_File_ID: uploadedFile.$id,
-      },
+      data: { image_File_ID: uploadedFile.$id },
     });
 
     return toPromotion(updated);
@@ -156,9 +154,7 @@ export async function replaceCategoryPromotionImage(
       databaseId: DATABASE_ID,
       tableId: CATEGORY_PROMOTIONS_TABLE_ID,
       rowId: promotionId,
-      data: {
-        image_File_ID: uploadedFile.$id,
-      },
+      data: { image_File_ID: uploadedFile.$id },
     });
 
     if (oldFileId) {
@@ -191,9 +187,7 @@ export async function removeCategoryPromotionImage(promotionId, fileId) {
     databaseId: DATABASE_ID,
     tableId: CATEGORY_PROMOTIONS_TABLE_ID,
     rowId: promotionId,
-    data: {
-      image_File_ID: "",
-    },
+    data: { image_File_ID: "" },
   });
 
   if (fileId) {
@@ -217,10 +211,6 @@ export async function getPromotionCategories() {
     total: false,
   });
 
-  const rootCategories = response.rows.filter(
-    (category) => !category.parentCategoryID,
-  );
-
   return [
     {
       $id: ALL_PRODUCTS_PROMOTION_KEY,
@@ -228,6 +218,6 @@ export async function getPromotionCategories() {
       slug: "all-products",
       description: "The promotional banner for the all-products page.",
     },
-    ...rootCategories,
+    ...response.rows,
   ];
 }
