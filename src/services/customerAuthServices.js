@@ -65,13 +65,14 @@ export async function updateCustomerProfile({
 
 export async function getCurrentCustomer() {
   try {
-    const user = await account.get();
-
-    // Repair accounts created before the customer-profile
-    // bootstrap was moved behind the server Function.
-    await ensureCustomerProfile(user);
-
-    return user;
+    // Authentication initialization must only ask Appwrite whether a
+    // session exists. It must not depend on the customer-profile
+    // synchronization Function being deployed correctly.
+    //
+    // Profile synchronization is performed immediately after an
+    // explicit sign-in/sign-up, where an actionable error can be shown
+    // to the user instead of turning every page load into an auth error.
+    return await account.get();
   } catch (error) {
     if (error?.code === 401) {
       return null;
