@@ -487,7 +487,7 @@ async function deleteCustomerAddress(tablesDB, userId, addressId) {
   return { success: true };
 }
 
-function getOrderItems(tablesDB, orderId) {
+async function getOrderItems(tablesDB, orderId) {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: ORDER_ITEMS_TABLE_ID,
