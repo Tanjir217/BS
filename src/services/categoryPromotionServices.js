@@ -10,14 +10,8 @@ const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "st
 export const ALL_PRODUCTS_PROMOTION_KEY = "all-products";
 
 function requireCategoryPromotionConfig() {
-  
-
-  
-
   if (!STORAGE_BUCKET_ID) {
-    throw new Error(
-      "Appwrite storage is not configured. Set VITE_APPWRITE_BUCKET_ID.",
-    );
+    throw new Error("Supabase storefront storage is not configured.");
   }
 
   return {
