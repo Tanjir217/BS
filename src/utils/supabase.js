@@ -45,7 +45,6 @@ const FIELD_ALIASES = {
   compare_at_price: "compareAtPrice",
   product_id: "product_ID",
   file_id: "fileID",
-  sort_order: "sortOrder",
   is_primary: "isPrimary",
   section_key: "section_key",
   tier_name: "tier_name",
@@ -79,7 +78,7 @@ const FIELD_ALIASES = {
   editorial_alt: "editorial_Alt",
   cta_label: "cta_Label",
   cta_href: "cta_Href",
-  sort_order: "sort_Order",
+  sort_order: "sortOrder",
   image_file_id: "image_File_ID",
   image_id: "image_ID",
   image_alt: "image_Alt",
@@ -168,13 +167,43 @@ function splitQueryArgs(source) {
 
 function parseQuery(query) {
   if (typeof query !== "string") return null;
-  const match = query.match(/^([a-zA-Z]+)\((.*)\)$/);
+
+  const trimmed = query.trim();
+
+  // Appwrite SDKs emit compact query strings. Accept the JSON query
+  // representation too so valid queries are never silently discarded.
+  try {
+    const jsonQuery = JSON.parse(trimmed);
+    if (jsonQuery && typeof jsonQuery === "object" && !Array.isArray(jsonQuery)) {
+      const op = jsonQuery.method || jsonQuery.op;
+      const field = jsonQuery.attribute ?? jsonQuery.column;
+      const values = jsonQuery.values ?? jsonQuery.value ?? [];
+      if (op) {
+        return {
+          op,
+          args:
+            field === undefined
+              ? [values]
+              : [
+                  field,
+                  Array.isArray(values) && values.length === 1
+                    ? values[0]
+                    : values,
+                ],
+        };
+      }
+    }
+  } catch {
+    // Fall through to Appwrite's compact query syntax.
+  }
+
+  const match = trimmed.match(/^([a-zA-Z]+)\\((.*)\\)$/);
   if (!match) return null;
 
   const [, op, body] = match;
   const args = splitQueryArgs(body).map((arg) => {
     try { return JSON.parse(arg); } catch {}
-    return arg.replace(/^"(.*)"$/, "$1");
+    return arg.replace(/^\"(.*)\"$/, "$1");
   });
 
   return { op, args };
@@ -225,20 +254,42 @@ function applyQuery(builder, parsed) {
         selected = fields.join(",");
         break;
       }
-      case "or": {
+      case "or":
+      case "and": {
         const nested = Array.isArray(valueRaw) ? valueRaw.map(parseQuery).filter(Boolean) : [];
         const clauses = nested.map((n) => {
           const f = toSnakeKey(String(n.args[0] ?? ""));
           const v = n.args[1];
-          if (n.op === "contains") return `${f}.ilike.%${String(v)}%`;
-          if (n.op === "equal") return `${f}.eq.${encodeURIComponent(String(Array.isArray(v) ? v[0] : v))}`;
+          const values = Array.isArray(v) ? v : [v];
+
+          if (n.op === "contains") return f + ".ilike.%" + String(v) + "%";
+          if (n.op === "startsWith") return f + ".ilike." + String(v) + "%";
+          if (n.op === "endsWith") return f + ".ilike.%" + String(v);
+          if (n.op === "equal") {
+            if (values.length > 1) {
+              return f + ".in.(" + values.map((value) => encodeURIComponent(String(value))).join(",") + ")";
+            }
+            return f + ".eq." + encodeURIComponent(String(values[0]));
+          }
+          if (n.op === "notEqual") return f + ".neq." + encodeURIComponent(String(values[0]));
+          if (n.op === "greaterThan") return f + ".gt." + encodeURIComponent(String(values[0]));
+          if (n.op === "greaterThanEqual") return f + ".gte." + encodeURIComponent(String(values[0]));
+          if (n.op === "lessThan") return f + ".lt." + encodeURIComponent(String(values[0]));
+          if (n.op === "lessThanEqual") return f + ".lte." + encodeURIComponent(String(values[0]));
+          if (n.op === "isNull") return f + ".is.null";
+          if (n.op === "isNotNull") return f + ".not.is.null";
           return null;
         }).filter(Boolean);
-        if (clauses.length) result = result.or(clauses.join(","));
+
+        if (clauses.length) {
+          result = q.op === "or"
+            ? result.or(clauses.join(","))
+            : result.or(clauses.map((clause) => "and(" + clause + ")").join(","));
+        }
         break;
       }
       default:
-        console.warn("Unsupported Appwrite query in Supabase adapter:", q.op);
+        throw new Error("Unsupported Appwrite query in Supabase adapter: " + q.op);
     }
   }
 
