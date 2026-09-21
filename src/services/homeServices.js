@@ -138,7 +138,7 @@ export async function getEditorialSections() {
       const editorialImage = section.editorial_File_ID
         ? storage.getFileView({
             bucketId: STORAGE_BUCKET_ID,
-            fileId: section.editorialFileID,
+            fileId: section.editorial_File_ID,
           })
         : null;
 
