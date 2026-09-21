@@ -4,24 +4,15 @@ import { storage, tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
-const CATEGORY_PROMOTIONS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID;
+const CATEGORY_PROMOTIONS_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID || "category_promotions";
 const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
 export const ALL_PRODUCTS_PROMOTION_KEY = "all-products";
 
 function requireCategoryPromotionConfig() {
-  if (!DATABASE_ID) {
-    throw new Error(
-      "Appwrite database is not configured. Set VITE_APPWRITE_DATABASE_ID.",
-    );
-  }
+  
 
-  if (!CATEGORY_PROMOTIONS_TABLE_ID) {
-    throw new Error(
-      "Category promotions table is not configured. Set VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID to the Appwrite table ID for category_promotions.",
-    );
-  }
+  
 
   if (!STORAGE_BUCKET_ID) {
     throw new Error(
