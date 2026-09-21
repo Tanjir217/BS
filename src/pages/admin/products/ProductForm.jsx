@@ -18,6 +18,7 @@ const EMPTY_FORM = {
 
 function ProductForm({ product, categories, onSubmit, onCancel }) {
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [pendingFiles, setPendingFiles] = useState([]);
 
   useEffect(() => {
     if (product) {
@@ -38,6 +39,8 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
     } else {
       setFormData(EMPTY_FORM);
     }
+
+    setPendingFiles([]);
   }, [product]);
 
   function handleChange(event) {
@@ -58,6 +61,7 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
       compareAtPrice:
         formData.compareAtPrice === "" ? "" : Number(formData.compareAtPrice),
       stockQuantity: Number(formData.stockQuantity),
+      pendingFiles,
     });
   }
 
@@ -238,7 +242,10 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
           </div>
         </div>
       </section>
-      <ProductImageManager productId={product?.$id} />
+      <ProductImageManager
+        productId={product?.$id}
+        onPendingFilesChange={setPendingFiles}
+      />
       {/* Inventory */}
       <section className="mt-8 border-t border-black/8 pt-6">
         <h3 className="mb-4 text-sm font-semibold">Inventory</h3>
