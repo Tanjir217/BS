@@ -1,107 +1,55 @@
-import { Query } from "appwrite";
-
-import { account, teams } from "../utils/appwrite";
-
-const MANAGEMENT_TEAM_ID =
-  import.meta.env.VITE_APPWRITE_MANAGEMENT_TEAM_ID;
-
+import { supabase } from "../utils/supabase";
 
 export async function getCurrentUser() {
-  try {
-    return await account.get();
-  } catch (error) {
-    if (error?.code === 401) {
-      return null;
-    }
-
-    throw error;
-  }
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return null;
+  return {
+    $id: data.user.id,
+    name: data.user.user_metadata?.name || data.user.user_metadata?.full_name || "",
+    email: data.user.email || "",
+  };
 }
 
 export async function loginAdmin(email, password) {
   const normalizedEmail = String(email || "").trim();
+  if (!normalizedEmail) throw new Error("Email is required.");
+  if (!password) throw new Error("Password is required.");
 
-  if (!normalizedEmail) {
-    throw new Error("Email is required.");
-  }
-
-  if (!password) {
-    throw new Error("Password is required.");
-  }
-
-  if (!MANAGEMENT_TEAM_ID) {
-    throw new Error(
-      "Management team is not configured."
-    );
-  }
-
-  return account.createEmailPasswordSession({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: normalizedEmail,
     password,
   });
+  if (error) throw error;
+  return data.session;
 }
 
 export async function logoutAdmin() {
-  return account.deleteSession({
-    sessionId: "current",
-  });
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+  return true;
 }
 
 export async function getManagementAccess(user) {
   if (!user?.$id) {
-    return {
-      isMember: false,
-      roles: [],
-      membership: null,
-    };
+    return { isMember: false, roles: [], membership: null };
   }
 
-  if (!MANAGEMENT_TEAM_ID) {
-    throw new Error(
-      "VITE_APPWRITE_MANAGEMENT_TEAM_ID is not configured."
-    );
-  }
+  const { data, error } = await supabase
+    .from("management_memberships")
+    .select("*")
+    .eq("user_id", user.$id)
+    .maybeSingle();
 
-  try {
-    await teams.get({
-      teamId: MANAGEMENT_TEAM_ID,
-    });
-  } catch (error) {
-    if (error?.code === 404) {
-      return {
-        isMember: false,
-        roles: [],
-        membership: null,
-      };
-    }
-
-    throw error;
-  }
-
-  const membershipResponse =
-    await teams.listMemberships({
-      teamId: MANAGEMENT_TEAM_ID,
-      queries: [
-        Query.equal("userId", user.$id),
-        Query.equal("confirm", true),
-      ],
-      total: false,
-    });
-
-  const membership =
-    membershipResponse.memberships?.[0] || null;
-
-  if (!membership) {
-    return {
-      isMember: false,
-      roles: [],
-      membership: null,
-    };
-  }
+  if (error) throw error;
+  if (!data) return { isMember: false, roles: [], membership: null };
 
   return {
     isMember: true,
-    roles: membership.roles || [],
-    membership,
+    roles: [data.role],
+    membership: {
+      ...data,
+      roles: [data.role],
+      confirm: true,
+    },
   };
 }
