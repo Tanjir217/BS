@@ -21,21 +21,6 @@ function getPublishableKey() {
   throw new Error("Supabase publishable key is not configured.");
 }
 
-function getSecretKey() {
-  const direct = Deno.env.get("SUPABASE_SECRET_KEY");
-  if (direct) return direct;
-  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (legacy) return legacy;
-  const keys = Deno.env.get("SUPABASE_SECRET_KEYS");
-  if (keys) {
-    try {
-      const parsed = JSON.parse(keys);
-      if (parsed.default) return parsed.default;
-    } catch {}
-  }
-  throw new Error("Supabase secret key is not configured.");
-}
-
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -113,7 +98,6 @@ Deno.serve(async (req) => {
         "update_order_status",
         "cancel_order",
         "update_payment_status",
-        "create_courier_order",
       ].includes(action) &&
       !orderId
     ) {
