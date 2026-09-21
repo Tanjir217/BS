@@ -52,6 +52,10 @@ function ProductImageManager({
     loadImages();
   }, [productId]);
 
+  useEffect(() => {
+    onPendingFilesChange?.(pendingFiles);
+  }, [pendingFiles, onPendingFilesChange]);
+
   function handleFileSelect(event) {
     const files = Array.from(event.target.files || []);
 
@@ -66,8 +70,6 @@ function ProductImageManager({
 
     setPendingFiles((current) => {
       const updated = [...current, ...newFiles];
-
-      onPendingFilesChange?.(updated);
 
       return updated;
     });
@@ -84,8 +86,6 @@ function ProductImageManager({
       }
 
       const updated = current.filter((_, fileIndex) => fileIndex !== index);
-
-      onPendingFilesChange?.(updated);
 
       return updated;
     });
@@ -120,8 +120,6 @@ function ProductImageManager({
       });
 
       setPendingFiles([]);
-      onPendingFilesChange?.([]);
-
       await loadImages();
     } catch (error) {
       console.error("Failed to upload product images:", error);
