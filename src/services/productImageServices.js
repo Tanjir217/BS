@@ -7,7 +7,7 @@ const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const PRODUCT_IMAGES_TABLE_ID = import.meta.env
   .VITE_APPWRITE_PRODUCT_IMAGES_TABLE_ID;
 
-const STORAGE_BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
+const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
 export async function getProductImages(productId) {
   const response = await tablesDB.listRows({
