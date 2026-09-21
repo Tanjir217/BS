@@ -1312,10 +1312,6 @@ begin
   end if;
 
   if jsonb_array_length(p_item_ids) > 0 then
-    if exists (
-      select 1
-      from jsonb_array_elements_text(p_item_ids) as requested_item(item_id)
-      where item_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}
     where order_id = p_order_id
       and status not in ('rejected', 'cancelled')
   ) then
