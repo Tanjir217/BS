@@ -144,8 +144,16 @@ export async function createCategory(categoryData) {
 
     return response;
   } catch (error) {
-    if (error?.code === "23505" && error?.message?.includes("categories_parent_slug_unique_idx")) {
-      throw new Error("A category with this slug already exists under the selected parent.");
+    if (
+      error?.code === "23505" &&
+      (
+        error?.message?.includes("categories_parent_slug_unique_idx") ||
+        error?.message?.includes("categories_slug_key")
+      )
+    ) {
+      throw new Error(
+        "A category with this slug already exists under the selected parent. Apply the latest Supabase migration if you still see a global slug error.",
+      );
     }
     throw error;
   }
