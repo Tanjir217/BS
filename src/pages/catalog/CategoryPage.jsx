@@ -434,32 +434,39 @@ function CategoryPage() {
             />
           </div>
         </div>
-        <div className="mb-8">
-          <ProductFilters
-            filters={filters}
-            filterOptions={filterOptions}
-            priceRange={priceRange}
-            isPriceRangeLoading={isPriceRangeLoading}
-            onApply={setFilters}
-            onClear={() => setFilters(DEFAULT_FILTERS)}
-          />
-        </div>
-        <ProductGrid products={products} isLoading={isProductsLoading} />
 
-        {/* Load More */}
-        {!isProductsLoading && products.length > 0 && page < totalPages && (
-          <div className="mt-14 flex justify-center">
-            <button
-              type="button"
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isLoadingMore ? "Loading..." : "Load More"}
-            </button>
+        <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
+          <aside className="lg:sticky lg:top-24">
+            <ProductFilters
+              filters={filters}
+              filterOptions={filterOptions}
+              priceRange={priceRange}
+              isPriceRangeLoading={isPriceRangeLoading}
+              onApply={setFilters}
+              onClear={() => setFilters(DEFAULT_FILTERS)}
+            />
+          </aside>
+
+          <div className="min-w-0">
+            <ProductGrid products={products} isLoading={isProductsLoading} />
+
+            {/* Load More */}
+            {!isProductsLoading && products.length > 0 && page < totalPages && (
+              <div className="mt-14 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {isLoadingMore ? "Loading..." : "Load More"}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </section>
+
     </main>
   );
 }
