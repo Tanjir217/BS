@@ -231,18 +231,6 @@ export async function removeCategoryPromotionImage(promotionId, fileId) {
 }
 
 export async function getPromotionCategories() {
-  if (!DATABASE_ID) {
-    throw new Error(
-      "Appwrite database is not configured. Set VITE_APPWRITE_DATABASE_ID.",
-    );
-  }
-
-  if (!CATEGORIES_TABLE_ID) {
-    throw new Error(
-      "Categories table is not configured. Set VITE_APPWRITE_CATEGORIES_TABLE_ID.",
-    );
-  }
-
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
