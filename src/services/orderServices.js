@@ -249,9 +249,8 @@ export async function cancelCustomerOrder(orderId) {
   return executeOrderManagement({ action: "cancel_order_customer", orderId });
 }
 
-export async function createCourierOrder(orderId) {
-  if (!orderId) throw new Error("Order ID is required.");
-  return executeOrderManagement({ action: "create_courier_order", orderId });
+export async function createCourierOrder() {
+  throw new Error("Courier integration is not enabled in the COD-only Supabase migration.");
 }
 
 export async function updatePaymentStatus(orderId, paymentStatus) {
