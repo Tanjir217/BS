@@ -10,9 +10,9 @@ import {
 const DATABASE_ID =
   import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID || "orders";
+const ORDERS_TABLE_ID = "orders";
 
-const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID || "order_items";
+const ORDER_ITEMS_TABLE_ID = "order_items";
 
 const CUSTOMER_ORDER_LIMIT = 10;
 
@@ -272,7 +272,7 @@ export async function getCustomerShipment(userId, orderId) {
   validateUserId(userId);
   if (!orderId) throw new Error("Order ID is required.");
 
-  const shipmentTableId = import.meta.env.VITE_APPWRITE_DELIVERY_SHIPMENTS_TABLE_ID || "delivery_shipments";
+  const shipmentTableId = "delivery_shipments";
   if (!shipmentTableId) return null;
 
   try {
