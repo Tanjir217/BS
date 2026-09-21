@@ -197,7 +197,7 @@ function parseQuery(query) {
     // Fall through to Appwrite's compact query syntax.
   }
 
-  const match = trimmed.match(/^([a-zA-Z]+)\\((.*)\\)$/);
+  const match = trimmed.match(/^([a-zA-Z]+)\((.*)\)$/);
   if (!match) return null;
 
   const [, op, body] = match;
