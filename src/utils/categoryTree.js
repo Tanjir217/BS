@@ -136,3 +136,45 @@ export function getDescendantCategoryIds(
 
   return ids;
 }
+
+/*
+|--------------------------------------------------------------------------
+| Build product/category URL helpers
+|--------------------------------------------------------------------------
+*/
+
+export function getCategoryPathById(categories = [], categoryId) {
+  if (!categoryId) {
+    return [];
+  }
+
+  const byId = new Map(
+    categories.map((category) => [category.$id, category]),
+  );
+
+  const path = [];
+  const visited = new Set();
+  let current = byId.get(categoryId);
+
+  while (current && !visited.has(current.$id)) {
+    visited.add(current.$id);
+    if (current.slug) {
+      path.unshift(current.slug);
+    }
+    current = current.parentCategoryID
+      ? byId.get(current.parentCategoryID)
+      : null;
+  }
+
+  return path;
+}
+
+export function getProductUrl(product, categories = []) {
+  const path = getCategoryPathById(categories, product?.categoryID);
+
+  if (path.length > 0 && product?.slug) {
+    return `/products/${path.join("/")}/${product.slug}`;
+  }
+
+  return product?.slug ? `/products/${product.slug}` : "/all-products";
+}
