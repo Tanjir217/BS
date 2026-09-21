@@ -1,6 +1,6 @@
 import HomeSectionStatusBadge from "./HomeSectionStatusBadge";
 
-function HomeSectionCard({ section, onManage, onToggle }) {
+function HomeSectionCard({ section, onManage, onToggle, isSaving = false }) {
   const isActive = Boolean(section.isActive);
 
   return (
@@ -34,7 +34,8 @@ function HomeSectionCard({ section, onManage, onToggle }) {
           <button
             type="button"
             onClick={() => onToggle(section)}
-            className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+            disabled={isSaving}
+            className={`rounded-lg border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
               isActive
                 ? "border-black/10 text-black/60 hover:bg-black/5"
                 : "border-black bg-black text-white hover:bg-black/80"
