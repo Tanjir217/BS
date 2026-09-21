@@ -896,7 +896,37 @@ begin
     coalesce(trim(p_notes), ''),
     trim(p_idempotency_key)
   )
-  on conflict (idempotency_key) do nothing;
+  on conflict (idempotency_key) do nothing
+  returning id into v_order_id;
+
+  if v_order_id is null then
+    select *
+    into v_existing
+    from public.orders
+    where idempotency_key = trim(p_idempotency_key)
+    limit 1;
+
+    if not found then
+      raise exception 'Unable to resolve the idempotent order';
+    end if;
+
+    if v_existing.customer_id is distinct from v_user_id then
+      raise exception 'Idempotency key is already associated with another order';
+    end if;
+
+    return jsonb_build_object(
+      'order_id', v_existing.id,
+      'order_number', v_existing.order_number,
+      'subtotal', v_existing.subtotal,
+      'shipping_cost', v_existing.shipping_cost,
+      'discount', v_existing.discount,
+      'total', v_existing.total,
+      'payment_method', v_existing.payment_method,
+      'payment_status', v_existing.payment_status,
+      'order_status', v_existing.order_status,
+      'replayed', true
+    );
+  end if;
 
   if not found then
     select *
@@ -1279,6 +1309,811 @@ begin
 
   if v_order.order_status <> 'delivered' then
     raise exception 'Only delivered orders can be returned or exchanged';
+  end if;
+
+  if jsonb_array_length(p_item_ids) > 0 then
+    if exists (
+      select 1
+      from jsonb_array_elements_text(p_item_ids) as requested_item(item_id)
+      where item_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}
+    raise exception 'A return request already exists for this order';
+  end if;
+
+  v_number :=
+    'RET-' ||
+    to_char(now(), 'YYYYMMDDHH24MISSMS') ||
+    '-' ||
+    upper(substr(gen_random_uuid()::text, 1, 6));
+
+  insert into public.return_requests (
+    id,
+    return_number,
+    order_id,
+    customer_id,
+    request_type,
+    reason,
+    details,
+    requested_item_ids,
+    exchange_note,
+    status,
+    resolution
+  )
+  values (
+    p_order_id,
+    v_number,
+    p_order_id,
+    v_user_id,
+    p_request_type,
+    trim(coalesce(p_reason, '')),
+    trim(coalesce(p_details, '')),
+    p_item_ids,
+    trim(coalesce(p_exchange_note, '')),
+    'requested',
+    'pending'
+  )
+  returning * into v_return;
+
+  return v_return;
+end;
+$$;
+
+revoke execute on function public.create_customer_return_request(
+  uuid, text, text, text, jsonb, text
+) from public, anon;
+
+grant execute on function public.create_customer_return_request(
+  uuid, text, text, text, jsonb, text
+) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Management return request updates
+-- ---------------------------------------------------------------------------
+
+create or replace function public.update_return_request(
+  p_order_id uuid,
+  p_status text,
+  p_resolution text,
+  p_refund_amount numeric,
+  p_management_note text
+)
+returns public.return_requests
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_return public.return_requests%rowtype;
+  v_allowed boolean := false;
+  v_max_refund numeric(12,2) := 0;
+begin
+  if (select auth.uid()) is null
+     or not (select private.is_management_member()) then
+    raise exception 'Management authentication is required';
+  end if;
+
+  if p_status not in (
+    'requested',
+    'approved',
+    'rejected',
+    'pickup',
+    'received',
+    'completed',
+    'cancelled'
+  ) then
+    raise exception 'Invalid return status';
+  end if;
+
+  select *
+  into v_return
+  from public.return_requests
+  where id = p_order_id
+  for update;
+
+  if not found then
+    raise exception 'Return request not found';
+  end if;
+
+  v_allowed :=
+    case v_return.status
+      when 'requested' then p_status in ('requested', 'approved', 'rejected', 'cancelled')
+      when 'approved' then p_status in ('approved', 'pickup', 'rejected', 'cancelled')
+      when 'pickup' then p_status in ('pickup', 'received', 'cancelled')
+      when 'received' then p_status in ('received', 'completed', 'rejected')
+      when 'completed' then p_status = 'completed'
+      when 'rejected' then p_status = 'rejected'
+      when 'cancelled' then p_status = 'cancelled'
+      else false
+    end;
+
+  if not v_allowed then
+    raise exception 'Cannot change return status from % to %',
+      v_return.status,
+      p_status;
+  end if;
+
+  if p_refund_amount is not null then
+    if p_refund_amount < 0 then
+      raise exception 'Refund amount cannot be negative';
+    end if;
+
+    if jsonb_array_length(v_return.requested_item_ids) > 0 then
+      select coalesce(sum(oi.line_total), 0)
+      into v_max_refund
+      from public.order_items oi
+      where oi.order_id = v_return.order_id
+        and oi.id in (
+          select requested_item.item_id::uuid
+          from jsonb_array_elements_text(v_return.requested_item_ids) as requested_item(item_id)
+        );
+    else
+      select coalesce(total, 0)
+      into v_max_refund
+      from public.orders
+      where id = v_return.order_id;
+    end if;
+
+    if p_refund_amount > v_max_refund then
+      raise exception 'Refund amount cannot exceed the eligible return amount';
+    end if;
+  end if;
+
+  if p_resolution = 'refund' and coalesce(p_refund_amount, v_return.refund_amount) <= 0 then
+    raise exception 'A refund resolution requires a positive refund amount';
+  end if;
+
+  update public.return_requests
+  set status = p_status,
+      resolution = coalesce(p_resolution, resolution),
+      refund_amount = coalesce(p_refund_amount, refund_amount),
+      management_note = coalesce(trim(p_management_note), management_note),
+      updated_at = now()
+  where id = p_order_id
+  returning * into v_return;
+
+  return v_return;
+end;
+$$;
+
+revoke execute on function public.update_return_request(
+  uuid, text, text, numeric, text
+) from public, anon;
+
+grant execute on function public.update_return_request(
+  uuid, text, text, numeric, text
+) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- RLS
+-- ---------------------------------------------------------------------------
+
+alter table public.management_memberships enable row level security;
+alter table public.customers enable row level security;
+alter table public.categories enable row level security;
+alter table public.products enable row level security;
+alter table public.product_images enable row level security;
+alter table public.home_sections enable row level security;
+alter table public.home_sections_products enable row level security;
+alter table public.category_promotions enable row level security;
+alter table public.customer_tier_rules enable row level security;
+alter table public.customer_addresses enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
+alter table public.return_requests enable row level security;
+alter table public.delivery_shipments enable row level security;
+alter table public.wishlists enable row level security;
+
+-- Start from a closed Data API surface.
+revoke all on table
+  public.management_memberships,
+  public.customers,
+  public.categories,
+  public.products,
+  public.product_images,
+  public.home_sections,
+  public.home_sections_products,
+  public.category_promotions,
+  public.customer_tier_rules,
+  public.customer_addresses,
+  public.orders,
+  public.order_items,
+  public.return_requests,
+  public.delivery_shipments,
+  public.wishlists
+from anon, authenticated;
+
+-- Public storefront reads.
+grant select on table
+  public.categories,
+  public.products,
+  public.product_images,
+  public.home_sections,
+  public.home_sections_products,
+  public.category_promotions
+to anon, authenticated;
+
+-- Customer reads/writes.
+grant select on table public.customers to authenticated;
+grant select, insert, update, delete on table public.customer_addresses to authenticated;
+grant select, insert, delete on table public.wishlists to authenticated;
+
+-- Customer order/return/shipment reads.
+grant select on table
+  public.orders,
+  public.order_items,
+  public.return_requests,
+  public.delivery_shipments
+to authenticated;
+
+-- Management reads.
+grant select on table
+  public.management_memberships,
+  public.customers,
+  public.categories,
+  public.products,
+  public.product_images,
+  public.home_sections,
+  public.home_sections_products,
+  public.category_promotions,
+  public.customer_tier_rules,
+  public.customer_addresses,
+  public.orders,
+  public.order_items,
+  public.return_requests,
+  public.delivery_shipments,
+  public.wishlists
+to authenticated;
+
+-- Management writes.
+grant insert, update, delete on table
+  public.categories,
+  public.products,
+  public.product_images,
+  public.home_sections,
+  public.home_sections_products,
+  public.category_promotions,
+  public.customer_tier_rules
+to authenticated;
+
+grant update on table public.customers to authenticated;
+grant update, delete on table public.customer_addresses to authenticated;
+-- Order, return, and shipment mutations are performed through
+-- authenticated database functions / Edge Functions, not direct table updates.
+-- This prevents a browser client from changing financial or courier state
+-- by writing rows directly.
+revoke update on table public.orders from authenticated;
+revoke update on table public.return_requests from authenticated;
+revoke update on table public.delivery_shipments from authenticated;
+
+-- Owner-only membership management.
+grant insert, update, delete on table public.management_memberships to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Management membership policies
+-- ---------------------------------------------------------------------------
+
+create policy management_read_own_membership
+on public.management_memberships
+for select to authenticated
+using ((select auth.uid()) = user_id);
+
+create policy management_owner_insert
+on public.management_memberships
+for insert to authenticated
+with check ((select private.is_owner()));
+
+create policy management_owner_update
+on public.management_memberships
+for update to authenticated
+using ((select private.is_owner()))
+with check ((select private.is_owner()));
+
+create policy management_owner_delete
+on public.management_memberships
+for delete to authenticated
+using ((select private.is_owner()));
+
+-- ---------------------------------------------------------------------------
+-- Customer policies
+-- ---------------------------------------------------------------------------
+
+create policy customers_read_own_or_management
+on public.customers
+for select to authenticated
+using (
+  (select auth.uid()) = id
+  or (select private.is_management_member())
+);
+
+create policy customers_management_update
+on public.customers
+for update to authenticated
+using ((select private.is_management_member()))
+with check ((select private.is_management_member()));
+
+-- No public INSERT/DELETE policy. Customer rows are created by the
+-- auth.users trigger and removed by ON DELETE CASCADE.
+
+-- ---------------------------------------------------------------------------
+-- Public catalog policies
+-- ---------------------------------------------------------------------------
+
+create policy categories_public_read_active
+on public.categories
+for select to anon, authenticated
+using (
+  is_active = true
+  or (select private.is_management_member())
+);
+
+create policy categories_management_insert
+on public.categories
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy categories_management_update
+on public.categories
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy categories_management_delete
+on public.categories
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+create policy products_public_read_active
+on public.products
+for select to anon, authenticated
+using (
+  is_active = true
+  or (select private.is_management_member())
+);
+
+create policy products_management_insert
+on public.products
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy products_management_update
+on public.products
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy products_management_delete
+on public.products
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+create policy product_images_public_read_active
+on public.product_images
+for select to anon, authenticated
+using (
+  exists (
+    select 1
+    from public.products p
+    where p.id = product_id
+      and (
+        p.is_active = true
+        or (select private.is_management_member())
+      )
+  )
+);
+
+create policy product_images_management_insert
+on public.product_images
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy product_images_management_update
+on public.product_images
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy product_images_management_delete
+on public.product_images
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+-- ---------------------------------------------------------------------------
+-- Homepage / promotion policies
+-- ---------------------------------------------------------------------------
+
+create policy home_sections_public_read_active
+on public.home_sections
+for select to anon, authenticated
+using (
+  is_active = true
+  or (select private.is_management_member())
+);
+
+create policy home_sections_management_insert
+on public.home_sections
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy home_sections_management_update
+on public.home_sections
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy home_sections_management_delete
+on public.home_sections
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+create policy home_section_products_public_read_active
+on public.home_sections_products
+for select to anon, authenticated
+using (
+  is_active = true
+  and exists (
+    select 1
+    from public.home_sections hs
+    where hs.id = section_id
+      and hs.is_active = true
+  )
+  and exists (
+    select 1
+    from public.products p
+    where p.id = product_id
+      and p.is_active = true
+  )
+  or (select private.is_management_member())
+);
+
+create policy home_section_products_management_insert
+on public.home_sections_products
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy home_section_products_management_update
+on public.home_sections_products
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy home_section_products_management_delete
+on public.home_sections_products
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+create policy category_promotions_public_read_active
+on public.category_promotions
+for select to anon, authenticated
+using (
+  is_active = true
+  or (select private.is_management_member())
+);
+
+create policy category_promotions_management_insert
+on public.category_promotions
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy category_promotions_management_update
+on public.category_promotions
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy category_promotions_management_delete
+on public.category_promotions
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+create policy tier_rules_management_read
+on public.customer_tier_rules
+for select to authenticated
+using ((select private.is_management_member()));
+
+create policy tier_rules_management_insert
+on public.customer_tier_rules
+for insert to authenticated
+with check ((select private.has_management_role('manager')));
+
+create policy tier_rules_management_update
+on public.customer_tier_rules
+for update to authenticated
+using ((select private.has_management_role('manager')))
+with check ((select private.has_management_role('manager')));
+
+create policy tier_rules_management_delete
+on public.customer_tier_rules
+for delete to authenticated
+using ((select private.has_management_role('manager')));
+
+-- ---------------------------------------------------------------------------
+-- Address policies
+-- ---------------------------------------------------------------------------
+
+create policy addresses_read_own
+on public.customer_addresses
+for select to authenticated
+using ((select auth.uid()) = customer_id);
+
+create policy addresses_management_read
+on public.customer_addresses
+for select to authenticated
+using ((select private.is_management_member()));
+
+create policy addresses_insert_own
+on public.customer_addresses
+for insert to authenticated
+with check ((select auth.uid()) = customer_id);
+
+create policy addresses_update_own
+on public.customer_addresses
+for update to authenticated
+using (
+  (select auth.uid()) = customer_id
+  or (select private.is_management_member())
+)
+with check (
+  customer_id = (select auth.uid())
+  or (select private.is_management_member())
+);
+
+create policy addresses_delete_own
+on public.customer_addresses
+for delete to authenticated
+using (
+  (select auth.uid()) = customer_id
+  or (select private.is_management_member())
+);
+
+-- ---------------------------------------------------------------------------
+-- Order policies
+-- ---------------------------------------------------------------------------
+
+create policy orders_read_own_or_management
+on public.orders
+for select to authenticated
+using (
+  customer_id = (select auth.uid())
+  or (select private.is_management_member())
+);
+
+create policy orders_management_update
+on public.orders
+for update to authenticated
+using ((select private.is_management_member()))
+with check ((select private.is_management_member()));
+
+create policy order_items_read_own_or_management
+on public.order_items
+for select to authenticated
+using (
+  exists (
+    select 1
+    from public.orders o
+    where o.id = order_id
+      and (
+        o.customer_id = (select auth.uid())
+        or (select private.is_management_member())
+      )
+  )
+);
+
+create policy returns_read_own_or_management
+on public.return_requests
+for select to authenticated
+using (
+  customer_id = (select auth.uid())
+  or (select private.is_management_member())
+);
+
+create policy returns_management_update
+on public.return_requests
+for update to authenticated
+using ((select private.is_management_member()))
+with check ((select private.is_management_member()));
+
+create policy shipments_read_own_or_management
+on public.delivery_shipments
+for select to authenticated
+using (
+  exists (
+    select 1
+    from public.orders o
+    where o.id = delivery_shipments.id
+      and (
+        o.customer_id = (select auth.uid())
+        or (select private.is_management_member())
+      )
+  )
+);
+
+create policy shipments_management_update
+on public.delivery_shipments
+for update to authenticated
+using ((select private.is_management_member()))
+with check ((select private.is_management_member()));
+
+-- ---------------------------------------------------------------------------
+-- Wishlist policies
+-- ---------------------------------------------------------------------------
+
+create policy wishlist_read_own
+on public.wishlists
+for select to authenticated
+using ((select auth.uid()) = customer_id);
+
+create policy wishlist_insert_own
+on public.wishlists
+for insert to authenticated
+with check (
+  (select auth.uid()) = customer_id
+  and exists (
+    select 1
+    from public.products p
+    where p.id = product_id
+      and p.is_active = true
+  )
+);
+
+create policy wishlist_delete_own
+on public.wishlists
+for delete to authenticated
+using ((select auth.uid()) = customer_id);
+
+-- Management can inspect wishlists for analytics/customer insight.
+create policy wishlist_management_read
+on public.wishlists
+for select to authenticated
+using ((select private.is_management_member()));
+
+-- ---------------------------------------------------------------------------
+-- Storage
+-- ---------------------------------------------------------------------------
+--
+-- Storage metadata is managed by Supabase Storage. We only create buckets
+-- and policies; we do not modify storage.objects rows directly.
+--
+-- Public storefront assets are intentionally separate from customer-private
+-- assets. Product/editorial/promotion images can be public; profile images
+-- can remain private.
+
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
+values
+  (
+    'storefront-media',
+    'storefront-media',
+    true,
+    10485760,
+    array['image/*']::text[]
+  ),
+  (
+    'customer-media',
+    'customer-media',
+    false,
+    5242880,
+    array['image/*']::text[]
+  )
+on conflict (id) do nothing;
+
+-- Public bucket reads are handled by the bucket's public access model.
+-- Upload/update/delete are still protected by storage.objects RLS.
+
+create policy storefront_media_management_insert
+on storage.objects
+for insert to authenticated
+with check (
+  bucket_id = 'storefront-media'
+  and (select private.has_management_role('manager'))
+);
+
+create policy storefront_media_management_update
+on storage.objects
+for update to authenticated
+using (
+  bucket_id = 'storefront-media'
+  and (select private.has_management_role('manager'))
+)
+with check (
+  bucket_id = 'storefront-media'
+  and (select private.has_management_role('manager'))
+);
+
+create policy storefront_media_management_delete
+on storage.objects
+for delete to authenticated
+using (
+  bucket_id = 'storefront-media'
+  and (select private.has_management_role('manager'))
+);
+
+create policy customer_media_owner_insert
+on storage.objects
+for insert to authenticated
+with check (
+  bucket_id = 'customer-media'
+  and owner_id = (select auth.uid())::text
+);
+
+create policy customer_media_owner_update
+on storage.objects
+for update to authenticated
+using (
+  bucket_id = 'customer-media'
+  and owner_id = (select auth.uid())::text
+)
+with check (
+  bucket_id = 'customer-media'
+  and owner_id = (select auth.uid())::text
+);
+
+create policy customer_media_owner_delete
+on storage.objects
+for delete to authenticated
+using (
+  bucket_id = 'customer-media'
+  and owner_id = (select auth.uid())::text
+);
+
+create policy customer_media_management_read
+on storage.objects
+for select to authenticated
+using (
+  bucket_id = 'customer-media'
+  and (select private.is_management_member())
+);
+
+-- ---------------------------------------------------------------------------
+-- Initial configuration only — no business/customer/product data.
+-- ---------------------------------------------------------------------------
+--
+-- No management member is inserted here because the correct Supabase Auth
+-- user UUID does not exist until you create the first management account.
+--
+-- After creating the first management user in Supabase Auth, run:
+--
+--   insert into public.management_memberships (user_id, role)
+--   values ('THE_AUTH_USER_UUID', 'owner');
+--
+-- This is the only bootstrap step required for the management authorization
+-- table. Do not put the UUID in source control unless it is intentionally
+-- public/non-sensitive configuration.
+
+-- ---------------------------------------------------------------------------
+-- End of migration
+-- ---------------------------------------------------------------------------
+
+    ) then
+      raise exception 'Return item IDs must be valid UUIDs';
+    end if;
+
+    if (
+      select count(*)
+      from jsonb_array_elements_text(p_item_ids)
+    ) <> (
+      select count(distinct requested_item.item_id::uuid)
+      from jsonb_array_elements_text(p_item_ids) as requested_item(item_id)
+    ) then
+      raise exception 'Duplicate return item IDs are not allowed';
+    end if;
+
+    if exists (
+      select 1
+      from jsonb_array_elements_text(p_item_ids) as requested_item(item_id)
+      where not exists (
+        select 1
+        from public.order_items oi
+        where oi.id = requested_item.item_id::uuid
+          and oi.order_id = p_order_id
+      )
+    ) then
+      raise exception 'Every return item must belong to the selected order';
+    end if;
   end if;
 
   if exists (
