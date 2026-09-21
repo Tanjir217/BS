@@ -61,7 +61,10 @@ function Home() {
         </div>
       )}
 
-      <NewCollectionHero products={newCollection?.products ?? []} />
+      <NewCollectionHero
+        section={newCollection}
+        products={newCollection?.products ?? []}
+      />
       <EditorialProductShowcase sections={editorialSections} />
       <InspiredProductSlider products={inspiredProducts} />
     </main>
