@@ -1312,6 +1312,33 @@ begin
   end if;
 
   if jsonb_array_length(p_item_ids) > 0 then
+    if (
+      select count(*)
+      from jsonb_array_elements_text(p_item_ids)
+    ) <> (
+      select count(distinct requested_item.item_id::uuid)
+      from jsonb_array_elements_text(p_item_ids) as requested_item(item_id)
+    ) then
+      raise exception 'Duplicate return item IDs are not allowed';
+    end if;
+
+    if exists (
+      select 1
+      from jsonb_array_elements_text(p_item_ids) as requested_item(item_id)
+      where not exists (
+        select 1
+        from public.order_items oi
+        where oi.id = requested_item.item_id::uuid
+          and oi.order_id = p_order_id
+      )
+    ) then
+      raise exception 'Every return item must belong to the selected order';
+    end if;
+  end if;
+
+  if exists (
+    select 1
+    from public.return_requests
     where order_id = p_order_id
       and status not in ('rejected', 'cancelled')
   ) then
