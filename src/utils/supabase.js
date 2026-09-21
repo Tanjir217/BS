@@ -287,7 +287,7 @@ export const tablesDB = {
 
   async createRow({ tableId, rowId, data }) {
     const payload = toDb(data);
-    if (rowId && rowId !== "unique()") payload.id = rowId;
+    if (rowId && rowId !== "unique()" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(rowId))) payload.id = rowId;
     const response = await supabase.from(resolveTableName(tableId)).insert(payload).select("*").single();
     if (response.error) throw response.error;
     return fromSupabaseRow(response.data);
