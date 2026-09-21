@@ -9,14 +9,14 @@ import {
   uploadEditorialImage,
 } from "../../../services/editorialImageServices";
 
-function EditorialManager({ section, onClose }) {
+function EditorialManager({ section, onClose, onSaved }) {
   const [form, setForm] = useState({
     title: section.title || "",
     sub_title: section.sub_title || "",
     editorial_Alt: section.editorial_Alt || "",
     cta_Label: section.cta_Label || "",
     cta_Href: section.cta_Href || "",
-    is_Active: section.is_Active ?? true,
+    isActive: section.isActive ?? true,
   });
   const [editorialFileId, setEditorialFileId] = useState(
     section.editorial_File_ID || "",
@@ -53,6 +53,7 @@ function EditorialManager({ section, onClose }) {
       await updateHomeSection(section.$id, form);
 
       setSuccess("Editorial section updated.");
+      onSaved?.();
     } catch (error) {
       console.error("Failed to update editorial section:", error);
 
@@ -321,11 +322,11 @@ function EditorialManager({ section, onClose }) {
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={form.is_Active}
+            checked={form.isActive}
             onChange={(event) =>
               setForm((current) => ({
                 ...current,
-                is_Active: event.target.checked,
+                isActive: event.target.checked,
               }))
             }
           />
