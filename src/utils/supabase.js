@@ -1,22 +1,389 @@
 import { createClient } from "@supabase/supabase-js";
 
-let supabaseClient;
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export function getSupabaseClient() {
-  if (supabaseClient) return supabaseClient;
+if (!url || !key) {
+  console.warn("Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.");
+}
 
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+export const supabase = createClient(url || "https://invalid.local", key || "invalid", {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
-  if (!url || !publishableKey) throw new Error("Supabase production configuration is missing.");
+export function appwriteId() {
+  return crypto.randomUUID();
+}
 
-  supabaseClient = createClient(url, publishableKey, {
-    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true },
+const FIELD_ALIASES = {
+  id: "$id",
+  created_at: "$createdAt",
+  updated_at: "$updatedAt",
+  first_name: "first_Name",
+  last_name: "last_Name",
+  account_id: "account_ID",
+  profile_image_file_id: "profile_Image_File_ID",
+  postal_code: "postal_Code",
+  whatsapp_number: "whatsapp_Number",
+  customer_tier: "customer_Tire",
+  is_active: "is_Active",
+  total_orders: "total_Orders",
+  total_spent: "total_Spent",
+  last_order_at: "last_Order_At",
+  parent_category_id: "parentCategoryID",
+  image_url: "imageUrl",
+  category_id: "categoryID",
+  color_hex: "colorHEX",
+  stock_quantity: "stockQuantity",
+  is_featured: "isFeatured",
+  compare_at_price: "compareAtPrice",
+  product_id: "product_ID",
+  file_id: "fileID",
+  sort_order: "sortOrder",
+  is_primary: "isPrimary",
+  section_id: "section_ID",
+  product_name: "product_name",
+  product_sku: "product_sku",
+  product_color: "product_color",
+  unit_price: "unit_price",
+  line_total: "line_total",
+  payment_method: "payment_Method",
+  payment_status: "payment_Status",
+  order_status: "order_Status",
+  customer_id: "customer_ID",
+  shipping_address: "shipping_Address",
+  shipping_city: "shipping_City",
+  shipping_postal_code: "shipping_Postal_Code",
+  shipping_cost: "shipping_Cost",
+  order_number: "order_Number",
+  customer_name: "customer_Name",
+  customer_email: "customer_Email",
+  customer_phone: "customer_Phone",
+  idempotency_key: "idempotency_Key",
+  cancelled_at: "cancelled_At",
+  cancelled_by: "cancelled_By",
+  home_section_id: "section_ID",
+  sub_title: "sub_title",
+  editorial_file_id: "editorial_File_ID",
+  editorial_alt: "editorial_Alt",
+  cta_label: "cta_Label",
+  cta_href: "cta_Href",
+  is_active: "is_Active",
+  sort_order: "sort_Order",
+  image_file_id: "image_File_ID",
+  image_alt: "image_Alt",
+  promotion_key: "promotion_Key",
+  request_type: "requestType",
+  return_number: "returnNumber",
+  requested_item_ids: "requestedItemIds",
+  exchange_note: "exchangeNote",
+  management_note: "managementNote",
+  refund_amount: "refundAmount",
+  delivery_shipments: "deliveryShipments",
+  consignment_id: "consignmentId",
+  tracking_url: "trackingUrl",
+};
+
+const REVERSE_ALIASES = Object.fromEntries(
+  Object.entries(FIELD_ALIASES).map(([db, appwrite]) => [appwrite, db]),
+);
+
+function toCamelKey(key) {
+  if (FIELD_ALIASES[key]) return FIELD_ALIASES[key];
+  return key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function toSnakeKey(key) {
+  if (REVERSE_ALIASES[key]) return REVERSE_ALIASES[key];
+  if (key === "$id") return "id";
+  if (key === "$createdAt") return "created_at";
+  if (key === "$updatedAt") return "updated_at";
+  return key.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
+}
+
+function fromDb(value) {
+  if (Array.isArray(value)) return value.map(fromDb);
+  if (!value || typeof value !== "object") return value;
+
+  const output = {};
+  for (const [key, val] of Object.entries(value)) {
+    output[toCamelKey(key)] = fromDb(val);
+  }
+  return output;
+}
+
+function toDb(value) {
+  if (Array.isArray(value)) return value.map(toDb);
+  if (!value || typeof value !== "object" || value instanceof File) return value;
+
+  const output = {};
+  for (const [key, val] of Object.entries(value)) {
+    output[toSnakeKey(key)] = toDb(val);
+  }
+  return output;
+}
+
+function splitQueryArgs(source) {
+  const args = [];
+  let current = "";
+  let quote = null;
+  let depth = 0;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+    if (quote) {
+      current += ch;
+      if (ch === quote && source[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      current += ch;
+      continue;
+    }
+    if (ch === "[" || ch === "(" || ch === "{") depth += 1;
+    if (ch === "]" || ch === ")" || ch === "}") depth -= 1;
+    if (ch === "," && depth === 0) {
+      args.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) args.push(current.trim());
+  return args;
+}
+
+function parseQuery(query) {
+  if (typeof query !== "string") return null;
+  const match = query.match(/^([a-zA-Z]+)\\((.*)\\)$/);
+  if (!match) return null;
+
+  const [, op, body] = match;
+  const args = splitQueryArgs(body).map((arg) => {
+    try { return JSON.parse(arg); } catch {}
+    return arg.replace(/^"(.*)"$/, "$1");
   });
 
-  return supabaseClient;
+  return { op, args };
 }
 
-export function isSupabaseConfigured() {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+function queryFilterParts(queries = []) {
+  return queries.map(parseQuery).filter(Boolean);
 }
+
+function applyQuery(builder, parsed) {
+  let result = builder;
+  let selected = null;
+
+  for (const q of parsed) {
+    const [fieldRaw, valueRaw] = q.args;
+    const field = toSnakeKey(String(fieldRaw ?? ""));
+
+    switch (q.op) {
+      case "equal": {
+        const values = Array.isArray(valueRaw) ? valueRaw : [valueRaw];
+        result = values.length > 1 ? result.in(field, values) : result.eq(field, values[0]);
+        break;
+      }
+      case "notEqual": result = result.neq(field, valueRaw); break;
+      case "lessThan": result = result.lt(field, valueRaw); break;
+      case "lessThanEqual": result = result.lte(field, valueRaw); break;
+      case "greaterThan": result = result.gt(field, valueRaw); break;
+      case "greaterThanEqual": result = result.gte(field, valueRaw); break;
+      case "isNull": result = result.is(field, null); break;
+      case "isNotNull": result = result.not(field, "is", null); break;
+      case "contains":
+        result = result.ilike(field, "%" + String(valueRaw ?? "") + "%");
+        break;
+      case "startsWith":
+        result = result.ilike(field, String(valueRaw ?? "") + "%");
+        break;
+      case "endsWith":
+        result = result.ilike(field, "%" + String(valueRaw ?? ""));
+        break;
+      case "orderAsc": result = result.order(field, { ascending: true }); break;
+      case "orderDesc": result = result.order(field, { ascending: false }); break;
+      case "limit": result = result.limit(Number(valueRaw)); break;
+      case "offset": result = result.range(Number(valueRaw), Number(valueRaw) + 999999); break;
+      case "select": {
+        const fields = Array.isArray(valueRaw) ? valueRaw.map(toSnakeKey) : ["*"];
+        selected = fields.join(",");
+        break;
+      }
+      case "or": {
+        const nested = Array.isArray(valueRaw) ? valueRaw.map(parseQuery).filter(Boolean) : [];
+        const clauses = nested.map((n) => {
+          const f = toSnakeKey(String(n.args[0] ?? ""));
+          const v = n.args[1];
+          if (n.op === "contains") return `${f}.ilike.%${String(v)}%`;
+          if (n.op === "equal") return `${f}.eq.${encodeURIComponent(String(Array.isArray(v) ? v[0] : v))}`;
+          return null;
+        }).filter(Boolean);
+        if (clauses.length) result = result.or(clauses.join(","));
+        break;
+      }
+      default:
+        console.warn("Unsupported Appwrite query in Supabase adapter:", q.op);
+    }
+  }
+
+  return { result, selected };
+}
+
+function resolveTableName(tableId) {
+  if (!tableId) throw new Error("Supabase table name is required.");
+  return String(tableId);
+}
+
+function makeResponse(data, count = null) {
+  return { rows: (data || []).map(fromDb), total: count ?? (data || []).length };
+}
+
+export const tablesDB = {
+  async listRows({ tableId, queries = [], total = true }) {
+    const parsed = queryFilterParts(queries);
+    const selectQuery = parsed.find((q) => q.op === "select");
+    let builder = supabase.from(resolveTableName(tableId)).select(
+      selectQuery ? (Array.isArray(selectQuery.args[0]) ? selectQuery.args[0].map(toSnakeKey).join(",") : "*") : "*",
+      { count: total === false ? undefined : "exact" },
+    );
+    const { result } = applyQuery(builder, parsed);
+    const response = await result;
+    if (response.error) throw response.error;
+    return makeResponse(response.data, response.count);
+  },
+
+  async getRow({ tableId, rowId }) {
+    const response = await supabase.from(resolveTableName(tableId)).select("*").eq("id", rowId).single();
+    if (response.error) {
+      if (response.status === 406 || response.code === "PGRST116") {
+        const error = new Error("Row not found");
+        error.code = 404;
+        throw error;
+      }
+      throw response.error;
+    }
+    return fromDb(response.data);
+  },
+
+  async createRow({ tableId, rowId, data }) {
+    const payload = toDb(data);
+    if (rowId && rowId !== "unique()") payload.id = rowId;
+    const response = await supabase.from(resolveTableName(tableId)).insert(payload).select("*").single();
+    if (response.error) throw response.error;
+    return fromDb(response.data);
+  },
+
+  async updateRow({ tableId, rowId, data }) {
+    const response = await supabase.from(resolveTableName(tableId)).update(toDb(data)).eq("id", rowId).select("*").single();
+    if (response.error) throw response.error;
+    return fromDb(response.data);
+  },
+
+  async deleteRow({ tableId, rowId }) {
+    const response = await supabase.from(resolveTableName(tableId)).delete().eq("id", rowId);
+    if (response.error) throw response.error;
+    return true;
+  },
+};
+
+export const account = {
+  async get() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      const e = new Error("Not authenticated");
+      e.code = 401;
+      throw e;
+    }
+    return {
+      $id: data.user.id,
+      name: data.user.user_metadata?.name || data.user.user_metadata?.full_name || "",
+      email: data.user.email || "",
+    };
+  },
+
+  async create({ userId, email, password, name }) {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error) throw error;
+  },
+
+  async createEmailPasswordSession({ email, password }) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data.session;
+  },
+
+  async deleteSession() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    return true;
+  },
+
+  async updateName({ name }) {
+    const { data, error } = await supabase.auth.updateUser({ data: { name } });
+    if (error) throw error;
+    return {
+      $id: data.user.id,
+      name: data.user.user_metadata?.name || name,
+      email: data.user.email || "",
+    };
+  },
+};
+
+export const teams = {
+  async get() { return { $id: "supabase-management" }; },
+  async listMemberships({ queries = [] }) {
+    const userQuery = queries.find((q) => String(q).includes("userId"));
+    const userId = (parseQuery(userQuery)?.args?.[1]) || (await supabase.auth.getUser()).data.user?.id;
+    const response = await supabase.from("management_memberships").select("*").eq("user_id", userId).maybeSingle();
+    if (response.error) throw response.error;
+    if (!response.data) return { memberships: [] };
+    return { memberships: [{ ...fromDb(response.data), roles: [response.data.role], confirm: true }] };
+  },
+};
+
+export const storage = {
+  getFileView({ bucketId, fileId }) {
+    return supabase.storage.from(bucketId || "storefront-media").getPublicUrl(fileId).data.publicUrl;
+  },
+  async createFile({ bucketId, fileId, file }) {
+    const bucket = bucketId || "storefront-media";
+    const path = fileId;
+    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false, contentType: file?.type });
+    if (error) throw error;
+    return { $id: path };
+  },
+  async deleteFile({ bucketId, fileId }) {
+    const { error } = await supabase.storage.from(bucketId || "storefront-media").remove([fileId]);
+    if (error) throw error;
+    return true;
+  },
+};
+
+export const functions = {
+  async createExecution({ functionId, body }) {
+    const mapping = {
+      "create-order": "create-order",
+      "manage-order": "manage-order",
+    };
+    const name = mapping[functionId] || functionId;
+    const payload = body ? JSON.parse(body) : {};
+    const { data, error } = await supabase.functions.invoke(name, { body: payload });
+    const responseBody = error ? (error.context ? await error.context.text().catch(() => "") : "") : JSON.stringify(data ?? {});
+    return {
+      responseStatusCode: error ? (error.context?.status || 500) : 200,
+      responseBody: responseBody || JSON.stringify(data ?? {}),
+    };
+  },
+};
