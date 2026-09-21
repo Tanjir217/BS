@@ -110,13 +110,13 @@ function toSnakeKey(key) {
   return key.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
 }
 
-function fromDb(value) {
+export function fromSupabaseRow(value) {
   if (Array.isArray(value)) return value.map(fromDb);
   if (!value || typeof value !== "object") return value;
 
   const output = {};
   for (const [key, val] of Object.entries(value)) {
-    output[toCamelKey(key)] = fromDb(val);
+    output[toCamelKey(key)] = fromSupabaseRow(val);
   }
   return output;
 }
@@ -282,7 +282,7 @@ export const tablesDB = {
       }
       throw response.error;
     }
-    return fromDb(response.data);
+    return fromSupabaseRow(response.data);
   },
 
   async createRow({ tableId, rowId, data }) {
@@ -290,13 +290,13 @@ export const tablesDB = {
     if (rowId && rowId !== "unique()") payload.id = rowId;
     const response = await supabase.from(resolveTableName(tableId)).insert(payload).select("*").single();
     if (response.error) throw response.error;
-    return fromDb(response.data);
+    return fromSupabaseRow(response.data);
   },
 
   async updateRow({ tableId, rowId, data }) {
     const response = await supabase.from(resolveTableName(tableId)).update(toDb(data)).eq("id", rowId).select("*").single();
     if (response.error) throw response.error;
-    return fromDb(response.data);
+    return fromSupabaseRow(response.data);
   },
 
   async deleteRow({ tableId, rowId }) {
@@ -362,7 +362,7 @@ export const teams = {
     const response = await supabase.from("management_memberships").select("*").eq("user_id", userId).maybeSingle();
     if (response.error) throw response.error;
     if (!response.data) return { memberships: [] };
-    return { memberships: [{ ...fromDb(response.data), roles: [response.data.role], confirm: true }] };
+    return { memberships: [{ ...fromSupabaseRow(response.data), roles: [response.data.role], confirm: true }] };
   },
 };
 
