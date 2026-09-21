@@ -77,14 +77,15 @@ const FIELD_ALIASES = {
   is_active: "is_Active",
   sort_order: "sort_Order",
   image_file_id: "image_File_ID",
+  image_id: "image_ID",
   image_alt: "image_Alt",
   promotion_key: "promotion_Key",
-  request_type: "requestType",
-  return_number: "returnNumber",
-  requested_item_ids: "requestedItemIds",
-  exchange_note: "exchangeNote",
-  management_note: "managementNote",
-  refund_amount: "refundAmount",
+  request_type: "request_Type",
+  return_number: "return_Number",
+  requested_item_ids: "requested_Item_Ids",
+  exchange_note: "exchange_Note",
+  management_note: "management_Note",
+  refund_amount: "refund_Amount",
   delivery_shipments: "deliveryShipments",
   consignment_id: "consignmentId",
   tracking_url: "trackingUrl",
@@ -181,6 +182,8 @@ function queryFilterParts(queries = []) {
 function applyQuery(builder, parsed) {
   let result = builder;
   let selected = null;
+  let offset = null;
+  let limit = null;
 
   for (const q of parsed) {
     const [fieldRaw, valueRaw] = q.args;
@@ -210,8 +213,8 @@ function applyQuery(builder, parsed) {
         break;
       case "orderAsc": result = result.order(field, { ascending: true }); break;
       case "orderDesc": result = result.order(field, { ascending: false }); break;
-      case "limit": result = result.limit(Number(valueRaw)); break;
-      case "offset": result = result.range(Number(valueRaw), Number(valueRaw) + 999999); break;
+      case "limit": limit = Number(valueRaw); break;
+      case "offset": offset = Number(valueRaw); break;
       case "select": {
         const fields = Array.isArray(valueRaw) ? valueRaw.map(toSnakeKey) : ["*"];
         selected = fields.join(",");
@@ -232,6 +235,13 @@ function applyQuery(builder, parsed) {
       default:
         console.warn("Unsupported Appwrite query in Supabase adapter:", q.op);
     }
+  }
+
+  if (offset !== null) {
+    const end = offset + Math.max(0, (limit ?? 1000) - 1);
+    result = result.range(offset, end);
+  } else if (limit !== null) {
+    result = result.limit(limit);
   }
 
   return { result, selected };
