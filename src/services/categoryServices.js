@@ -3,8 +3,7 @@ import { tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const CATEGORIES_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID;
+const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
 
 /*
 |--------------------------------------------------------------------------
