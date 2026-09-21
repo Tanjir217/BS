@@ -1,8 +1,0 @@
-{
-  "name": "bs-manage-order",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "node-appwrite": "^29.0.0"
-  }
-}
