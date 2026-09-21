@@ -243,11 +243,11 @@ export async function createProduct(productData) {
 export async function updateProduct(productId, productData) {
   const data = {
     name: productData.name,
-    slug: normalizeSlug(productData.slug),
+    slug: requireProductSlug(productData.slug),
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
-    categoryID: productData.categoryID || null,
+    categoryID: requireCategoryId(productData.categoryID),
     color: productData.color || "",
     colorHEX: productData.colorHEX || "",
     stockQuantity: Number(productData.stockQuantity),
