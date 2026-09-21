@@ -1,4 +1,5 @@
 import { functions } from "../utils/appwrite";
+import { fromSupabaseRow } from "../utils/supabase";
 
 import { getCustomerOrderWithItems } from "./customerOrderServices";
 
@@ -57,7 +58,7 @@ async function executeReturnAction(payload) {
     throw new Error("The return request was not returned.");
   }
 
-  return responseBody.returnRequest;
+  return fromSupabaseRow(responseBody.returnRequest);
 }
 
 export async function getCustomerReturnRequest(userId, orderId) {
