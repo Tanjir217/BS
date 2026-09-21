@@ -10,7 +10,7 @@ import {
 } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID || "products";
+const PRODUCTS_TABLE_ID = "products";
 
 function normalizeSlug(value) {
   return String(value ?? "")
