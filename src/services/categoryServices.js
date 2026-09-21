@@ -98,7 +98,9 @@ export async function getCategoryById(categoryId) {
 */
 
 export async function getCategoryBySlug(slug) {
-  if (!slug) {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
     return null;
   }
 
@@ -106,7 +108,7 @@ export async function getCategoryBySlug(slug) {
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
     queries: [
-      Query.equal("slug", slug),
+      Query.equal("slug", normalizedSlug),
       Query.equal("isActive", true),
       Query.limit(1),
     ],
