@@ -5,6 +5,14 @@ const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const CATEGORIES_TABLE_ID =
   import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
 
+function normalizeSlug(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function normalizeParentCategoryId(value) {
   const normalized = String(value ?? "").trim();
   return normalized || null;
@@ -13,7 +21,7 @@ function normalizeParentCategoryId(value) {
 function normalizeCategoryData(categoryData = {}) {
   return {
     name: String(categoryData.name ?? "").trim(),
-    slug: String(categoryData.slug ?? "").trim(),
+    slug: normalizeSlug(categoryData.slug),
     description: String(categoryData.description ?? "").trim(),
     imageUrl: String(categoryData.imageUrl ?? "").trim(),
     parentCategoryID: normalizeParentCategoryId(
@@ -114,14 +122,21 @@ export async function getCategoryBySlug(slug) {
 */
 
 export async function createCategory(categoryData) {
-  const response = await tablesDB.createRow({
+  try {
+    const response = await tablesDB.createRow({
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
     rowId: ID.unique(),
     data: normalizeCategoryData(categoryData),
   });
 
-  return response;
+    return response;
+  } catch (error) {
+    if (error?.code === "23505" && error?.message?.includes("categories_parent_slug_unique_idx")) {
+      throw new Error("A category with this slug already exists under the selected parent.");
+    }
+    throw error;
+  }
 }
 
 /*
@@ -142,14 +157,21 @@ export async function updateCategory(categoryId, categoryData) {
     throw new Error("A category cannot be its own parent.");
   }
 
-  const response = await tablesDB.updateRow({
+  try {
+    const response = await tablesDB.updateRow({
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
     rowId: categoryId,
     data: normalizeCategoryData(categoryData),
   });
 
-  return response;
+    return response;
+  } catch (error) {
+    if (error?.code === "23505" && error?.message?.includes("categories_parent_slug_unique_idx")) {
+      throw new Error("A category with this slug already exists under the selected parent.");
+    }
+    throw error;
+  }
 }
 
 /*
