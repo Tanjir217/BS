@@ -197,6 +197,7 @@ export async function updateCategory(categoryId, categoryData) {
     ) {
       throw new Error(
         "A category with this slug already exists under the selected parent. Apply the latest Supabase migration if you still see a global slug error.",
+        { cause: error },
       );
     }
     throw error;
