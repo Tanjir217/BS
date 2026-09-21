@@ -408,7 +408,7 @@ export async function getCustomerOrders({
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId:
-      import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID,
+      import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID || "orders",
     queries: [
       Query.equal("customer_ID", customerId),
       Query.orderDesc("$createdAt"),
