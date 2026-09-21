@@ -135,7 +135,7 @@ export async function getEditorialSections() {
         }),
       );
 
-      const editorialImage = section.editorialFileID
+      const editorialImage = section.editorial_File_ID
         ? storage.getFileView({
             bucketId: STORAGE_BUCKET_ID,
             fileId: section.editorialFileID,
@@ -149,10 +149,10 @@ export async function getEditorialSections() {
         subtitle: section.sub_title,
         editorial: {
           image: editorialImage,
-          alt: section.editorialAlt || "",
+          alt: section.editorial_Alt || "",
           cta: {
-            Label: section.ctaLabel || "",
-            Href: section.ctaHref || "#",
+            Label: section.cta_Label || "",
+            Href: section.cta_Href || "#",
           },
         },
         products: products.filter(Boolean),
