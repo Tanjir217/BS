@@ -72,7 +72,7 @@ export async function getCustomerReturnRequest(userId, orderId) {
     const { tablesDB } = await import("../utils/appwrite");
     return await tablesDB.getRow({
       databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
-      tableId: import.meta.env.VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID || "return_requests",
+      tableId: "return_requests",
       rowId: orderId,
     });
   } catch (error) {
