@@ -5,6 +5,10 @@ import {
   getProductsForAdmin,
   updateProduct,
 } from "../../../services/productServices";
+import {
+  getProductImages,
+  uploadProductImage,
+} from "../../../services/productImageServices";
 import { getCategoriesForAdmin } from "../../../services/categoryServices";
 import ProductPagination from "./ProductPagination";
 import ProductFilters from "./ProductFilters";
@@ -123,10 +127,36 @@ function ProductsPage() {
 
   async function handleSubmit(formData) {
     try {
-      if (editingProduct) {
-        await updateProduct(editingProduct.$id, formData);
-      } else {
-        await createProduct(formData);
+      const { pendingFiles = [], ...productData } = formData;
+
+      const savedProduct = editingProduct
+        ? await updateProduct(editingProduct.$id, productData)
+        : await createProduct(productData);
+
+      if (pendingFiles.length > 0) {
+        const existingImages = await getProductImages(savedProduct.$id);
+        const startingSortOrder = existingImages.length;
+        const hasPrimaryImage = existingImages.some(
+          (image) => image.isPrimary,
+        );
+
+        for (let index = 0; index < pendingFiles.length; index += 1) {
+          const item = pendingFiles[index];
+
+          await uploadProductImage({
+            productId: savedProduct.$id,
+            file: item.file,
+            alt: item.file.name,
+            sortOrder: startingSortOrder + index,
+            isPrimary: !hasPrimaryImage && index === 0,
+          });
+        }
+
+        pendingFiles.forEach((item) => {
+          if (item.preview) {
+            URL.revokeObjectURL(item.preview);
+          }
+        });
       }
 
       setIsFormOpen(false);
