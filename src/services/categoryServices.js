@@ -19,9 +19,19 @@ function normalizeParentCategoryId(value) {
 }
 
 function normalizeCategoryData(categoryData = {}) {
+  const slug = normalizeSlug(categoryData.slug);
+
+  if (!slug) {
+    throw new Error("Category slug is required.");
+  }
+
+  if (slug === "all-products") {
+    throw new Error("The slug \"all-products\" is reserved for the catalog route.");
+  }
+
   return {
     name: String(categoryData.name ?? "").trim(),
-    slug: normalizeSlug(categoryData.slug),
+    slug,
     description: String(categoryData.description ?? "").trim(),
     imageUrl: String(categoryData.imageUrl ?? "").trim(),
     parentCategoryID: normalizeParentCategoryId(
