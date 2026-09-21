@@ -11,7 +11,7 @@ import AddProductToSection from "./AddProductToSection";
 import CustomDropdown from "../../../components/ui/CustomDropdown";
 import { uploadProductImage } from "../../../services/productImageServices";
 
-function SectionProductManager({ section, onClose }) {
+function SectionProductManager({ section, onClose, onSaved }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,6 +51,7 @@ function SectionProductManager({ section, onClose }) {
 
       await updateHomeSection(section.$id, settings);
       setError("");
+      await onSaved?.();
     } catch (saveError) {
       console.error("Failed to save homepage section settings:", saveError);
       setError(saveError?.message || "Failed to save section settings.");
