@@ -25,7 +25,7 @@ function FooterBottomBar() {
           {socialLinks.map((social) => (
             <Link
             to={social.href}
-              key={social.id}
+              key={social.label}
               // href={social.href}
               target="_blank"
               rel="noopener noreferrer"

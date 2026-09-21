@@ -11,23 +11,23 @@ export const footerColumns = [
         links: [
             {
             label: "Contact Us",
-            href: "/contact",
+            href: "/customer-services#contact",
             },
             {
             label: "Shipping & Delivery",
-            href: "/shipping",
+            href: "/customer-services#shipping-delivery",
             },
             {
             label: "Returns",
-            href: "/returns",
+            href: "/customer-services#returns",
             },
             {
             label: "FAQ",
-            href: "/faq",
+            href: "/customer-services#faq",
             },
             {
             label: "Product Care",
-            href: "/product-care",
+            href: "/customer-services#product-care",
             },
         ],
         },
@@ -65,19 +65,19 @@ export const footerColumns = [
         links: [
             {
             label: "Our Story",
-            href: "/about",
+            href: "/about#our-story",
             },
             {
             label: "Our Commitment",
-            href: "/commitment",
+            href: "/about#commitment",
             },
             {
             label: "Careers",
-            href: "/careers",
+            href: "/about#careers",
             },
             {
             label: "Contact",
-            href: "/contact",
+            href: "/about#contact",
             },
         ],
         },

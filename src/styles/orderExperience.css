@@ -1,0 +1,173 @@
+.customer-order-detail__error {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 1.25rem 0;
+  border: 1px solid rgb(185 28 28 / 18%);
+  background: rgb(254 242 242);
+  color: rgb(153 27 27);
+  padding: 0.85rem 1rem;
+  font-size: 0.8rem;
+}
+
+.customer-order-timeline {
+  margin: 1.5rem 0;
+  border: 1px solid rgb(23 23 23 / 8%);
+  background: #fff;
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.customer-order-timeline__list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.customer-order-timeline__item {
+  position: relative;
+  min-width: 0;
+  padding-top: 0.15rem;
+}
+
+.customer-order-timeline__item::after {
+  position: absolute;
+  top: 0.8rem;
+  right: calc(-50% + 0.75rem);
+  left: calc(50% + 0.75rem);
+  height: 1px;
+  background: rgb(23 23 23 / 10%);
+  content: "";
+}
+
+.customer-order-timeline__item:last-child::after {
+  display: none;
+}
+
+.customer-order-timeline__marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin-bottom: 0.7rem;
+  place-items: center;
+  border: 1px solid rgb(23 23 23 / 14%);
+  border-radius: 50%;
+  background: #fff;
+  color: rgb(23 23 23 / 45%);
+}
+
+.customer-order-timeline__marker span {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: rgb(23 23 23 / 20%);
+}
+
+.customer-order-timeline__item--complete .customer-order-timeline__marker,
+.customer-order-timeline__item--current .customer-order-timeline__marker {
+  border-color: #171717;
+  background: #171717;
+  color: #fff;
+}
+
+.customer-order-timeline__item--complete::after {
+  background: #171717;
+}
+
+.customer-order-timeline__item > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.customer-order-timeline__item strong {
+  font-size: 0.75rem;
+}
+
+.customer-order-timeline__item span:not(.customer-order-timeline__marker) {
+  color: rgb(23 23 23 / 48%);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.customer-order-timeline__item--upcoming {
+  opacity: 0.55;
+}
+
+.customer-order-cancelled-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 1.25rem;
+  border: 1px solid rgb(127 29 29 / 16%);
+  background: rgb(254 242 242);
+  padding: 0.85rem 1rem;
+  color: rgb(127 29 29);
+}
+
+.customer-order-cancelled-banner div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.customer-order-cancelled-banner span {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.customer-order-cancel-button {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  border: 1px solid rgb(127 29 29 / 22%);
+  background: #fff;
+  color: rgb(127 29 29);
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.customer-order-cancel-button:hover:not(:disabled) {
+  background: rgb(127 29 29);
+  color: #fff;
+}
+
+.customer-order-cancel-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+@media (max-width: 800px) {
+  .customer-order-timeline__list {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .customer-order-timeline__item {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    column-gap: 0.8rem;
+    padding-bottom: 1rem;
+  }
+
+  .customer-order-timeline__item::after {
+    top: 1.6rem;
+    right: auto;
+    bottom: 0;
+    left: 0.8rem;
+    width: 1px;
+    height: auto;
+  }
+
+  .customer-order-timeline__marker {
+    margin-bottom: 0;
+  }
+}

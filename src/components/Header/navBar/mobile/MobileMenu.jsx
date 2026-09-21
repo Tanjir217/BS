@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { navigation } from "../../../../data/navigation";
+import { Search } from "lucide-react";
 
-function MobileMenu() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [expandedSection, setExpandedSection] = useState(null);
+function MobileMenu({
+  navigation = [],
+  isLoading,
+}) {
+  const [isOpen, setIsOpen] =
+    useState(false);
+
+  const [activeCategory, setActiveCategory] =
+    useState(null);
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
+    document.body.style.overflow =
+      isOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
@@ -18,19 +24,20 @@ function MobileMenu() {
   const closeMenu = () => {
     setIsOpen(false);
     setActiveCategory(null);
-    setExpandedSection(null);
   };
 
-  const activeItem = navigation.find((item) => item.id === activeCategory);
+  const activeItem =
+    navigation.find(
+      (item) =>
+        item.id === activeCategory
+    );
 
   const openCategory = (item) => {
     if (!item.megaMenu) {
-      setIsOpen(false);
       return;
     }
 
     setActiveCategory(item.id);
-    setExpandedSection(null);
   };
 
   return (
@@ -43,18 +50,25 @@ function MobileMenu() {
         onClick={() => setIsOpen(true)}
         className="flex h-10 w-10 items-center justify-center"
       >
-        <span className="text-xl">☰</span>
+        <span className="text-xl">
+          ☰
+        </span>
       </button>
 
       {/* Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-90 bg-black/50" onClick={closeMenu} />
+        <div
+          className="fixed inset-0 z-90 bg-black/50"
+          onClick={closeMenu}
+        />
       )}
 
       {/* Drawer */}
       <aside
         className={`fixed left-0 top-0 z-100 h-dvh w-[86%] max-w-105 bg-white transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
         }`}
         aria-hidden={!isOpen}
       >
@@ -63,10 +77,9 @@ function MobileMenu() {
           {activeCategory ? (
             <button
               type="button"
-              onClick={() => {
-                setActiveCategory(null);
-                setExpandedSection(null);
-              }}
+              onClick={() =>
+                setActiveCategory(null)
+              }
               className="text-xl"
               aria-label="Back"
             >
@@ -88,120 +101,176 @@ function MobileMenu() {
 
         {/* Main menu */}
         {!activeCategory && (
-          <nav className="overflow-y-auto px-4">
-            {navigation.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => openCategory(item)}
-                className="flex w-full items-center justify-between border-b border-gray-300 py-4 text-left text-[12px] tracking-[0.04em]"
-              >
-                <span>{item.label}</span>
+          <nav className="h-[calc(100dvh-56px)] overflow-y-auto px-4">
+            {isLoading ? (
+              <div className="space-y-4 py-5">
+                <div className="h-5 animate-pulse rounded bg-black/5" />
+                <div className="h-5 animate-pulse rounded bg-black/5" />
+                <div className="h-5 animate-pulse rounded bg-black/5" />
+              </div>
+            ) : (
+              <>
+                {navigation.map((item) =>
+                  item.megaMenu ? (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() =>
+                        openCategory(item)
+                      }
+                      className="flex w-full items-center justify-between border-b border-gray-300 py-4 text-left text-[12px] tracking-[0.04em]"
+                    >
+                      <span>
+                        {item.label}
+                      </span>
 
-                {item.megaMenu && <span className="text-lg font-light">›</span>}
-              </button>
-            ))}
+                      <span className="text-lg font-light">
+                        ›
+                      </span>
+                    </button>
+                  ) : (
+                    <Link
+                      key={item.id}
+                      to={item.href}
+                      onClick={closeMenu}
+                      className="flex w-full items-center justify-between border-b border-gray-300 py-4 text-left text-[12px] tracking-[0.04em] no-underline"
+                    >
+                      <span>
+                        {item.label}
+                      </span>
+                    </Link>
+                  )
+                )}
 
-            <div className="mt-5 space-y-3">
-              <Link
-                to="/wishlist"
-                onClick={closeMenu}
-                className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
-              >
-                WISHLIST
-              </Link>
+                <div className="mt-5 space-y-3">
+                  <Link
+                    to="/search"
+                    onClick={closeMenu}
+                    className="flex h-12 items-center justify-center gap-2 rounded-md border border-gray-900 text-[12px] no-underline"
+                  >
+                    <Search size={15} />
+                    SEARCH
+                  </Link>
 
-              <Link
-                to="/login"
-                onClick={closeMenu}
-                className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
-              >
-                LOG IN
-              </Link>
-            </div>
+                  <Link
+                    to="/wishlist"
+                    onClick={closeMenu}
+                    className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
+                  >
+                    WISHLIST
+                  </Link>
+
+                  <Link
+                    to="/account/login"
+                    onClick={closeMenu}
+                    className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
+                  >
+                    LOG IN
+                  </Link>
+                </div>
+              </>
+            )}
           </nav>
         )}
 
         {/* Category submenu */}
-        {activeCategory && activeItem?.megaMenu && (
-          <div className="h-[calc(100dvh-56px)] overflow-y-auto px-4">
-            {activeItem.megaMenu.columns.map((column) => {
-              const isExpanded = expandedSection === column.id;
+        {activeCategory &&
+          activeItem?.megaMenu && (
+            <div className="h-[calc(100dvh-56px)] overflow-y-auto px-4">
+              <div className="pb-6">
+                {activeItem.megaMenu.columns.map(
+                  (column) => (
+                    <section
+                      key={column.id}
+                      className="border-b border-gray-300 py-4"
+                    >
+                      {/* Column title */}
+                      <h2 className="text-[12px] font-medium tracking-[0.08em]">
+                        {column.title}
+                      </h2>
 
-              return (
-                <div key={column.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedSection(isExpanded ? null : column.id)
-                    }
-                    className="flex w-full items-center justify-between border-b border-gray-300 py-4 text-left text-[12px] tracking-[0.04em]"
-                  >
-                    <span>{column.title}</span>
+                      {/* Category links */}
+                      {column.links?.length > 0 && (
+                        <ul className="mt-3 space-y-1">
+                          {column.links.map(
+                            (link) => (
+                              <li
+                                key={
+                                  link.id ||
+                                  link.label
+                                }
+                              >
+                                <Link
+                                  to={
+                                    link.href
+                                  }
+                                  onClick={
+                                    closeMenu
+                                  }
+                                  className="block py-2 text-[13px] text-black/75 no-underline transition-opacity hover:opacity-60"
+                                >
+                                  {
+                                    link.label
+                                  }
+                                </Link>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      )}
 
-                    <span className="text-lg font-light">
-                      {isExpanded ? "⌃" : "⌄"}
-                    </span>
-                  </button>
-
-                  {isExpanded && (
-                    <div className="py-3">
-                      {column.links.map((link) => (
+                      {/* Section View All */}
+                      {column.href && (
                         <Link
-                          key={link.label}
-                          to={link.href}
+                          to={column.href}
                           onClick={closeMenu}
-                          className="block py-3 text-[13px] no-underline"
+                          className="mt-3 inline-block text-[11px] font-medium uppercase tracking-[0.08em] underline underline-offset-4 no-underline"
                         >
-                          {link.label}
+                          View All
                         </Link>
-                      ))}
+                      )}
+                    </section>
+                  )
+                )}
 
-                      <Link
-                        to={column.links[0]?.href || "#"}
-                        onClick={closeMenu}
-                        className="mt-2 block border-b border-gray-300 pb-4 pt-2 text-[13px] no-underline"
-                      >
-                        View All
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* View all */}
-            <Link
-              to={activeItem.href}
-              onClick={closeMenu}
-              className="block border-b border-gray-300 py-4 text-[12px] no-underline"
-            >
-              VIEW ALL
-            </Link>
-
-            {/* Promo cards */}
-            <div className="grid grid-cols-2 gap-3 py-5">
-              {activeItem.megaMenu.promos.map((promo) => (
+                {/* Main category View All */}
                 <Link
-                  key={promo.id}
-                  to={promo.href}
+                  to={activeItem.href}
                   onClick={closeMenu}
-                  className="block no-underline"
+                  className="block py-5 text-[12px] font-medium uppercase tracking-[0.08em] underline underline-offset-4 no-underline"
                 >
-                  <img
-                    src={promo.url}
-                    alt={promo.label}
-                    className="aspect-4/5 w-full object-cover rounded-md"
-                  />
-
-                  <span className="mt-2 block text-[10px] underline underline-offset-2">
-                    {promo.label}
-                  </span>
+                  View All {activeItem.label}
                 </Link>
-              ))}
+
+                {/* Promo cards */}
+                {activeItem.megaMenu
+                  .promos?.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 py-5">
+                    {activeItem.megaMenu.promos.map(
+                      (promo) => (
+                        <Link
+                          key={promo.id}
+                          to={promo.href}
+                          onClick={closeMenu}
+                          className="block no-underline"
+                        >
+                          <img
+                            src={promo.url}
+                            alt={promo.label}
+                            className="aspect-[4/5] w-full rounded-md object-cover"
+                          />
+
+                          <span className="mt-2 block text-[10px] underline underline-offset-2">
+                            {promo.label}
+                          </span>
+                        </Link>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </aside>
     </>
   );

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import NotFound from "../NotFound";
-import { getProductBySlug } from "../../services/productServices";
 
+import NotFound from "../NotFound";
+
+import { getProductBySlug } from "../../services/productServices";
+import InspiredProductSlider from "../../components/sections/InspiredProductSlider"
 import ProductGallery from "../../components/product/ProductGallery";
 import ProductInfo from "../../components/product/ProductInfo";
+
 function ProductDetail() {
   const { slug } = useParams();
 
@@ -13,31 +16,52 @@ function ProductDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadProduct() {
       try {
         setLoading(true);
         setError(null);
 
-        const data = await getProductBySlug(slug);
-        console.log("PRODUCT:", data);
-        console.log("PRODUCT IMAGES:", data?.images);
+        const data =
+          await getProductBySlug(slug);
+
+        if (!isMounted) {
+          return;
+        }
+
         setProduct(data);
       } catch (err) {
-        console.error("Failed to load product:", err);
-        setError(err);
+        console.error(
+          "Failed to load product:",
+          err,
+        );
+
+        if (isMounted) {
+          setError(err);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadProduct();
+
+    return () => {
+      isMounted = false;
+    };
   }, [slug]);
 
   if (loading) {
     return (
-      <div className="mx-auto grid min-h-[50vh] max-w-xl place-items-center px-6 py-20 text-center">
-        Loading product...
-      </div>
+      <main className="product-page product-page--loading">
+        <div className="product-loading">
+          <span className="product-loading__line" />
+          <span className="product-loading__line product-loading__line--short" />
+        </div>
+      </main>
     );
   }
 
@@ -46,10 +70,23 @@ function ProductDetail() {
   }
 
   return (
-    <main>
-      <ProductGallery images={product.images} productName={product.name} />
+    <main className="product-page">
+      <div className="product-breadcrumbs">
+        <span>Home</span>
+        <span>Shop</span>
+        <span>{product.name}</span>
+      </div>
 
-      {/* <ProductInfo product={product} /> */}
+      <div className="product-page__layout">
+        <ProductGallery
+          images={product.images}
+          productName={product.name}
+        />
+
+        <ProductInfo
+          product={product}
+        />
+      </div>
     </main>
   );
 }

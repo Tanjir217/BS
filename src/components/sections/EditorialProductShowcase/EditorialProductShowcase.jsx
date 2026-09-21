@@ -7,9 +7,6 @@ import useHorizontalSwipe from "../../../hooks/useHorizontalSwipe";
 import ShowcaseProduct from "./ShowcaseProduct";
 import ShowcaseNavigation from "./ShowcaseNavigation";
 
-import { editorialShowcases } from "../../../data/home/editorialShowcase";
-
-
 /*
 |--------------------------------------------------------------------------
 | Single Editorial Product Showcase Section
@@ -77,9 +74,9 @@ function EditorialProductShowcaseItem({
           />
         )}
 
-        {editorial.cta?.label && (
+        {editorial.cta?.Label && (
           <Link
-            to={editorial.cta.href || "#"}
+            to={editorial.cta.Href || "#"}
             className={`
               absolute
               border-b
@@ -96,7 +93,7 @@ function EditorialProductShowcaseItem({
               ${reverse? "text-right right-8":"left-8"}
             `}
           >
-            {editorial.cta.label}
+            {editorial.cta.Label}
           </Link>
         )}
       </div>
@@ -155,11 +152,10 @@ function EditorialProductShowcaseItem({
 | This component controls ALL editorial showcase sections.
 |--------------------------------------------------------------------------
 */
-
-function EditorialProductShowcase() {
+function EditorialProductShowcase({ sections = [] }) {
   return (
     <>
-      {editorialShowcases.map((section, index) => (
+      {sections.map((section, index) => (
         <EditorialProductShowcaseItem
           key={section.id}
           {...section}

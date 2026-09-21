@@ -6,32 +6,41 @@ import NewCollectionHero from "../../components/sections/NewCollectionHero";
 
 import InspiredProductSlider from "../../components/sections/InspiredProductSlider";
 
-import { inspiredProducts } from "../../data/home/inspiredProductSlider";
-
-import { getNewCollection } from "../../services/homeServices";
+import {
+  getNewCollection,
+  getEditorialSections,
+  getInspiredProducts,
+} from "../../services/homeServices";
 
 function Home() {
   const [newCollection, setNewCollection] = useState(null);
+  const [editorialSections, setEditorialSections] = useState([]);
+  const [inspiredProducts, setInspiredProducts] = useState([]);
 
   useEffect(() => {
-    async function loadNewCollection() {
-      const data = await getNewCollection();
+    async function loadHomeContent() {
+      const newCollectionData = await getNewCollection();
 
-      console.log("NEW COLLECTION:", data);
-      console.log("NEW COLLECTION PRODUCTS:", data?.products);
-      console.log("PRODUCT COUNT:", data?.products?.length);
+      const editorialData = await getEditorialSections();
+      const inspiredData = await getInspiredProducts();
 
-      setNewCollection(data);
+      // console.log("NEW COLLECTION:", newCollectionData);
+      // console.log("EDITORIAL SECTIONS:", editorialData);
+      // console.log("INSPIRED PRODUCTS:", inspiredData);
+
+      setNewCollection(newCollectionData);
+      setEditorialSections(editorialData);
+      setInspiredProducts(inspiredData);
     }
 
-    loadNewCollection();
+    loadHomeContent();
   }, []);
 
   return (
     <main>
       <NewCollectionHero products={newCollection?.products ?? []} />
 
-      <EditorialProductShowcase />
+      <EditorialProductShowcase sections={editorialSections} />
 
       <InspiredProductSlider products={inspiredProducts} />
     </main>
