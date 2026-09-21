@@ -128,6 +128,7 @@ function HomePage() {
               key={selectedSection.$id}
               section={selectedSection}
               onClose={() => setSelectedSection(null)}
+              onSaved={loadSections}
             />
           )}
         </div>
