@@ -101,10 +101,10 @@ revoke execute on function private.has_management_role(text) from public;
 revoke execute on function private.is_management_member() from public;
 revoke execute on function private.is_owner() from public;
 
-grant usage on schema private to authenticated;
-grant execute on function private.has_management_role(text) to authenticated;
-grant execute on function private.is_management_member() to authenticated;
-grant execute on function private.is_owner() to authenticated;
+grant usage on schema private to anon, authenticated;
+grant execute on function private.has_management_role(text) to anon, authenticated;
+grant execute on function private.is_management_member() to anon, authenticated;
+grant execute on function private.is_owner() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Customers / Auth profile
