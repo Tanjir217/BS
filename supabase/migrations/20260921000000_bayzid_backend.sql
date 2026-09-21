@@ -2038,7 +2038,7 @@ on storage.objects
 for insert to authenticated
 with check (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 );
 
 create policy customer_media_owner_update
@@ -2046,11 +2046,11 @@ on storage.objects
 for update to authenticated
 using (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 )
 with check (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 );
 
 create policy customer_media_owner_delete
@@ -2058,7 +2058,7 @@ on storage.objects
 for delete to authenticated
 using (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 );
 
 create policy customer_media_management_read
@@ -2813,7 +2813,7 @@ on storage.objects
 for insert to authenticated
 with check (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 );
 
 create policy customer_media_owner_update
@@ -2821,11 +2821,11 @@ on storage.objects
 for update to authenticated
 using (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 )
 with check (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 );
 
 create policy customer_media_owner_delete
@@ -2833,7 +2833,7 @@ on storage.objects
 for delete to authenticated
 using (
   bucket_id = 'customer-media'
-  and owner_id = (select auth.uid())::text
+  and owner_id = auth.uid()::text
 );
 
 create policy customer_media_management_read
