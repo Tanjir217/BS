@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { getCategories } from "../../services/categoryServices";
 import {
   getProductsByCategoryIds,
@@ -11,6 +11,7 @@ import {
   buildCategoryTree,
   findCategoryByPath,
   getDescendantCategoryIds,
+  getCategoryUrl,
 } from "../../utils/categoryTree";
 import ProductGrid from "../../components/product/ProductGrid";
 import CustomDropdown from "../../components/ui/CustomDropdown";
@@ -339,6 +340,14 @@ function CategoryPage() {
         <p className="text-sm text-black/50">Loading category...</p>
       </main>
     );
+  }
+
+  if (category && category.$id !== "all-products") {
+    const canonicalCategoryUrl = getCategoryUrl(category);
+
+    if (location.pathname !== canonicalCategoryUrl) {
+      return <Navigate to={canonicalCategoryUrl} replace />;
+    }
   }
 
   if (error || !category) {
