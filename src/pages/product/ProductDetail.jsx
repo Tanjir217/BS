@@ -4,7 +4,6 @@ import { Navigate, useParams } from "react-router-dom";
 import NotFound from "../NotFound";
 
 import { getProductByPath } from "../../services/productServices";
-import InspiredProductSlider from "../../components/sections/InspiredProductSlider"
 import ProductGallery from "../../components/product/ProductGallery";
 import ProductInfo from "../../components/product/ProductInfo";
 
