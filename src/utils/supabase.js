@@ -32,7 +32,7 @@ const FIELD_ALIASES = {
   postal_code: "postal_Code",
   whatsapp_number: "whatsapp_Number",
   customer_tier: "customer_Tire",
-  is_active: "is_Active",
+  is_active: "isActive",
   total_orders: "total_Orders",
   total_spent: "total_Spent",
   last_order_at: "last_Order_At",
@@ -79,7 +79,6 @@ const FIELD_ALIASES = {
   editorial_alt: "editorial_Alt",
   cta_label: "cta_Label",
   cta_href: "cta_Href",
-  is_active: "is_Active",
   sort_order: "sort_Order",
   image_file_id: "image_File_ID",
   image_id: "image_ID",
@@ -106,6 +105,7 @@ function toCamelKey(key) {
 }
 
 function toSnakeKey(key) {
+  if (key === "is_Active" || key === "isActive") return "is_active";
   if (REVERSE_ALIASES[key]) return REVERSE_ALIASES[key];
   if (key === "$id") return "id";
   if (key === "$createdAt") return "created_at";
