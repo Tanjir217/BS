@@ -11,19 +11,6 @@
 - Verify an `online` order is rejected while COD-only mode is active.
 - Create and test one Pathao shipment; verify duplicate shipment creation is blocked.
 
-## Supabase checkpoint
-
-- Create the production Supabase project.
-- Apply `supabase/migrations/0001_initial_store_schema.sql`.
-- Backfill Appwrite IDs into the text ID columns before changing references.
-- Migrate products, categories, images, addresses, orders, order items, and returns.
-- Map Appwrite customer IDs to Supabase Auth user IDs.
-- Configure Supabase Storage and product-image policies.
-- Deploy `supabase/functions/create-order` and test its authenticated JWT path.
-- Add the production management, courier, and payment Edge Functions before switching the provider.
-- Run the RLS matrix with customer and management accounts.
-- Switch `VITE_BACKEND_PROVIDER=supabase` only after the production services are live.
-
 ## Digital payment
 
 The current checkout is intentionally COD-only. Online payment is not activated until a gateway is selected and its server-side verification/webhook contract is implemented.
