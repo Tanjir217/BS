@@ -70,7 +70,7 @@ function ProductDetail() {
   }
 
   const requestedPath = productPath.split("/").filter(Boolean).join("/");
-  const canonicalPath = product.href.replace(/^\\/products\\//, "");
+  const canonicalPath = product.href.replace(/^\/products\//, "");
 
   if (requestedPath !== canonicalPath) {
     return <Navigate to={product.href} replace />;
