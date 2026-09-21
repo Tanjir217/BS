@@ -19,7 +19,11 @@ export async function getProducts() {
     queries: [Query.equal("isActive", true)],
   });
 
-  return response.rows;
+  const categories = await getCategories();
+  return response.rows.map((product) => ({
+    ...product,
+    href: getProductUrl(product, categories),
+  }));
 }
 
 export async function getProductBySlug(slug) {
@@ -474,8 +478,11 @@ export async function getProductsByIds(productIds = []) {
     response.rows.map((product) => product.$id),
   );
 
+  const categories = await getCategories();
+
   const products = response.rows.map((product) => ({
     ...product,
+    href: getProductUrl(product, categories),
     primaryImage: primaryImages[product.$id] ?? null,
   }));
 
