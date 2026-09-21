@@ -35,11 +35,17 @@ export async function getProducts() {
 }
 
 export async function getProductBySlug(slug) {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,
     queries: [
-      Query.equal("slug", slug),
+      Query.equal("slug", normalizedSlug),
       Query.equal("isActive", true),
       Query.limit(1),
     ],
