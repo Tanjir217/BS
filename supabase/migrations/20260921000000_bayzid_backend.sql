@@ -2041,17 +2041,8 @@ with check (
   and owner_id = auth.uid()::text
 );
 
-create policy customer_media_owner_update
-on storage.objects
-for update to authenticated
-using (
-  bucket_id = 'customer-media'
-  and owner_id = auth.uid()::text
-)
-with check (
-  bucket_id = 'customer-media'
-  and owner_id = auth.uid()::text
-);
+-- Customer profile media is replaced by uploading a new file and deleting
+-- the previous file, so no direct Storage UPDATE policy is required.
 
 create policy customer_media_owner_delete
 on storage.objects
