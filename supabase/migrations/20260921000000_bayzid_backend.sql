@@ -799,8 +799,12 @@ begin
     raise exception 'Shipping city is required';
   end if;
 
-  if coalesce(p_shipping_cost, 0) < 0 or coalesce(p_discount, 0) < 0 then
-    raise exception 'Invalid shipping or discount value';
+  if coalesce(p_shipping_cost, 0) not in (100, 150) then
+    raise exception 'Unsupported delivery charge';
+  end if;
+
+  if coalesce(p_discount, 0) <> 0 then
+    raise exception 'Discounts are not enabled in the current Supabase migration';
   end if;
 
   if p_payment_method <> 'cod' then
