@@ -14,7 +14,7 @@ const HOME_SECTIONS_TABLE_ID = import.meta.env
 const HOME_SECTIONS_PRODUCTS_TABLE_ID = import.meta.env
   .VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID;
 
-const STORAGE_BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
+const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
 export async function getNewCollection() {
   // 1. Get the new_collection section
