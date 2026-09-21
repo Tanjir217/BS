@@ -114,18 +114,23 @@ export async function updateProductImage(imageId, data) {
 export async function setPrimaryProductImage(productId, imageId) {
   const images = await getProductImages(productId);
 
-  await Promise.all(
-    images.map((image) =>
-      tablesDB.updateRow({
+  for (const image of images) {
+    if (image.isPrimary) {
+      await tablesDB.updateRow({
         databaseId: DATABASE_ID,
         tableId: PRODUCT_IMAGES_TABLE_ID,
         rowId: image.id,
-        data: {
-          isPrimary: image.id === imageId,
-        },
-      }),
-    ),
-  );
+        data: { isPrimary: false },
+      });
+    }
+  }
+
+  await tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCT_IMAGES_TABLE_ID,
+    rowId: imageId,
+    data: { isPrimary: true },
+  });
 
   return getProductImages(productId);
 }
