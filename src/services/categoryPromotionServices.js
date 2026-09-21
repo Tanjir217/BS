@@ -3,8 +3,8 @@ import { ID, Query } from "appwrite";
 import { storage, tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
-const CATEGORY_PROMOTIONS_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID || "category_promotions";
+const CATEGORIES_TABLE_ID = "categories";
+const CATEGORY_PROMOTIONS_TABLE_ID = "category_promotions";
 const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
 export const ALL_PRODUCTS_PROMOTION_KEY = "all-products";
