@@ -1,5 +1,7 @@
 import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
+import { getCategories } from "./categoryServices";
+import { getProductUrl } from "../utils/categoryTree";
 import {
   deleteProductImages,
   getPrimaryProductImage,
@@ -37,11 +39,15 @@ export async function getProductBySlug(slug) {
     return null;
   }
 
-  const images = await getProductImages(product.$id);
+  const [images, categories] = await Promise.all([
+    getProductImages(product.$id),
+    getCategories(),
+  ]);
 
   return {
     ...product,
     images,
+    href: getProductUrl(product, categories),
   };
 }
 
@@ -122,7 +128,7 @@ export async function createProduct(productData) {
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
-    categoryID: productData.categoryID || "",
+    categoryID: productData.categoryID || null,
     color: productData.color || "",
     colorHEX: productData.colorHEX || "",
     stockQuantity: Number(productData.stockQuantity),
@@ -157,7 +163,7 @@ export async function updateProduct(productId, productData) {
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
-    categoryID: productData.categoryID || "",
+    categoryID: productData.categoryID || null,
     color: productData.color || "",
     colorHEX: productData.colorHEX || "",
     stockQuantity: Number(productData.stockQuantity),
@@ -396,8 +402,11 @@ export async function getProductsByCategoryIds(
 
   const primaryImages = await getPrimaryProductImages(productIds);
 
+  const categories = await getCategories();
+
   const productsWithImages = response.rows.map((product) => ({
     ...product,
+    href: getProductUrl(product, categories),
     primaryImage: primaryImages[product.$id] ?? null,
   }));
 
@@ -472,8 +481,11 @@ export async function searchProducts(searchTerm, { limit = 48 } = {}) {
     response.rows.map((product) => product.$id),
   );
 
+  const categories = await getCategories();
+
   return response.rows.map((product) => ({
     ...product,
+    href: getProductUrl(product, categories),
     primaryImage: primaryImages[product.$id] ?? null,
   }));
 }
