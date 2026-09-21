@@ -1,6 +1,23 @@
 import { Search, X } from "lucide-react";
 import CustomDropdown from "../components/CustomDropdown";
 
+function getCategoryLabel(category, categories) {
+  const byId = new Map(categories.map((item) => [item.$id, item]));
+  const names = [];
+  const visited = new Set();
+  let current = category;
+
+  while (current && !visited.has(current.$id)) {
+    visited.add(current.$id);
+    names.unshift(current.name);
+    current = current.parentCategoryID
+      ? byId.get(current.parentCategoryID)
+      : null;
+  }
+
+  return names.join(" / ");
+}
+
 function ProductFilters({ filters, categories, onChange }) {
   function updateFilter(name, value) {
     onChange((current) => ({ ...current, [name]: value }));
@@ -47,7 +64,7 @@ function ProductFilters({ filters, categories, onChange }) {
             { value: "all", label: "All Categories" },
             ...categories.map((category) => ({
               value: category.$id,
-              label: category.name,
+              label: getCategoryLabel(category, categories),
             })),
           ]}
         />
