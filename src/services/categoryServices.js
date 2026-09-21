@@ -136,11 +136,11 @@ export async function getCategoryBySlug(slug) {
 export async function createCategory(categoryData) {
   try {
     const response = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORIES_TABLE_ID,
-    rowId: ID.unique(),
-    data: normalizeCategoryData(categoryData),
-  });
+      databaseId: DATABASE_ID,
+      tableId: CATEGORIES_TABLE_ID,
+      rowId: ID.unique(),
+      data: normalizeCategoryData(categoryData),
+    });
 
     return response;
   } catch (error) {
@@ -179,11 +179,11 @@ export async function updateCategory(categoryId, categoryData) {
 
   try {
     const response = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORIES_TABLE_ID,
-    rowId: categoryId,
-    data: normalizeCategoryData(categoryData),
-  });
+      databaseId: DATABASE_ID,
+      tableId: CATEGORIES_TABLE_ID,
+      rowId: categoryId,
+      data: normalizeCategoryData(categoryData),
+    });
 
     return response;
   } catch (error) {
