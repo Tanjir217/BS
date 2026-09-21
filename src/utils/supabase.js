@@ -111,7 +111,7 @@ function toSnakeKey(key) {
 }
 
 export function fromSupabaseRow(value) {
-  if (Array.isArray(value)) return value.map(fromDb);
+  if (Array.isArray(value)) return value.map(fromSupabaseRow);
   if (!value || typeof value !== "object") return value;
 
   const output = {};
