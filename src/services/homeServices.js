@@ -8,11 +8,9 @@ import { getProductImages } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const HOME_SECTIONS_TABLE_ID = import.meta.env
-  .VITE_APPWRITE_HOME_SECTIONS_TABLE_ID;
+const HOME_SECTIONS_TABLE_ID = import.meta.env.VITE_APPWRITE_HOME_SECTIONS_TABLE_ID || "home_sections";
 
-const HOME_SECTIONS_PRODUCTS_TABLE_ID = import.meta.env
-  .VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID;
+const HOME_SECTIONS_PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_HOME_SECTIONS_PRODUCTS_TABLE_ID || "home_sections_products";
 
 const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
