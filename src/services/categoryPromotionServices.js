@@ -4,9 +4,14 @@ import { storage, tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID;
+// Keep the environment variables as the preferred deployment configuration.
+// These are public Appwrite resource IDs and provide a production-safe fallback
+// so missing optional env entries cannot turn into an undefined tableId/bucketId.
 const CATEGORY_PROMOTIONS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID;
-const STORAGE_BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
+  import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID ||
+  "6ab0351e00339abceb1a";
+const STORAGE_BUCKET_ID =
+  import.meta.env.VITE_APPWRITE_BUCKET_ID || "6a977929003873f6d810";
 
 export const ALL_PRODUCTS_PROMOTION_KEY = "all-products";
 
