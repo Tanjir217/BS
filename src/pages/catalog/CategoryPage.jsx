@@ -311,9 +311,16 @@ function CategoryPage() {
         filters,
       });
 
+      const visibleProducts =
+        category?.$id === "all-products"
+          ? productResponse.products
+          : productResponse.products.filter((product) =>
+              categoryIds.includes(product.categoryID),
+            );
+
       setProducts((currentProducts) => [
         ...currentProducts,
-        ...productResponse.products,
+        ...visibleProducts,
       ]);
 
       setPage(productResponse.page);
