@@ -258,7 +258,7 @@ function resolveTableName(tableId) {
 }
 
 function makeResponse(data, count = null) {
-  return { rows: (data || []).map(fromDb), total: count ?? (data || []).length };
+  return { rows: (data || []).map(fromSupabaseRow), total: count ?? (data || []).length };
 }
 
 export const tablesDB = {
