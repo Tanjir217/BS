@@ -4,8 +4,7 @@ import { tablesDB, storage } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const PRODUCT_IMAGES_TABLE_ID = import.meta.env
-  .VITE_APPWRITE_PRODUCT_IMAGES_TABLE_ID;
+const PRODUCT_IMAGES_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCT_IMAGES_TABLE_ID || "product_images";
 
 const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
