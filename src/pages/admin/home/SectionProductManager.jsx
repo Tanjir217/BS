@@ -51,7 +51,7 @@ function SectionProductManager({ section, onClose }) {
     try {
       setError("");
       await updateSectionProduct(item.$id, {
-        isActive: !item.is_Active,
+        isActive: !item.isActive,
       });
       await loadProducts();
     } catch (error) {
@@ -199,7 +199,7 @@ function SectionProductManager({ section, onClose }) {
                     <label className="flex items-center gap-2 text-xs text-gray-600">
                       <input
                         type="checkbox"
-                        checked={Boolean(item.is_Active)}
+                        checked={Boolean(item.isActive)}
                         onChange={() => handleToggleActive(item)}
                       />
                       Show in section
