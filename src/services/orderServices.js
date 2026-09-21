@@ -104,11 +104,12 @@ async function executeOrderManagement(payload) {
     throw new Error(responseBody.error || "Unable to update the order.");
   }
 
-  if (!responseBody.order?.$id) {
+  const mappedOrder = fromSupabaseRow(responseBody.order);
+  if (!mappedOrder?.$id) {
     throw new Error("The updated order was not returned.");
   }
 
-  return fromSupabaseRow(responseBody.order);
+  return mappedOrder;
 }
 
 export async function createOrder({
@@ -161,13 +162,14 @@ export async function createOrder({
     throw new Error(responseBody.error || "Unable to create the order.");
   }
 
-  if (!responseBody.order?.$id) {
+  const mappedOrder = fromSupabaseRow(responseBody.order);
+  if (!mappedOrder?.$id) {
     throw new Error("Order was created but no order ID was returned.");
   }
 
   clearCheckoutIdempotencyKey();
 
-  return { order: fromSupabaseRow(responseBody.order), items: (responseBody.items || []).map(fromSupabaseRow) };
+  return { order: mappedOrder, items: (responseBody.items || []).map(fromSupabaseRow) };
 }
 
 export async function getOrders({ page = 1, limit = 10, orderStatus = "all", paymentStatus = "all" } = {}) {
