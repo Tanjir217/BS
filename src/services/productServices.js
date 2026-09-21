@@ -12,6 +12,14 @@ import {
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID || "products";
 
+function normalizeSlug(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export async function getProducts() {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -160,7 +168,7 @@ export async function getProductByIdAdmin(productId) {
 export async function createProduct(productData) {
   const data = {
     name: productData.name,
-    slug: productData.slug,
+    slug: normalizeSlug(productData.slug),
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
@@ -195,7 +203,7 @@ export async function createProduct(productData) {
 export async function updateProduct(productId, productData) {
   const data = {
     name: productData.name,
-    slug: productData.slug,
+    slug: normalizeSlug(productData.slug),
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
