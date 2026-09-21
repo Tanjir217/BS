@@ -1,6 +1,6 @@
 # Bayzid Shoes — Appwrite development database setup
 
-The current development branch uses Appwrite. Supabase is the production checkpoint and must not be selected until the Supabase migration/RLS/function verification is complete.
+The current development branch uses Appwrite.
 
 ## 1. Appwrite project
 
@@ -12,7 +12,7 @@ Create/select one Appwrite project and record:
 - One product-image storage bucket ID
 - One management team ID
 
-Put the public IDs in the Vite environment file. Never put Function API keys, Pathao access tokens, payment secrets, or Supabase service-role keys in `VITE_*` variables.
+Put the public IDs in the Vite environment file. Never put Function API keys, Pathao access tokens, or payment secrets in `VITE_*` variables.
 
 ## 2. Required Appwrite TablesDB tables
 
@@ -380,27 +380,3 @@ VITE_APPWRITE_MANAGEMENT_TEAM_ID=...
 ```
 
 Restart Vite after changing environment variables.
-
-## 7. Supabase production checkpoint
-
-Do not create the Supabase production connection by simply changing the provider variable.
-
-The repository contains the production schema and authenticated `create-order` Edge Function, but the production Supabase project still needs:
-
-1. schema migration
-2. data migration
-3. Auth identity mapping
-4. Storage configuration
-5. RLS verification
-6. management Edge Functions
-7. courier Edge Function
-8. return/exchange server actions
-9. payment gateway server integration
-
-Only after those are verified should:
-
-```
-VITE_BACKEND_PROVIDER=supabase
-```
-
-be used in production.
