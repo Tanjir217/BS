@@ -2033,32 +2033,8 @@ using (
   and (select private.has_management_role('manager'))
 );
 
-create policy customer_media_owner_insert
-on storage.objects
-for insert to authenticated
-with check (
-  bucket_id = 'customer-media'
-  and owner_id = auth.uid()::text
-);
-
--- Customer profile media is replaced by uploading a new file and deleting
--- the previous file, so no direct Storage UPDATE policy is required.
-
-create policy customer_media_owner_delete
-on storage.objects
-for delete to authenticated
-using (
-  bucket_id = 'customer-media'
-  and owner_id = auth.uid()::text
-);
-
-create policy customer_media_management_read
-on storage.objects
-for select to authenticated
-using (
-  bucket_id = 'customer-media'
-  and (select private.is_management_member())
-);
+-- The private customer-media bucket is reserved for future profile/media workflows.
+-- No browser policy is granted until that workflow is implemented and tested.
 
 -- ---------------------------------------------------------------------------
 -- Initial configuration only — no business/customer/product data.
