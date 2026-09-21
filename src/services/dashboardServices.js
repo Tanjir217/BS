@@ -4,13 +4,13 @@ import { tablesDB } from "../utils/appwrite";
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
 const ORDERS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID || "orders";
+  "orders";
 
 const ORDER_ITEMS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID || "order_items";
+  "order_items";
 
 const PRODUCTS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID || "products";
+  "products";
 
 /*
 |--------------------------------------------------------------------------
