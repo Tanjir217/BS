@@ -928,31 +928,6 @@ begin
     );
   end if;
 
-  if not found then
-    select *
-    into v_existing
-    from public.orders
-    where idempotency_key = trim(p_idempotency_key)
-    limit 1;
-
-    if v_existing.customer_id is distinct from v_user_id then
-      raise exception 'Idempotency key is already associated with another order';
-    end if;
-
-    return jsonb_build_object(
-      'order_id', v_existing.id,
-      'order_number', v_existing.order_number,
-      'subtotal', v_existing.subtotal,
-      'shipping_cost', v_existing.shipping_cost,
-      'discount', v_existing.discount,
-      'total', v_existing.total,
-      'payment_method', v_existing.payment_method,
-      'payment_status', v_existing.payment_status,
-      'order_status', v_existing.order_status,
-      'replayed', true
-    );
-  end if;
-
   for v_item in
     select
       product_id,
