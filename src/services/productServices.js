@@ -51,6 +51,38 @@ export async function getProductBySlug(slug) {
   };
 }
 
+export async function getProductByPath(pathSegments = []) {
+  const segments = pathSegments.filter(Boolean).map((segment) => segment.trim().toLowerCase());
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  const slug = segments[segments.length - 1];
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return null;
+  }
+
+  const expectedPath = product.href
+    .replace(/^\/products\//, "")
+    .split("/")
+    .filter(Boolean);
+
+  // Legacy /products/:slug URLs are accepted and can be redirected
+  // to the canonical category-aware URL by the page.
+  if (
+    segments.length > 1 &&
+    (segments.length !== expectedPath.length ||
+      segments.some((segment, index) => segment !== expectedPath[index]))
+  ) {
+    return null;
+  }
+
+  return product;
+}
+
 export async function getProductById(productId) {
   if (!productId) {
     return null;
