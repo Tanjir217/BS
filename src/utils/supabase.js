@@ -47,6 +47,7 @@ const FIELD_ALIASES = {
   file_id: "fileID",
   sort_order: "sortOrder",
   is_primary: "isPrimary",
+  section_key: "section_key",
   section_id: "section_ID",
   sub_title: "sub_title",
   product_name: "product_Name",
