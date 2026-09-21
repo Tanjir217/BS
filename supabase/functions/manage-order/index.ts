@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "npm:@supabase/supabase-js@^2/cors";
 
 function getPublishableKey() {
   const direct = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
