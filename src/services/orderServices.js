@@ -1,5 +1,6 @@
 import { ID, Query } from "appwrite";
 import { tablesDB, functions } from "../utils/appwrite";
+import { fromSupabaseRow } from "../utils/supabase";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const CREATE_ORDER_FUNCTION_ID = import.meta.env.VITE_SUPABASE_CREATE_ORDER_FUNCTION_NAME || "create-order";
@@ -107,7 +108,7 @@ async function executeOrderManagement(payload) {
     throw new Error("The updated order was not returned.");
   }
 
-  return responseBody.order;
+  return fromSupabaseRow(responseBody.order);
 }
 
 export async function createOrder({
@@ -166,7 +167,7 @@ export async function createOrder({
 
   clearCheckoutIdempotencyKey();
 
-  return { order: responseBody.order, items: responseBody.items || [] };
+  return { order: fromSupabaseRow(responseBody.order), items: (responseBody.items || []).map(fromSupabaseRow) };
 }
 
 export async function getOrders({ page = 1, limit = 10, orderStatus = "all", paymentStatus = "all" } = {}) {
