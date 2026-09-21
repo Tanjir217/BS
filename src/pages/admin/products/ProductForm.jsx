@@ -1,6 +1,23 @@
 import { useEffect, useState } from "react";
 import CustomDropdown from "../components/CustomDropdown";
 import ProductImageManager from "./ProductImageManager";
+function getCategoryLabel(category, categories) {
+  const byId = new Map(categories.map((item) => [item.$id, item]));
+  const names = [];
+  const visited = new Set();
+  let current = category;
+
+  while (current && !visited.has(current.$id)) {
+    visited.add(current.$id);
+    names.unshift(current.name);
+    current = current.parentCategoryID
+      ? byId.get(current.parentCategoryID)
+      : null;
+  }
+
+  return names.join(" / ");
+}
+
 const EMPTY_FORM = {
   name: "",
   slug: "",
@@ -203,7 +220,7 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
               .filter((category) => category.isActive)
               .map((category) => ({
                 value: category.$id,
-                label: category.name,
+                label: getCategoryLabel(category, categories),
               })),
           ]}
           className="w-full"
