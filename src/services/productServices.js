@@ -20,6 +20,38 @@ function normalizeSlug(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function requireCategoryId(categoryId) {
+  const normalized = String(categoryId ?? "").trim();
+
+  if (!normalized) {
+    throw new Error("A product category is required.");
+  }
+
+  return normalized;
+}
+
+function requireProductSlug(value) {
+  const slug = normalizeSlug(value);
+
+  if (!slug) {
+    throw new Error("A product slug is required.");
+  }
+
+  return slug;
+}
+
+function rethrowProductConstraintError(error) {
+  if (error?.code === "23505" && error?.message?.includes("products_slug_key")) {
+    throw new Error("A product with this slug already exists. Choose a different slug.");
+  }
+
+  if (error?.code === "23505" && error?.message?.includes("products_sku_key")) {
+    throw new Error("A product with this SKU already exists. Choose a different SKU.");
+  }
+
+  throw error;
+}
+
 export async function getProducts() {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -174,11 +206,11 @@ export async function getProductByIdAdmin(productId) {
 export async function createProduct(productData) {
   const data = {
     name: productData.name,
-    slug: normalizeSlug(productData.slug),
+    slug: requireProductSlug(productData.slug),
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
-    categoryID: productData.categoryID || null,
+    categoryID: requireCategoryId(productData.categoryID),
     color: productData.color || "",
     colorHEX: productData.colorHEX || "",
     stockQuantity: Number(productData.stockQuantity),
@@ -195,14 +227,16 @@ export async function createProduct(productData) {
     data.compareAtPrice = Number(productData.compareAtPrice);
   }
 
-  const response = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: PRODUCTS_TABLE_ID,
-    rowId: ID.unique(),
-    data,
-  });
-
-  return response;
+  try {
+    return await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      rowId: ID.unique(),
+      data,
+    });
+  } catch (error) {
+    rethrowProductConstraintError(error);
+  }
 }
 
 // Update an existing product
@@ -228,14 +262,16 @@ export async function updateProduct(productId, productData) {
       ? null
       : Number(productData.compareAtPrice);
 
-  const response = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: PRODUCTS_TABLE_ID,
-    rowId: productId,
-    data,
-  });
-
-  return response;
+  try {
+    return await tablesDB.updateRow({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      rowId: productId,
+      data,
+    });
+  } catch (error) {
+    rethrowProductConstraintError(error);
+  }
 }
 
 // Update only the active/inactive status
