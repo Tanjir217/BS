@@ -2,11 +2,11 @@ import { Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 import { CUSTOMER_TIERS } from "./customerServices";
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID || "order_items";
-const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID || "orders";
-const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID || "products";
-const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
-const CUSTOMERS_TABLE_ID = import.meta.env.VITE_APPWRITE_CUSTOMERS_TABLE_ID || "customers";
+const ORDER_ITEMS_TABLE_ID = "order_items";
+const ORDERS_TABLE_ID = "orders";
+const PRODUCTS_TABLE_ID = "products";
+const CATEGORIES_TABLE_ID = "categories";
+const CUSTOMERS_TABLE_ID = "customers";
 const REVENUE_ORDER_STATUS = "delivered";
 const REVENUE_PAYMENT_STATUS = "paid";
 
