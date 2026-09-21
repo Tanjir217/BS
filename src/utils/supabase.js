@@ -121,7 +121,7 @@ function fromDb(value) {
 
 function toDb(value) {
   if (Array.isArray(value)) return value.map(toDb);
-  if (!value || typeof value !== "object" || value instanceof File) return value;
+  if (!value || typeof value !== "object" || typeof File !== "undefined" && value instanceof File) return value;
 
   const output = {};
   for (const [key, val] of Object.entries(value)) {
@@ -163,7 +163,7 @@ function splitQueryArgs(source) {
 
 function parseQuery(query) {
   if (typeof query !== "string") return null;
-  const match = query.match(/^([a-zA-Z]+)\\((.*)\\)$/);
+  const match = query.match(/^([a-zA-Z]+)\((.*)\)$/);
   if (!match) return null;
 
   const [, op, body] = match;
