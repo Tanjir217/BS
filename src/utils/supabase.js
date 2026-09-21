@@ -357,7 +357,8 @@ export const teams = {
   async get() { return { $id: "supabase-management" }; },
   async listMemberships({ queries = [] }) {
     const userQuery = queries.find((q) => String(q).includes("userId"));
-    const userId = (parseQuery(userQuery)?.args?.[1]) || (await supabase.auth.getUser()).data.user?.id;
+    const rawUserId = parseQuery(userQuery)?.args?.[1];
+    const userId = (Array.isArray(rawUserId) ? rawUserId[0] : rawUserId) || (await supabase.auth.getUser()).data.user?.id;
     const response = await supabase.from("management_memberships").select("*").eq("user_id", userId).maybeSingle();
     if (response.error) throw response.error;
     if (!response.data) return { memberships: [] };
