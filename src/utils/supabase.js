@@ -73,7 +73,6 @@ const FIELD_ALIASES = {
   cancelled_at: "cancelled_At",
   cancelled_by: "cancelled_By",
   home_section_id: "section_ID",
-  sub_title: "sub_title",
   editorial_file_id: "editorial_File_ID",
   editorial_alt: "editorial_Alt",
   cta_label: "cta_Label",
@@ -202,8 +201,11 @@ function parseQuery(query) {
 
   const [, op, body] = match;
   const args = splitQueryArgs(body).map((arg) => {
-    try { return JSON.parse(arg); } catch {}
-    return arg.replace(/^\"(.*)\"$/, "$1");
+    try {
+      return JSON.parse(arg);
+    } catch {
+      return arg.replace(/^"(.*)"$/, "$1");
+    }
   });
 
   return { op, args };
@@ -375,7 +377,7 @@ export const account = {
     };
   },
 
-  async create({ userId, email, password, name }) {
+  async create({ email, password, name }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
