@@ -9,21 +9,35 @@ import {
 import CategoryTable from "./CategoryTable";
 import CategoryForm from "./CategoryForm";
 
+function getErrorMessage(error, fallback) {
+  return error?.message || fallback;
+}
+
 function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   async function loadCategories() {
     try {
       setIsLoading(true);
+      setErrorMessage("");
 
       const data = await getCategoriesForAdmin();
 
       setCategories(data);
     } catch (error) {
       console.error("Failed to load categories:", error);
+      setCategories([]);
+      setErrorMessage(
+        getErrorMessage(
+          error,
+          "Failed to load categories. Please refresh and try again.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -34,17 +48,22 @@ function CategoriesPage() {
   }, []);
 
   function handleAddCategory() {
+    setErrorMessage("");
     setEditingCategory(null);
     setIsFormOpen(true);
   }
 
   function handleEditCategory(category) {
+    setErrorMessage("");
     setEditingCategory(category);
     setIsFormOpen(true);
   }
 
   async function handleSubmit(formData) {
     try {
+      setIsSaving(true);
+      setErrorMessage("");
+
       if (editingCategory) {
         await updateCategory(editingCategory.$id, formData);
       } else {
@@ -57,22 +76,33 @@ function CategoriesPage() {
       await loadCategories();
     } catch (error) {
       console.error("Failed to save category:", error);
+      setErrorMessage(
+        getErrorMessage(
+          error,
+          "Failed to save category. Please check the form and try again.",
+        ),
+      );
+    } finally {
+      setIsSaving(false);
     }
   }
 
   async function handleDelete(categoryId) {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this category?"
+      "Are you sure you want to delete this category?",
     );
 
     if (!confirmed) return;
 
     try {
+      setErrorMessage("");
       await deleteCategory(categoryId);
-
       await loadCategories();
     } catch (error) {
       console.error("Failed to delete category:", error);
+      setErrorMessage(
+        getErrorMessage(error, "Failed to delete category."),
+      );
     }
   }
 
@@ -100,13 +130,21 @@ function CategoriesPage() {
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMessage}
+        </div>
+      )}
+
       {isFormOpen && (
         <CategoryForm
           category={editingCategory}
           onSubmit={handleSubmit}
           onCancel={() => {
-            setIsFormOpen(false);
-            setEditingCategory(null);
+            if (!isSaving) {
+              setIsFormOpen(false);
+              setEditingCategory(null);
+            }
           }}
         />
       )}
