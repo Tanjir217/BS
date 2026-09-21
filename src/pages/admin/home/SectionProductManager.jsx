@@ -5,6 +5,7 @@ import {
   removeProductFromSection,
   updateSectionProduct,
   moveSectionProduct,
+  updateHomeSection,
 } from "../../../services/homeAdminServices";
 import AddProductToSection from "./AddProductToSection";
 import CustomDropdown from "../../../components/ui/CustomDropdown";
@@ -15,6 +16,14 @@ function SectionProductManager({ section, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [settings, setSettings] = useState({
+    title: section.title || "",
+    sub_title: section.sub_title || "",
+    cta_Label: section.cta_Label || "",
+    cta_Href: section.cta_Href || "",
+    isActive: section.isActive ?? true,
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   async function loadProducts() {
     try {
@@ -32,6 +41,23 @@ function SectionProductManager({ section, onClose }) {
   useEffect(() => {
     loadProducts();
   }, [section.$id]);
+
+  async function handleSaveSettings(event) {
+    event.preventDefault();
+
+    try {
+      setSavingSettings(true);
+      setError("");
+
+      await updateHomeSection(section.$id, settings);
+      setError("");
+    } catch (saveError) {
+      console.error("Failed to save homepage section settings:", saveError);
+      setError(saveError?.message || "Failed to save section settings.");
+    } finally {
+      setSavingSettings(false);
+    }
+  }
 
   async function handleRemove(sectionProductId) {
     if (!window.confirm(`Remove this product from ${section.title || section.section_key}?`)) {
@@ -158,6 +184,76 @@ function SectionProductManager({ section, onClose }) {
       </div>
 
       <div className="p-5">
+        <form
+          onSubmit={handleSaveSettings}
+          className="mb-6 rounded-xl border border-black/8 bg-black/[0.02] p-4"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/35">
+            Section settings
+          </p>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <input
+              value={settings.title}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }))
+              }
+              placeholder="Section title"
+              className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+            />
+
+            <input
+              value={settings.sub_title}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  sub_title: event.target.value,
+                }))
+              }
+              placeholder="Subtitle"
+              className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+            />
+
+            <input
+              value={settings.cta_Label}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  cta_Label: event.target.value,
+                }))
+              }
+              placeholder="CTA label"
+              className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+            />
+
+            <input
+              value={settings.cta_Href}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  cta_Href: event.target.value,
+                }))
+              }
+              placeholder="CTA URL, e.g. /all-products/men"
+              className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+            />
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <button
+              type="submit"
+              disabled={savingSettings}
+              className="rounded-lg bg-black px-4 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {savingSettings ? "Saving..." : "Save Section Settings"}
+            </button>
+          </div>
+        </form>
+
+
         {loading && <p className="text-sm text-gray-500">Loading products...</p>}
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
