@@ -31,6 +31,7 @@ function toPromotion(row) {
 
   return {
     ...row,
+    category_ID: row.category_ID || row.categoryID || null,
     imageUrl: row.image_File_ID
       ? storage.getFileView({
           bucketId: STORAGE_BUCKET_ID,
