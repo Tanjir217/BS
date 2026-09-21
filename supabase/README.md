@@ -21,7 +21,7 @@ Payment-provider and courier integrations are intentionally postponed. The curre
 
 ## Database migration
 
-Run: `supabase/migrations/20260921000000_bayzid_backend.sql` in a fresh Supabase test project.
+Apply the migrations in `supabase/migrations/` in timestamp order. The base migration is `20260921000000_bayzid_backend.sql`; the follow-up `20260921120000_catalog_paths_home_defaults.sql` adds scoped category slugs, homepage default section records, and storefront storage metadata SELECT access.
 
 The migration creates:
 - Supabase Auth → `public.customers` profile synchronization
@@ -138,7 +138,7 @@ The current functions require no Pathao credentials because courier integration 
 ### Database/security
 1. Create a fresh Supabase test project.
 2. Apply the canonical migration.
-3. Confirm all tables and indexes are created.
+3. Confirm all tables and indexes are created, including the scoped category-slug index and homepage section defaults.
 4. Create one customer Auth account.
 5. Confirm the Auth trigger creates its `public.customers` row.
 6. Create one management Auth account.
@@ -177,7 +177,7 @@ The current functions require no Pathao credentials because courier integration 
 33. Product detail and product images.
 34. Homepage editorial sections.
 35. Category promotions.
-36. Admin product/category/content management.
+36. Admin product/category/content management, including category-aware product URLs and homepage section controls.
 37. Storage upload/replace/delete.
 38. Customer addresses.
 39. Wishlist behavior.
