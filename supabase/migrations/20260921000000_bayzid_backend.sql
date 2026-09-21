@@ -803,8 +803,8 @@ begin
     raise exception 'Invalid shipping or discount value';
   end if;
 
-  if p_payment_method not in ('cod', 'online') then
-    raise exception 'Unsupported payment method';
+  if p_payment_method <> 'cod' then
+    raise exception 'Only Cash on Delivery is enabled in the current Supabase migration';
   end if;
 
   if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
