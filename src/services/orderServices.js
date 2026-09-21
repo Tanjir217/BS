@@ -1,11 +1,12 @@
 import { ID, Query } from "appwrite";
 import { tablesDB, functions } from "../utils/appwrite";
+import { fromSupabaseRow } from "../utils/supabase";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const CREATE_ORDER_FUNCTION_ID = import.meta.env.VITE_APPWRITE_CREATE_ORDER_FUNCTION_ID;
-const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
-const ORDERS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID;
-const ORDER_ITEMS_TABLE_ID = import.meta.env.VITE_APPWRITE_ORDER_ITEMS_TABLE_ID;
+const CREATE_ORDER_FUNCTION_ID = import.meta.env.VITE_SUPABASE_CREATE_ORDER_FUNCTION_NAME || "create-order";
+const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_SUPABASE_MANAGE_ORDER_FUNCTION_NAME || "manage-order";
+const ORDERS_TABLE_ID = "orders";
+const ORDER_ITEMS_TABLE_ID = "order_items";
 const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "bayzid-checkout-idempotency-key";
 
 export const ORDER_STATUSES = {
@@ -103,11 +104,12 @@ async function executeOrderManagement(payload) {
     throw new Error(responseBody.error || "Unable to update the order.");
   }
 
-  if (!responseBody.order?.$id) {
+  const mappedOrder = fromSupabaseRow(responseBody.order);
+  if (!mappedOrder?.$id) {
     throw new Error("The updated order was not returned.");
   }
 
-  return responseBody.order;
+  return mappedOrder;
 }
 
 export async function createOrder({
@@ -160,13 +162,14 @@ export async function createOrder({
     throw new Error(responseBody.error || "Unable to create the order.");
   }
 
-  if (!responseBody.order?.$id) {
+  const mappedOrder = fromSupabaseRow(responseBody.order);
+  if (!mappedOrder?.$id) {
     throw new Error("Order was created but no order ID was returned.");
   }
 
   clearCheckoutIdempotencyKey();
 
-  return { order: responseBody.order, items: responseBody.items || [] };
+  return { order: mappedOrder, items: (responseBody.items || []).map(fromSupabaseRow) };
 }
 
 export async function getOrders({ page = 1, limit = 10, orderStatus = "all", paymentStatus = "all" } = {}) {
@@ -249,9 +252,8 @@ export async function cancelCustomerOrder(orderId) {
   return executeOrderManagement({ action: "cancel_order_customer", orderId });
 }
 
-export async function createCourierOrder(orderId) {
-  if (!orderId) throw new Error("Order ID is required.");
-  return executeOrderManagement({ action: "create_courier_order", orderId });
+export async function createCourierOrder() {
+  throw new Error("Courier integration is not enabled in the COD-only Supabase migration.");
 }
 
 export async function updatePaymentStatus(orderId, paymentStatus) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { getCategories } from "../../services/categoryServices";
 import {
   getProductsByCategoryIds,
@@ -11,6 +11,7 @@ import {
   buildCategoryTree,
   findCategoryByPath,
   getDescendantCategoryIds,
+  getCategoryUrl,
 } from "../../utils/categoryTree";
 import ProductGrid from "../../components/product/ProductGrid";
 import CustomDropdown from "../../components/ui/CustomDropdown";
@@ -109,6 +110,12 @@ function CategoryPage() {
 
         const slugs =
           segments[0] === "all-products" ? segments.slice(1) : segments;
+
+        // Be tolerant of legacy/generated links that accidentally repeated
+        // the catalog prefix, e.g. /all-products/all-products/men.
+        while (slugs[0] === "all-products") {
+          slugs.shift();
+        }
 
         const isAllProducts = slugs.length === 0;
 
@@ -240,7 +247,14 @@ function CategoryPage() {
           return;
         }
 
-        setProducts(productResponse.products);
+        const visibleProducts =
+          category.$id === "all-products"
+            ? productResponse.products
+            : productResponse.products.filter((product) =>
+                categoryIds.includes(product.categoryID),
+              );
+
+        setProducts(visibleProducts);
 
         setPage(productResponse.page);
 
@@ -298,9 +312,16 @@ function CategoryPage() {
         filters,
       });
 
+      const visibleProducts =
+        category?.$id === "all-products"
+          ? productResponse.products
+          : productResponse.products.filter((product) =>
+              categoryIds.includes(product.categoryID),
+            );
+
       setProducts((currentProducts) => [
         ...currentProducts,
-        ...productResponse.products,
+        ...visibleProducts,
       ]);
 
       setPage(productResponse.page);
@@ -319,6 +340,14 @@ function CategoryPage() {
         <p className="text-sm text-black/50">Loading category...</p>
       </main>
     );
+  }
+
+  if (category && category.$id !== "all-products") {
+    const canonicalCategoryUrl = getCategoryUrl(category);
+
+    if (location.pathname !== canonicalCategoryUrl) {
+      return <Navigate to={canonicalCategoryUrl} replace />;
+    }
   }
 
   if (error || !category) {

@@ -1,6 +1,23 @@
 import { useEffect, useState } from "react";
 import CustomDropdown from "../components/CustomDropdown";
 import ProductImageManager from "./ProductImageManager";
+function getCategoryLabel(category, categories) {
+  const byId = new Map(categories.map((item) => [item.$id, item]));
+  const names = [];
+  const visited = new Set();
+  let current = category;
+
+  while (current && !visited.has(current.$id)) {
+    visited.add(current.$id);
+    names.unshift(current.name);
+    current = current.parentCategoryID
+      ? byId.get(current.parentCategoryID)
+      : null;
+  }
+
+  return names.join(" / ");
+}
+
 const EMPTY_FORM = {
   name: "",
   slug: "",
@@ -18,6 +35,8 @@ const EMPTY_FORM = {
 
 function ProductForm({ product, categories, onSubmit, onCancel }) {
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [pendingFiles, setPendingFiles] = useState([]);
+  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
     if (product) {
@@ -38,6 +57,8 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
     } else {
       setFormData(EMPTY_FORM);
     }
+
+    setPendingFiles([]);
   }, [product]);
 
   function handleChange(event) {
@@ -52,12 +73,20 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
   function handleSubmit(event) {
     event.preventDefault();
 
+    if (!formData.categoryID) {
+      setValidationError("Please select a product category before saving.");
+      return;
+    }
+
+    setValidationError("");
+
     onSubmit({
       ...formData,
       price: Number(formData.price),
       compareAtPrice:
         formData.compareAtPrice === "" ? "" : Number(formData.compareAtPrice),
       stockQuantity: Number(formData.stockQuantity),
+      pendingFiles,
     });
   }
 
@@ -186,7 +215,7 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
 
       {/* Category */}
       <section className="mt-8 border-t border-black/8 pt-6">
-        <h3 className="mb-4 text-sm font-semibold">Category</h3>
+        <h3 className="mb-4 text-sm font-semibold">Category *</h3>
 
         <CustomDropdown
           value={formData.categoryID}
@@ -199,11 +228,15 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
               .filter((category) => category.isActive)
               .map((category) => ({
                 value: category.$id,
-                label: category.name,
+                label: getCategoryLabel(category, categories),
               })),
           ]}
           className="w-full"
         />
+
+        {validationError && (
+          <p className="mt-2 text-sm text-red-600">{validationError}</p>
+        )}
       </section>
 
       {/* Product Details */}
@@ -238,7 +271,10 @@ function ProductForm({ product, categories, onSubmit, onCancel }) {
           </div>
         </div>
       </section>
-      <ProductImageManager productId={product?.$id} />
+      <ProductImageManager
+        productId={product?.$id}
+        onPendingFilesChange={setPendingFiles}
+      />
       {/* Inventory */}
       <section className="mt-8 border-t border-black/8 pt-6">
         <h3 className="mb-4 text-sm font-semibold">Inventory</h3>

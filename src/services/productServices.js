@@ -1,5 +1,7 @@
 import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
+import { getCategories } from "./categoryServices";
+import { getProductUrl } from "../utils/categoryTree";
 import {
   deleteProductImages,
   getPrimaryProductImage,
@@ -8,7 +10,47 @@ import {
 } from "./productImageServices";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const PRODUCTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PRODUCTS_TABLE_ID;
+const PRODUCTS_TABLE_ID = "products";
+
+function normalizeSlug(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function requireCategoryId(categoryId) {
+  const normalized = String(categoryId ?? "").trim();
+
+  if (!normalized) {
+    throw new Error("A product category is required.");
+  }
+
+  return normalized;
+}
+
+function requireProductSlug(value) {
+  const slug = normalizeSlug(value);
+
+  if (!slug) {
+    throw new Error("A product slug is required.");
+  }
+
+  return slug;
+}
+
+function rethrowProductConstraintError(error) {
+  if (error?.code === "23505" && error?.message?.includes("products_slug_key")) {
+    throw new Error("A product with this slug already exists. Choose a different slug.");
+  }
+
+  if (error?.code === "23505" && error?.message?.includes("products_sku_key")) {
+    throw new Error("A product with this SKU already exists. Choose a different SKU.");
+  }
+
+  throw error;
+}
 
 export async function getProducts() {
   const response = await tablesDB.listRows({
@@ -17,15 +59,25 @@ export async function getProducts() {
     queries: [Query.equal("isActive", true)],
   });
 
-  return response.rows;
+  const categories = await getCategories();
+  return response.rows.map((product) => ({
+    ...product,
+    href: getProductUrl(product, categories),
+  }));
 }
 
 export async function getProductBySlug(slug) {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId: PRODUCTS_TABLE_ID,
     queries: [
-      Query.equal("slug", slug),
+      Query.equal("slug", normalizedSlug),
       Query.equal("isActive", true),
       Query.limit(1),
     ],
@@ -37,12 +89,48 @@ export async function getProductBySlug(slug) {
     return null;
   }
 
-  const images = await getProductImages(product.$id);
+  const [images, categories] = await Promise.all([
+    getProductImages(product.$id),
+    getCategories(),
+  ]);
 
   return {
     ...product,
     images,
+    href: getProductUrl(product, categories),
   };
+}
+
+export async function getProductByPath(pathSegments = []) {
+  const segments = pathSegments.filter(Boolean).map((segment) => segment.trim().toLowerCase());
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  const slug = segments[segments.length - 1];
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return null;
+  }
+
+  const expectedPath = product.href
+    .replace(/^\/products\//, "")
+    .split("/")
+    .filter(Boolean);
+
+  // Legacy /products/:slug URLs are accepted and can be redirected
+  // to the canonical category-aware URL by the page.
+  if (
+    segments.length > 1 &&
+    (segments.length !== expectedPath.length ||
+      segments.some((segment, index) => segment !== expectedPath[index]))
+  ) {
+    return null;
+  }
+
+  return product;
 }
 
 export async function getProductById(productId) {
@@ -118,11 +206,11 @@ export async function getProductByIdAdmin(productId) {
 export async function createProduct(productData) {
   const data = {
     name: productData.name,
-    slug: productData.slug,
+    slug: requireProductSlug(productData.slug),
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
-    categoryID: productData.categoryID || "",
+    categoryID: requireCategoryId(productData.categoryID),
     color: productData.color || "",
     colorHEX: productData.colorHEX || "",
     stockQuantity: Number(productData.stockQuantity),
@@ -139,25 +227,27 @@ export async function createProduct(productData) {
     data.compareAtPrice = Number(productData.compareAtPrice);
   }
 
-  const response = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: PRODUCTS_TABLE_ID,
-    rowId: ID.unique(),
-    data,
-  });
-
-  return response;
+  try {
+    return await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      rowId: ID.unique(),
+      data,
+    });
+  } catch (error) {
+    rethrowProductConstraintError(error);
+  }
 }
 
 // Update an existing product
 export async function updateProduct(productId, productData) {
   const data = {
     name: productData.name,
-    slug: productData.slug,
+    slug: requireProductSlug(productData.slug),
     sku: productData.sku,
     description: productData.description || "",
     price: Number(productData.price),
-    categoryID: productData.categoryID || "",
+    categoryID: requireCategoryId(productData.categoryID),
     color: productData.color || "",
     colorHEX: productData.colorHEX || "",
     stockQuantity: Number(productData.stockQuantity),
@@ -172,14 +262,16 @@ export async function updateProduct(productId, productData) {
       ? null
       : Number(productData.compareAtPrice);
 
-  const response = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: PRODUCTS_TABLE_ID,
-    rowId: productId,
-    data,
-  });
-
-  return response;
+  try {
+    return await tablesDB.updateRow({
+      databaseId: DATABASE_ID,
+      tableId: PRODUCTS_TABLE_ID,
+      rowId: productId,
+      data,
+    });
+  } catch (error) {
+    rethrowProductConstraintError(error);
+  }
 }
 
 // Update only the active/inactive status
@@ -396,8 +488,11 @@ export async function getProductsByCategoryIds(
 
   const primaryImages = await getPrimaryProductImages(productIds);
 
+  const categories = await getCategories();
+
   const productsWithImages = response.rows.map((product) => ({
     ...product,
+    href: getProductUrl(product, categories),
     primaryImage: primaryImages[product.$id] ?? null,
   }));
 
@@ -433,8 +528,11 @@ export async function getProductsByIds(productIds = []) {
     response.rows.map((product) => product.$id),
   );
 
+  const categories = await getCategories();
+
   const products = response.rows.map((product) => ({
     ...product,
+    href: getProductUrl(product, categories),
     primaryImage: primaryImages[product.$id] ?? null,
   }));
 
@@ -472,8 +570,11 @@ export async function searchProducts(searchTerm, { limit = 48 } = {}) {
     response.rows.map((product) => product.$id),
   );
 
+  const categories = await getCategories();
+
   return response.rows.map((product) => ({
     ...product,
+    href: getProductUrl(product, categories),
     primaryImage: primaryImages[product.$id] ?? null,
   }));
 }

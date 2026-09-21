@@ -5,6 +5,10 @@ import {
   getProductsForAdmin,
   updateProduct,
 } from "../../../services/productServices";
+import {
+  getProductImages,
+  uploadProductImage,
+} from "../../../services/productImageServices";
 import { getCategoriesForAdmin } from "../../../services/categoryServices";
 import ProductPagination from "./ProductPagination";
 import ProductFilters from "./ProductFilters";
@@ -14,6 +18,7 @@ import ProductForm from "./ProductForm";
 function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [categoryError, setCategoryError] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -31,23 +36,32 @@ function ProductsPage() {
     discount: "all",
   });
 
+  async function loadCategories() {
+    try {
+      setCategoryError("");
+      const categoryData = await getCategoriesForAdmin();
+      setCategories(categoryData);
+    } catch (error) {
+      console.error("Failed to load admin categories:", error);
+      setCategories([]);
+      setCategoryError(
+        error?.message || "Failed to load categories. Please refresh and try again.",
+      );
+    }
+  }
+
   async function loadProducts() {
     try {
       setIsLoading(true);
 
-      const [productResult, categoryData] = await Promise.all([
-        getProductsForAdmin({
-          page,
-          limit: PRODUCTS_PER_PAGE,
-        }),
-        getCategoriesForAdmin(),
-      ]);
+      const productResult = await getProductsForAdmin({
+        page,
+        limit: PRODUCTS_PER_PAGE,
+      });
 
       setProducts(productResult.products);
       setTotalPages(productResult.totalPages);
       setTotalProducts(productResult.total);
-
-      setCategories(categoryData);
     } catch (error) {
       console.error("Failed to load admin products:", error);
     } finally {
@@ -58,6 +72,11 @@ function ProductsPage() {
   useEffect(() => {
     loadProducts();
   }, [page]);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
   useEffect(() => {
     setPage(1);
   }, [
@@ -67,6 +86,7 @@ function ProductsPage() {
     filters.stock,
     filters.discount,
   ]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const search = filters.search.trim().toLowerCase();
@@ -114,25 +134,53 @@ function ProductsPage() {
   function handleAddProduct() {
     setEditingProduct(null);
     setIsFormOpen(true);
+    loadCategories();
   }
 
   function handleEditProduct(product) {
     setEditingProduct(product);
     setIsFormOpen(true);
+    loadCategories();
   }
 
   async function handleSubmit(formData) {
     try {
-      if (editingProduct) {
-        await updateProduct(editingProduct.$id, formData);
-      } else {
-        await createProduct(formData);
+      const { pendingFiles = [], ...productData } = formData;
+
+      const savedProduct = editingProduct
+        ? await updateProduct(editingProduct.$id, productData)
+        : await createProduct(productData);
+
+      if (pendingFiles.length > 0) {
+        const existingImages = await getProductImages(savedProduct.$id);
+        const startingSortOrder = existingImages.length;
+        const hasPrimaryImage = existingImages.some(
+          (image) => image.isPrimary,
+        );
+
+        for (let index = 0; index < pendingFiles.length; index += 1) {
+          const item = pendingFiles[index];
+
+          await uploadProductImage({
+            productId: savedProduct.$id,
+            file: item.file,
+            alt: item.file.name,
+            sortOrder: startingSortOrder + index,
+            isPrimary: !hasPrimaryImage && index === 0,
+          });
+        }
+
+        pendingFiles.forEach((item) => {
+          if (item.preview) {
+            URL.revokeObjectURL(item.preview);
+          }
+        });
       }
 
       setIsFormOpen(false);
       setEditingProduct(null);
 
-      await loadProducts();
+      await Promise.all([loadProducts(), loadCategories()]);
     } catch (error) {
       console.error("Failed to save product:", error);
     }
@@ -177,6 +225,21 @@ function ProductsPage() {
           Add Product
         </button>
       </div>
+
+      {categoryError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>Categories could not be loaded: {categoryError}</span>
+            <button
+              type="button"
+              onClick={loadCategories}
+              className="font-medium underline underline-offset-2"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Form */}
       {isFormOpen && (

@@ -13,7 +13,7 @@ function ProductCard({ product }) {
   return (
     <article className="group h-full">
       <Link
-        to={`/products/${product.slug}`}
+        to={product.href || `/products/${product.slug}`}
         className="flex h-full min-w-0 flex-col rounded-[1.75rem] bg-white p-2 sm:p-2.5 no-underline shadow-[0_10px_35px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.025] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(0,0,0,0.1)]"
       >
         <div className="relative aspect-[0.92] overflow-hidden rounded-[1.35rem] bg-[#f6f6f4]">

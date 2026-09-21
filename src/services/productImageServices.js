@@ -4,10 +4,9 @@ import { tablesDB, storage } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const PRODUCT_IMAGES_TABLE_ID = import.meta.env
-  .VITE_APPWRITE_PRODUCT_IMAGES_TABLE_ID;
+const PRODUCT_IMAGES_TABLE_ID = "product_images";
 
-const STORAGE_BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
+const STORAGE_BUCKET_ID = import.meta.env.VITE_SUPABASE_STOREFRONT_BUCKET || "storefront-media";
 
 export async function getProductImages(productId) {
   const response = await tablesDB.listRows({
@@ -115,18 +114,23 @@ export async function updateProductImage(imageId, data) {
 export async function setPrimaryProductImage(productId, imageId) {
   const images = await getProductImages(productId);
 
-  await Promise.all(
-    images.map((image) =>
-      tablesDB.updateRow({
+  for (const image of images) {
+    if (image.isPrimary) {
+      await tablesDB.updateRow({
         databaseId: DATABASE_ID,
         tableId: PRODUCT_IMAGES_TABLE_ID,
         rowId: image.id,
-        data: {
-          isPrimary: image.id === imageId,
-        },
-      }),
-    ),
-  );
+        data: { isPrimary: false },
+      });
+    }
+  }
+
+  await tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: PRODUCT_IMAGES_TABLE_ID,
+    rowId: imageId,
+    data: { isPrimary: true },
+  });
 
   return getProductImages(productId);
 }

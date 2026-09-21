@@ -2,9 +2,44 @@ import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-
 const CATEGORIES_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID;
+  "categories";
+
+function normalizeSlug(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function normalizeParentCategoryId(value) {
+  const normalized = String(value ?? "").trim();
+  return normalized || null;
+}
+
+function normalizeCategoryData(categoryData = {}) {
+  const slug = normalizeSlug(categoryData.slug);
+
+  if (!slug) {
+    throw new Error("Category slug is required.");
+  }
+
+  if (slug === "all-products") {
+    throw new Error("The slug \"all-products\" is reserved for the catalog route.");
+  }
+
+  return {
+    name: String(categoryData.name ?? "").trim(),
+    slug,
+    description: String(categoryData.description ?? "").trim(),
+    imageUrl: String(categoryData.imageUrl ?? "").trim(),
+    parentCategoryID: normalizeParentCategoryId(
+      categoryData.parentCategoryID,
+    ),
+    isActive: categoryData.isActive ?? true,
+  };
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -73,7 +108,9 @@ export async function getCategoryById(categoryId) {
 */
 
 export async function getCategoryBySlug(slug) {
-  if (!slug) {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
     return null;
   }
 
@@ -81,7 +118,7 @@ export async function getCategoryBySlug(slug) {
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
     queries: [
-      Query.equal("slug", slug),
+      Query.equal("slug", normalizedSlug),
       Query.equal("isActive", true),
       Query.limit(1),
     ],
@@ -97,23 +134,30 @@ export async function getCategoryBySlug(slug) {
 */
 
 export async function createCategory(categoryData) {
-  const response = await tablesDB.createRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORIES_TABLE_ID,
-    rowId: ID.unique(),
-    data: {
-      name: String(categoryData.name || "").trim(),
-      slug: String(categoryData.slug || "").trim(),
-      description: categoryData.description || "",
-      imageUrl: categoryData.imageUrl || "",
-      parentCategoryID:
-        categoryData.parentCategoryID || "",
-      isActive:
-        categoryData.isActive ?? true,
-    },
-  });
+  try {
+    const response = await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: CATEGORIES_TABLE_ID,
+      rowId: ID.unique(),
+      data: normalizeCategoryData(categoryData),
+    });
 
-  return response;
+    return response;
+  } catch (error) {
+    if (
+      error?.code === "23505" &&
+      (
+        error?.message?.includes("categories_parent_slug_unique_idx") ||
+        error?.message?.includes("categories_slug_key")
+      )
+    ) {
+      throw new Error(
+        "A category with this slug already exists under the selected parent. Apply the latest Supabase migration if you still see a global slug error.",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
 }
 
 /*
@@ -122,10 +166,7 @@ export async function createCategory(categoryData) {
 |--------------------------------------------------------------------------
 */
 
-export async function updateCategory(
-  categoryId,
-  categoryData
-) {
+export async function updateCategory(categoryId, categoryData) {
   if (!categoryId) {
     throw new Error("Category ID is required.");
   }
@@ -134,28 +175,33 @@ export async function updateCategory(
     categoryData.parentCategoryID &&
     categoryData.parentCategoryID === categoryId
   ) {
-    throw new Error(
-      "A category cannot be its own parent."
-    );
+    throw new Error("A category cannot be its own parent.");
   }
 
-  const response = await tablesDB.updateRow({
-    databaseId: DATABASE_ID,
-    tableId: CATEGORIES_TABLE_ID,
-    rowId: categoryId,
-    data: {
-      name: String(categoryData.name || "").trim(),
-      slug: String(categoryData.slug || "").trim(),
-      description: categoryData.description || "",
-      imageUrl: categoryData.imageUrl || "",
-      parentCategoryID:
-        categoryData.parentCategoryID || "",
-      isActive:
-        categoryData.isActive ?? true,
-    },
-  });
+  try {
+    const response = await tablesDB.updateRow({
+      databaseId: DATABASE_ID,
+      tableId: CATEGORIES_TABLE_ID,
+      rowId: categoryId,
+      data: normalizeCategoryData(categoryData),
+    });
 
-  return response;
+    return response;
+  } catch (error) {
+    if (
+      error?.code === "23505" &&
+      (
+        error?.message?.includes("categories_parent_slug_unique_idx") ||
+        error?.message?.includes("categories_slug_key")
+      )
+    ) {
+      throw new Error(
+        "A category with this slug already exists under the selected parent. Apply the latest Supabase migration if you still see a global slug error.",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
 }
 
 /*

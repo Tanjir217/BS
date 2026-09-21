@@ -52,6 +52,10 @@ function ProductImageManager({
     loadImages();
   }, [productId]);
 
+  useEffect(() => {
+    onPendingFilesChange?.(pendingFiles);
+  }, [pendingFiles, onPendingFilesChange]);
+
   function handleFileSelect(event) {
     const files = Array.from(event.target.files || []);
 
@@ -66,8 +70,6 @@ function ProductImageManager({
 
     setPendingFiles((current) => {
       const updated = [...current, ...newFiles];
-
-      onPendingFilesChange?.(updated);
 
       return updated;
     });
@@ -84,8 +86,6 @@ function ProductImageManager({
       }
 
       const updated = current.filter((_, fileIndex) => fileIndex !== index);
-
-      onPendingFilesChange?.(updated);
 
       return updated;
     });
@@ -120,8 +120,6 @@ function ProductImageManager({
       });
 
       setPendingFiles([]);
-      onPendingFilesChange?.([]);
-
       await loadImages();
     } catch (error) {
       console.error("Failed to upload product images:", error);
@@ -184,20 +182,6 @@ function ProductImageManager({
       console.error("Failed to update image alt text:", error);
     }
   }
-  if (!productId) {
-    return (
-      <section className="mt-8 border-t border-black/8 pt-6">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold">Product Images</h3>
-
-          <p className="mt-1 text-xs text-black/40">
-            Save the product first, then you can upload images.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="mt-8 border-t border-black/8 pt-6">
       <div className="mb-4 flex items-center justify-between">
@@ -351,6 +335,12 @@ function ProductImageManager({
             </div>
           )}
 
+          {pendingFiles.length > 0 && !productId && (
+            <p className="mt-3 text-xs text-black/40">
+              These images are queued and will be uploaded automatically when you create the product.
+            </p>
+          )}
+
           {pendingFiles.length > 0 && (
             <div className="mt-5">
               <div className="mb-3 flex items-center justify-between">
@@ -359,12 +349,16 @@ function ProductImageManager({
                 <button
                   type="button"
                   onClick={handleUploadPendingFiles}
-                  disabled={isUploading}
+                  disabled={isUploading || !productId}
                   className="inline-flex items-center gap-2 rounded-xl bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Upload size={15} />
 
-                  {isUploading ? "Uploading..." : "Upload Images"}
+                  {isUploading
+                    ? "Uploading..."
+                    : productId
+                      ? "Upload Images"
+                      : "Save Product to Upload"}
                 </button>
               </div>
 

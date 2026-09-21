@@ -4,7 +4,7 @@ import useAutoAdvance from "../../../hooks/useAutoAdvance";
 
 const scenes = [[0, 1], [2], [3, 4]];
 
-function NewCollectionHero({ products = [] }) {
+function NewCollectionHero({ section = null, products = [] }) {
   const [activeScene, setActiveScene] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const sceneProducts = scenes[activeScene]
@@ -34,7 +34,7 @@ function NewCollectionHero({ products = [] }) {
       onBlurCapture={() => setIsPaused(false)}
     >
       <h2 id="new-collection-title" className="collection-scene__title">
-        New Collection
+        {section?.title || "New Collection"}
       </h2>
 
       <div
@@ -62,8 +62,11 @@ function NewCollectionHero({ products = [] }) {
         ))}
       </div>
 
-      <Link className="collection-scene__cta" to="/collection/new-collection">
-        Shop New Collections
+      <Link
+        className="collection-scene__cta"
+        to={section?.cta_Href || "/all-products"}
+      >
+        {section?.cta_Label || "Shop New Collection"}
       </Link>
       <div aria-label="Collection scenes" className="collection-scene__dots">
         {scenes.map((_, index) => (

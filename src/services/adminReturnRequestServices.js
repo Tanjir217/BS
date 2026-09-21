@@ -3,8 +3,8 @@ import { Query } from "appwrite";
 import { functions, tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const RETURN_REQUESTS_TABLE_ID = import.meta.env.VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID;
-const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
+const RETURN_REQUESTS_TABLE_ID = "return_requests";
+const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_SUPABASE_MANAGE_ORDER_FUNCTION_NAME || "manage-order";
 
 export const ADMIN_RETURN_STATUS_TRANSITIONS = {
   requested: ["requested", "approved", "rejected", "cancelled"],

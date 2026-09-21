@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import {
-  createCourierOrder,
   getAllowedOrderStatuses,
   getOrderWithItems,
   updateOrderStatus,
@@ -35,9 +34,6 @@ function formatDate(value) {
   });
 }
 
-function getPathaoConsignmentId(notes) {
-  return String(notes || "").match(/\[Pathao:([^\]]+)\]/)?.[1] || "";
-}
 
 function OrderDetailPage() {
   const { orderId } = useParams();
@@ -49,7 +45,6 @@ function OrderDetailPage() {
   const [error, setError] = useState("");
   const [updatingOrderStatus, setUpdatingOrderStatus] = useState(false);
   const [updatingPaymentStatus, setUpdatingPaymentStatus] = useState(false);
-  const [creatingCourierOrder, setCreatingCourierOrder] = useState(false);
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -120,20 +115,6 @@ function OrderDetailPage() {
     }
   };
 
-  const handleCreateCourierOrder = async () => {
-    setCreatingCourierOrder(true);
-    setError("");
-
-    try {
-      const updatedOrder = await createCourierOrder(orderId);
-      setOrder(updatedOrder);
-    } catch (err) {
-      console.error("Failed to create courier shipment:", err);
-      setError(err.message || "Failed to create courier shipment.");
-    } finally {
-      setCreatingCourierOrder(false);
-    }
-  };
 
   if (loading) {
     return <div className="p-6"><p className="text-sm text-black/60">Loading order...</p></div>;
@@ -157,11 +138,6 @@ function OrderDetailPage() {
   if (!order) return null;
 
   const allowedStatuses = getAllowedOrderStatuses(order.order_Status);
-  const consignmentId = getPathaoConsignmentId(order.notes);
-  const canCreateCourier = ["confirmed", "processing"].includes(order.order_Status) && !consignmentId;
-  const courierTrackingUrl = consignmentId
-    ? `https://merchant.pathao.com/tracking?consignment_id=${encodeURIComponent(consignmentId)}&phone=${encodeURIComponent(order.customer_Phone || "")}`
-    : "";
 
   return (
     <div className="p-6">
@@ -208,29 +184,6 @@ function OrderDetailPage() {
             {updatingPaymentStatus && <p className="mt-2 text-xs text-black/45">Updating payment status...</p>}
           </div>
         </div>
-      </section>
-
-      <section className="mb-6 rounded-lg border border-black/8 bg-white p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-black">Courier delivery</h2>
-            <p className="mt-1 text-sm text-black/50">Create a Pathao shipment after the store confirms the order.</p>
-          </div>
-
-          {consignmentId ? (
-            <a href={courierTrackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-md border border-black/10 px-4 py-2 text-sm font-medium hover:bg-black hover:text-white">
-              Track {consignmentId}
-            </a>
-          ) : (
-            <button type="button" onClick={handleCreateCourierOrder} disabled={!canCreateCourier || creatingCourierOrder} className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40">
-              {creatingCourierOrder ? "Creating shipment..." : "Create Pathao shipment"}
-            </button>
-          )}
-        </div>
-
-        {!canCreateCourier && !consignmentId && (
-          <p className="mt-3 text-xs text-black/45">Courier booking becomes available when the order is confirmed or processing.</p>
-        )}
       </section>
 
       <div className="grid gap-6 lg:grid-cols-3">

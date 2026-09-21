@@ -1,8 +1,9 @@
 import { functions } from "../utils/appwrite";
+import { fromSupabaseRow } from "../utils/supabase";
 
 import { getCustomerOrderWithItems } from "./customerOrderServices";
 
-const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_APPWRITE_MANAGE_ORDER_FUNCTION_ID;
+const MANAGE_ORDER_FUNCTION_ID = import.meta.env.VITE_SUPABASE_MANAGE_ORDER_FUNCTION_NAME || "manage-order";
 
 export const RETURN_REQUEST_TYPES = { RETURN: "return", EXCHANGE: "exchange" };
 export const RETURN_REQUEST_STATUSES = {
@@ -53,11 +54,12 @@ async function executeReturnAction(payload) {
     throw new Error(responseBody.error || "Unable to process the return request.");
   }
 
-  if (!responseBody.returnRequest?.$id) {
+  const mappedReturnRequest = fromSupabaseRow(responseBody.returnRequest);
+  if (!mappedReturnRequest?.$id) {
     throw new Error("The return request was not returned.");
   }
 
-  return responseBody.returnRequest;
+  return mappedReturnRequest;
 }
 
 export async function getCustomerReturnRequest(userId, orderId) {
@@ -70,7 +72,7 @@ export async function getCustomerReturnRequest(userId, orderId) {
     const { tablesDB } = await import("../utils/appwrite");
     return await tablesDB.getRow({
       databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
-      tableId: import.meta.env.VITE_APPWRITE_RETURN_REQUESTS_TABLE_ID,
+      tableId: "return_requests",
       rowId: orderId,
     });
   } catch (error) {
@@ -93,7 +95,7 @@ export async function createCustomerReturnRequest(
   if (!orderData) throw new Error("Order not found.");
 
   return executeReturnAction({
-    action: "create_return_customer",
+    action: "create_return_request",
     orderId,
     requestType,
     reason,

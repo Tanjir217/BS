@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 
 import NotFound from "../NotFound";
 
-import { getProductBySlug } from "../../services/productServices";
-import InspiredProductSlider from "../../components/sections/InspiredProductSlider"
+import { getProductByPath } from "../../services/productServices";
 import ProductGallery from "../../components/product/ProductGallery";
 import ProductInfo from "../../components/product/ProductInfo";
 
 function ProductDetail() {
-  const { slug } = useParams();
+  const { "*": productPath = "" } = useParams();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +23,7 @@ function ProductDetail() {
         setError(null);
 
         const data =
-          await getProductBySlug(slug);
+          await getProductByPath(productPath.split("/").filter(Boolean));
 
         if (!isMounted) {
           return;
@@ -52,7 +51,7 @@ function ProductDetail() {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [productPath]);
 
   if (loading) {
     return (
@@ -67,6 +66,13 @@ function ProductDetail() {
 
   if (error || !product) {
     return <NotFound />;
+  }
+
+  const requestedPath = productPath.split("/").filter(Boolean).join("/");
+  const canonicalPath = product.href.replace(/^\/products\//, "");
+
+  if (requestedPath !== canonicalPath) {
+    return <Navigate to={product.href} replace />;
   }
 
   return (

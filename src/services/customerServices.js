@@ -3,11 +3,9 @@ import { tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 
-const CUSTOMERS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CUSTOMERS_TABLE_ID;
+const CUSTOMERS_TABLE_ID = "customers";
 
-const CUSTOMER_TIER_RULES_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CUSTOMER_TIER_RULES_TABLE_ID;
+const CUSTOMER_TIER_RULES_TABLE_ID = "customer_tier_rules";
 
 /*
 |--------------------------------------------------------------------------
@@ -408,7 +406,7 @@ export async function getCustomerOrders({
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
     tableId:
-      import.meta.env.VITE_APPWRITE_ORDERS_TABLE_ID,
+      "orders",
     queries: [
       Query.equal("customer_ID", customerId),
       Query.orderDesc("$createdAt"),

@@ -1,2 +1,15 @@
 [functions.create-order]
-verify_jwt = true
+verify_jwt = false
+
+[functions.manage-order]
+verify_jwt = false
+
+[storage.buckets.storefront-media]
+public = true
+file_size_limit = "10MiB"
+allowed_mime_types = ["image/*"]
+
+[storage.buckets.customer-media]
+public = false
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/*"]
