@@ -54,11 +54,12 @@ async function executeReturnAction(payload) {
     throw new Error(responseBody.error || "Unable to process the return request.");
   }
 
-  if (!responseBody.returnRequest?.$id) {
+  const mappedReturnRequest = fromSupabaseRow(responseBody.returnRequest);
+  if (!mappedReturnRequest?.$id) {
     throw new Error("The return request was not returned.");
   }
 
-  return fromSupabaseRow(responseBody.returnRequest);
+  return mappedReturnRequest;
 }
 
 export async function getCustomerReturnRequest(userId, orderId) {
