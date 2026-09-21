@@ -110,6 +110,12 @@ function CategoryPage() {
         const slugs =
           segments[0] === "all-products" ? segments.slice(1) : segments;
 
+        // Be tolerant of legacy/generated links that accidentally repeated
+        // the catalog prefix, e.g. /all-products/all-products/men.
+        while (slugs[0] === "all-products") {
+          slugs.shift();
+        }
+
         const isAllProducts = slugs.length === 0;
 
         let resolvedCategory;
@@ -240,7 +246,14 @@ function CategoryPage() {
           return;
         }
 
-        setProducts(productResponse.products);
+        const visibleProducts =
+          category.$id === "all-products"
+            ? productResponse.products
+            : productResponse.products.filter((product) =>
+                categoryIds.includes(product.categoryID),
+              );
+
+        setProducts(visibleProducts);
 
         setPage(productResponse.page);
 
