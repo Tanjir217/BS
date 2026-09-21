@@ -2,8 +2,26 @@ import { ID, Query } from "appwrite";
 import { tablesDB } from "../utils/appwrite";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
+const CATEGORIES_TABLE_ID =
+  import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
 
-const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID || "categories";
+function normalizeParentCategoryId(value) {
+  const normalized = String(value ?? "").trim();
+  return normalized || null;
+}
+
+function normalizeCategoryData(categoryData = {}) {
+  return {
+    name: String(categoryData.name ?? "").trim(),
+    slug: String(categoryData.slug ?? "").trim(),
+    description: String(categoryData.description ?? "").trim(),
+    imageUrl: String(categoryData.imageUrl ?? "").trim(),
+    parentCategoryID: normalizeParentCategoryId(
+      categoryData.parentCategoryID,
+    ),
+    isActive: categoryData.isActive ?? true,
+  };
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -100,16 +118,7 @@ export async function createCategory(categoryData) {
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
     rowId: ID.unique(),
-    data: {
-      name: String(categoryData.name || "").trim(),
-      slug: String(categoryData.slug || "").trim(),
-      description: categoryData.description || "",
-      imageUrl: categoryData.imageUrl || "",
-      parentCategoryID:
-        categoryData.parentCategoryID || "",
-      isActive:
-        categoryData.isActive ?? true,
-    },
+    data: normalizeCategoryData(categoryData),
   });
 
   return response;
@@ -121,10 +130,7 @@ export async function createCategory(categoryData) {
 |--------------------------------------------------------------------------
 */
 
-export async function updateCategory(
-  categoryId,
-  categoryData
-) {
+export async function updateCategory(categoryId, categoryData) {
   if (!categoryId) {
     throw new Error("Category ID is required.");
   }
@@ -133,25 +139,14 @@ export async function updateCategory(
     categoryData.parentCategoryID &&
     categoryData.parentCategoryID === categoryId
   ) {
-    throw new Error(
-      "A category cannot be its own parent."
-    );
+    throw new Error("A category cannot be its own parent.");
   }
 
   const response = await tablesDB.updateRow({
     databaseId: DATABASE_ID,
     tableId: CATEGORIES_TABLE_ID,
     rowId: categoryId,
-    data: {
-      name: String(categoryData.name || "").trim(),
-      slug: String(categoryData.slug || "").trim(),
-      description: categoryData.description || "",
-      imageUrl: categoryData.imageUrl || "",
-      parentCategoryID:
-        categoryData.parentCategoryID || "",
-      isActive:
-        categoryData.isActive ?? true,
-    },
+    data: normalizeCategoryData(categoryData),
   });
 
   return response;
