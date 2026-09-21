@@ -96,7 +96,7 @@ function NavBar() {
       className="relative z-50 border-b border-gray-200 bg-white"
       onMouseLeave={closeMenu}
     >
-      <div className="flex h-15 items-center justify-between px-10 md:px-8">
+      <div className="grid h-15 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6 md:flex md:justify-between md:px-8">
         {/* Mobile menu */}
         <div className="md:hidden">
           <MobileMenu
@@ -117,11 +117,11 @@ function NavBar() {
 
         {/* Logo */}
         <Logo
-          className="order-1"
+          className="order-1 justify-self-center md:justify-self-auto"
         />
 
         {/* Right side */}
-        <div className="order-3 flex items-center gap-2 sm:gap-4 md:gap-5 lg:gap-6">
+        <div className="order-3 flex items-center gap-3 md:gap-5 lg:gap-6">
           <SearchButton
             type="button"
             aria-label="Search"
@@ -136,7 +136,9 @@ function NavBar() {
             className=""
           />
 
-          <WishlistButton />
+          <div className="hidden md:block">
+            <WishlistButton />
+          </div>
 
           <CartButton
             type="button"
