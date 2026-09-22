@@ -52,6 +52,36 @@ function rethrowProductConstraintError(error) {
   throw error;
 }
 
+// Image metadata is supplemental to the product row. A catalog/product list
+// must remain usable when Storage/product-image RLS is temporarily out of sync
+// on a hosted Supabase project.
+async function safeGetPrimaryProductImage(productId) {
+  try {
+    return await getPrimaryProductImage(productId);
+  } catch (error) {
+    console.warn(`Failed to load primary image for product ${productId}:`, error);
+    return null;
+  }
+}
+
+async function safeGetPrimaryProductImages(productIds) {
+  try {
+    return await getPrimaryProductImages(productIds);
+  } catch (error) {
+    console.warn("Failed to load product image metadata:", error);
+    return {};
+  }
+}
+
+async function safeGetProductImages(productId) {
+  try {
+    return await getProductImages(productId);
+  } catch (error) {
+    console.warn(`Failed to load images for product ${productId}:`, error);
+    return [];
+  }
+}
+
 export async function getProducts() {
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -90,7 +120,7 @@ export async function getProductBySlug(slug) {
   }
 
   const [images, categories] = await Promise.all([
-    getProductImages(product.$id),
+    safeGetProductImages(product.$id),
     getCategories(),
   ]);
 
@@ -172,7 +202,7 @@ export async function getProductsForAdmin({ page = 1, limit = 10 } = {}) {
 
   const productsWithImages = await Promise.all(
     response.rows.map(async (product) => {
-      const primaryImage = await getPrimaryProductImage(product.$id);
+      const primaryImage = await safeGetPrimaryProductImage(product.$id);
 
       return {
         ...product,
@@ -300,16 +330,6 @@ export async function deleteProduct(productId) {
 
   return true;
 }
-/*
-|-------------------------------------------------------------------------- 
-| Get active products for a category and all descendants
-|-------------------------------------------------------------------------- 
-*/
-/*
-|-------------------------------------------------------------------------- 
-| Get the active product price range for a category and all descendants
-|-------------------------------------------------------------------------- 
-*/
 
 export async function getProductPriceRange(categoryIds) {
   const baseQueries = [Query.equal("isActive", true)];
@@ -318,10 +338,7 @@ export async function getProductPriceRange(categoryIds) {
     baseQueries.unshift(Query.equal("categoryID", categoryIds));
   }
 
-  const [
-    minimumResponse,
-    maximumResponse,
-  ] = await Promise.all([
+  const [minimumResponse, maximumResponse] = await Promise.all([
     tablesDB.listRows({
       databaseId: DATABASE_ID,
       tableId: PRODUCTS_TABLE_ID,
@@ -353,10 +370,7 @@ export async function getProductPriceRange(categoryIds) {
     return null;
   }
 
-  return {
-    min: minimumPrice,
-    max: maximumPrice,
-  };
+  return { min: minimumPrice, max: maximumPrice };
 }
 
 export async function getProductFilterOptions(categoryIds) {
@@ -380,30 +394,22 @@ export async function getProductFilterOptions(categoryIds) {
   const colorMap = new Map();
 
   for (const product of response.rows) {
-    const color =
-      typeof product.color === "string" ? product.color.trim() : "";
+    const color = typeof product.color === "string" ? product.color.trim() : "";
 
-    if (!color) {
-      continue;
-    }
+    if (!color) continue;
 
     const normalizedColor = color.toLowerCase();
 
     if (!colorMap.has(normalizedColor)) {
       colorMap.set(normalizedColor, {
         name: color,
-        hex:
-          typeof product.colorHEX === "string"
-            ? product.colorHEX.trim()
-            : "",
+        hex: typeof product.colorHEX === "string" ? product.colorHEX.trim() : "",
       });
     }
   }
 
   return {
-    colors: Array.from(colorMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    ),
+    colors: Array.from(colorMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
 
@@ -412,7 +418,6 @@ export async function getProductsByCategoryIds(
   { page = 1, limit = 24, sort = "newest", filters = {} } = {},
 ) {
   const offset = (page - 1) * limit;
-
   const { minPrice, maxPrice, color, availability } = filters;
 
   let sortQuery;
@@ -421,32 +426,24 @@ export async function getProductsByCategoryIds(
     case "price-asc":
       sortQuery = Query.orderAsc("price");
       break;
-
     case "price-desc":
       sortQuery = Query.orderDesc("price");
       break;
-
     case "featured":
       sortQuery = Query.orderDesc("isFeatured");
       break;
-
     case "newest":
     default:
       sortQuery = Query.orderDesc("$createdAt");
       break;
   }
 
-  const queries = [
-    Query.equal("isActive", true),
-  ];
+  const queries = [Query.equal("isActive", true)];
 
   if (Array.isArray(categoryIds) && categoryIds.length > 0) {
     queries.unshift(Query.equal("categoryID", categoryIds));
   }
 
-  /*
-   * Price filtering
-   */
   if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
     queries.push(Query.greaterThanEqual("price", Number(minPrice)));
   }
@@ -455,28 +452,15 @@ export async function getProductsByCategoryIds(
     queries.push(Query.lessThanEqual("price", Number(maxPrice)));
   }
 
-  /*
-   * Color filtering
-   */
   if (typeof color === "string" && color.trim() !== "") {
     queries.push(Query.equal("color", color.trim()));
   }
 
-  /*
-   * Availability filtering
-   */
   if (availability === "in-stock") {
     queries.push(Query.greaterThan("stockQuantity", 0));
   }
 
-  /*
-   * Sorting + pagination
-   */
-  queries.push(sortQuery);
-
-  queries.push(Query.limit(limit));
-
-  queries.push(Query.offset(offset));
+  queries.push(sortQuery, Query.limit(limit), Query.offset(offset));
 
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -485,9 +469,7 @@ export async function getProductsByCategoryIds(
   });
 
   const productIds = response.rows.map((product) => product.$id);
-
-  const primaryImages = await getPrimaryProductImages(productIds);
-
+  const primaryImages = await safeGetPrimaryProductImages(productIds);
   const categories = await getCategories();
 
   const productsWithImages = response.rows.map((product) => ({
@@ -505,13 +487,10 @@ export async function getProductsByCategoryIds(
   };
 }
 
-
 export async function getProductsByIds(productIds = []) {
   const ids = [...new Set(productIds.filter(Boolean))];
 
-  if (ids.length === 0) {
-    return [];
-  }
+  if (ids.length === 0) return [];
 
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -524,10 +503,9 @@ export async function getProductsByIds(productIds = []) {
     total: false,
   });
 
-  const primaryImages = await getPrimaryProductImages(
+  const primaryImages = await safeGetPrimaryProductImages(
     response.rows.map((product) => product.$id),
   );
-
   const categories = await getCategories();
 
   const products = response.rows.map((product) => ({
@@ -537,16 +515,13 @@ export async function getProductsByIds(productIds = []) {
   }));
 
   const byId = new Map(products.map((product) => [product.$id, product]));
-
   return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
 export async function searchProducts(searchTerm, { limit = 48 } = {}) {
   const term = String(searchTerm || "").trim();
 
-  if (!term) {
-    return [];
-  }
+  if (!term) return [];
 
   const response = await tablesDB.listRows({
     databaseId: DATABASE_ID,
@@ -566,10 +541,9 @@ export async function searchProducts(searchTerm, { limit = 48 } = {}) {
     total: false,
   });
 
-  const primaryImages = await getPrimaryProductImages(
+  const primaryImages = await safeGetPrimaryProductImages(
     response.rows.map((product) => product.$id),
   );
-
   const categories = await getCategories();
 
   return response.rows.map((product) => ({
