@@ -137,7 +137,7 @@ select ok(
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.proname = 'create_order_atomic'
-      and p.proconfig @> array['search_path=']
+      and pg_get_functiondef(p.oid) ~* $$set[[:space:]]+search_path[[:space:]]+(to|=)[[:space:]]*''$$
   )
   and exists (
     select 1
@@ -145,7 +145,7 @@ select ok(
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.proname = 'update_return_request'
-      and p.proconfig @> array['search_path=']
+      and pg_get_functiondef(p.oid) ~* $$set[[:space:]]+search_path[[:space:]]+(to|=)[[:space:]]*''$$
   ),
   'Security-definer business functions pin an empty search_path'
 );
