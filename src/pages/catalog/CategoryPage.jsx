@@ -67,6 +67,18 @@ function CategoryPage() {
     };
   }, [category?.$id]);
 
+  /*
+   * Category context
+   *
+   * Runs only when the category URL changes.
+   *
+   * This is responsible for:
+   * - resolving the category
+   * - resolving descendant category IDs
+   * - getting the database price range
+   *
+   * It does NOT load products.
+   */
   useEffect(() => {
     let isMounted = true;
 
@@ -88,6 +100,9 @@ function CategoryPage() {
         setFilterOptions({
           colors: [],
         });
+        /*
+         * A new category starts with clean filters.
+         */
         setFilters(DEFAULT_FILTERS);
 
         const segments = location.pathname.split("/").filter(Boolean);
@@ -126,6 +141,13 @@ function CategoryPage() {
           ? []
           : getDescendantCategoryIds(resolvedCategory);
 
+        /*
+         * Price range is independent from
+         * sorting and active filters.
+         *
+         * It is therefore fetched only once
+         * for this category.
+         */
         const [
           resolvedPriceRange,
           resolvedFilterOptions,
@@ -177,7 +199,16 @@ function CategoryPage() {
       isMounted = false;
     };
   }, [location.pathname]);
-
+  /*
+   * Product catalog query
+   *
+   * This runs when:
+   * - category changes
+   * - sort changes
+   * - an applied filter changes
+   *
+   * Draft filter changes do NOT reach this effect.
+   */
   useEffect(() => {
     if (!category || (!categoryIds.length && category.$id !== "all-products")) {
       return undefined;
@@ -242,7 +273,10 @@ function CategoryPage() {
     filters.color,
     filters.availability,
   ]);
-
+  /*
+   * Load the next page of products and append
+   * them to the existing product list.
+   */
   async function handleLoadMore() {
     if (
       isLoadingMore ||
@@ -432,7 +466,6 @@ function CategoryPage() {
           </div>
         </div>
       </section>
-
     </main>
   );
 }
