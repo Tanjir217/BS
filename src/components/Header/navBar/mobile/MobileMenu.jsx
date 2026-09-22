@@ -153,14 +153,6 @@ function MobileMenu({
                   </Link>
 
                   <Link
-                    to="/wishlist"
-                    onClick={closeMenu}
-                    className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
-                  >
-                    WISHLIST
-                  </Link>
-
-                  <Link
                     to="/account/login"
                     onClick={closeMenu}
                     className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[12px] no-underline"
