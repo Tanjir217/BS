@@ -6,6 +6,7 @@ import {
   updateProduct,
 } from "../../../services/productServices";
 import {
+  deleteProductImage,
   getProductImages,
   uploadProductImage,
 } from "../../../services/productImageServices";
@@ -19,6 +20,7 @@ function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [categoryError, setCategoryError] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -132,22 +134,30 @@ function ProductsPage() {
   }, [products, filters]);
 
   function handleAddProduct() {
+    setSaveError("");
     setEditingProduct(null);
     setIsFormOpen(true);
     loadCategories();
   }
 
   function handleEditProduct(product) {
+    setSaveError("");
     setEditingProduct(product);
     setIsFormOpen(true);
     loadCategories();
   }
 
   async function handleSubmit(formData) {
+    setSaveError("");
+
+    let savedProduct = null;
+    const uploadedImages = [];
+    const isCreating = !editingProduct;
+
     try {
       const { pendingFiles = [], ...productData } = formData;
 
-      const savedProduct = editingProduct
+      savedProduct = editingProduct
         ? await updateProduct(editingProduct.$id, productData)
         : await createProduct(productData);
 
@@ -161,13 +171,15 @@ function ProductsPage() {
         for (let index = 0; index < pendingFiles.length; index += 1) {
           const item = pendingFiles[index];
 
-          await uploadProductImage({
+          const uploadedImage = await uploadProductImage({
             productId: savedProduct.$id,
             file: item.file,
             alt: item.file.name,
             sortOrder: startingSortOrder + index,
             isPrimary: !hasPrimaryImage && index === 0,
           });
+
+          uploadedImages.push(uploadedImage);
         }
 
         pendingFiles.forEach((item) => {
@@ -179,10 +191,28 @@ function ProductsPage() {
 
       setIsFormOpen(false);
       setEditingProduct(null);
-
       await Promise.all([loadProducts(), loadCategories()]);
     } catch (error) {
       console.error("Failed to save product:", error);
+
+      if (isCreating && savedProduct?.$id) {
+        await Promise.allSettled(
+          uploadedImages.map((image) =>
+            deleteProductImage(image.id, image.fileID),
+          ),
+        );
+
+        try {
+          await deleteProduct(savedProduct.$id);
+        } catch (rollbackError) {
+          console.error("Failed to roll back product after upload failure:", rollbackError);
+        }
+      }
+
+      setSaveError(
+        error?.message ||
+          "The product could not be saved. Please check the Supabase configuration and try again.",
+      );
     }
   }
 
@@ -202,8 +232,7 @@ function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6 py-2 sm:py-4 px-2 sm:px-6 lg:px-8">
-      {/* Header */}
+    <div className="space-y-6 py-2 px-2 sm:py-4 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-black/45">Catalog</p>
@@ -226,6 +255,12 @@ function ProductsPage() {
         </button>
       </div>
 
+      {saveError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
+
       {categoryError && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -241,7 +276,6 @@ function ProductsPage() {
         </div>
       )}
 
-      {/* Form */}
       {isFormOpen && (
         <ProductForm
           product={editingProduct}
@@ -254,14 +288,12 @@ function ProductsPage() {
         />
       )}
 
-      {/* Filters */}
       <ProductFilters
         filters={filters}
         categories={categories}
         onChange={setFilters}
       />
 
-      {/* Table */}
       <ProductTable
         products={filteredProducts}
         categories={categories}
