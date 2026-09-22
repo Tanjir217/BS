@@ -5,6 +5,9 @@
 -- Keep this policy scoped to the same management role and bucket as the
 -- existing insert/update/delete policies.
 
+-- Make the migration safe to retry after a partially-applied local migration.
+drop policy if exists storefront_media_management_select on storage.objects;
+
 create policy storefront_media_management_select
 on storage.objects
 for select to authenticated
