@@ -68,12 +68,7 @@ function ProductImageManager({
       preview: URL.createObjectURL(file),
     }));
 
-    setPendingFiles((current) => {
-      const updated = [...current, ...newFiles];
-
-      return updated;
-    });
-
+    setPendingFiles((current) => [...current, ...newFiles]);
     event.target.value = "";
   }
 
@@ -85,9 +80,7 @@ function ProductImageManager({
         URL.revokeObjectURL(file.preview);
       }
 
-      const updated = current.filter((_, fileIndex) => fileIndex !== index);
-
-      return updated;
+      return current.filter((_, fileIndex) => fileIndex !== index);
     });
   }
 
@@ -98,7 +91,6 @@ function ProductImageManager({
       setIsUploading(true);
 
       const currentImages = await getProductImages(productId);
-
       const startingSortOrder = currentImages.length;
 
       for (let index = 0; index < pendingFiles.length; index++) {
@@ -114,9 +106,7 @@ function ProductImageManager({
       }
 
       pendingFiles.forEach((item) => {
-        if (item.preview) {
-          URL.revokeObjectURL(item.preview);
-        }
+        if (item.preview) URL.revokeObjectURL(item.preview);
       });
 
       setPendingFiles([]);
@@ -135,7 +125,6 @@ function ProductImageManager({
 
     try {
       await deleteProductImage(image.id, image.fileID);
-
       await loadImages();
     } catch (error) {
       console.error("Failed to delete product image:", error);
@@ -145,13 +134,13 @@ function ProductImageManager({
   async function handleSetPrimary(image) {
     try {
       const updatedImages = await setPrimaryProductImage(productId, image.id);
-
       setImages(updatedImages);
       onImagesChange?.(updatedImages);
     } catch (error) {
       console.error("Failed to set primary image:", error);
     }
   }
+
   async function handleReorder(image, direction) {
     try {
       const updatedImages = await reorderProductImage(
@@ -166,6 +155,7 @@ function ProductImageManager({
       console.error("Failed to reorder product image:", error);
     }
   }
+
   async function handleSaveAlt(image) {
     try {
       await updateProductImage(image.id, {
@@ -176,18 +166,17 @@ function ProductImageManager({
 
       setEditingAltId(null);
       setAltValue("");
-
       await loadImages();
     } catch (error) {
       console.error("Failed to update image alt text:", error);
     }
   }
+
   return (
     <section className="mt-8 border-t border-black/8 pt-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold">Product Images</h3>
-
           <p className="mt-1 text-xs text-black/40">
             Add product photos and choose a primary image.
           </p>
@@ -347,9 +336,9 @@ function ProductImageManager({
                 <h4 className="text-sm font-medium">Ready to upload</h4>
 
                 <button
-                  type="button"
-                  onClick={handleUploadPendingFiles}
-                  disabled={isUploading || !productId}
+                  type={productId ? "button" : "submit"}
+                  onClick={productId ? handleUploadPendingFiles : undefined}
+                  disabled={isUploading}
                   className="inline-flex items-center gap-2 rounded-xl bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Upload size={15} />
@@ -358,7 +347,7 @@ function ProductImageManager({
                     ? "Uploading..."
                     : productId
                       ? "Upload Images"
-                      : "Save Product to Upload"}
+                      : "Save Product & Upload"}
                 </button>
               </div>
 
@@ -397,9 +386,7 @@ function ProductImageManager({
           {images.length === 0 && pendingFiles.length === 0 && (
             <div className="rounded-2xl border border-dashed border-black/10 px-6 py-12 text-center">
               <ImagePlus size={28} className="mx-auto text-black/25" />
-
               <p className="mt-3 text-sm font-medium">No product images</p>
-
               <p className="mt-1 text-xs text-black/40">
                 Add one or more images for this product.
               </p>
