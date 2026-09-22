@@ -5,10 +5,9 @@ import { storage, tablesDB } from "../utils/appwrite";
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const CATEGORIES_TABLE_ID = import.meta.env.VITE_APPWRITE_CATEGORIES_TABLE_ID;
 const CATEGORY_PROMOTIONS_TABLE_ID =
-  import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID ||
-  "6ab0351e00339abceb1a";
+  import.meta.env.VITE_APPWRITE_CATEGORY_PROMOTIONS_TABLE_ID;
 const STORAGE_BUCKET_ID =
-  import.meta.env.VITE_APPWRITE_BUCKET_ID || "6a977929003873f6d810";
+  import.meta.env.VITE_APPWRITE_BUCKET_ID;
 
 export const ALL_PRODUCTS_PROMOTION_KEY = "all-products";
 
