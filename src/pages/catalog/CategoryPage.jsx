@@ -67,18 +67,6 @@ function CategoryPage() {
     };
   }, [category?.$id]);
 
-  /*
-   * Category context
-   *
-   * Runs only when the category URL changes.
-   *
-   * This is responsible for:
-   * - resolving the category
-   * - resolving descendant category IDs
-   * - getting the database price range
-   *
-   * It does NOT load products.
-   */
   useEffect(() => {
     let isMounted = true;
 
@@ -100,9 +88,6 @@ function CategoryPage() {
         setFilterOptions({
           colors: [],
         });
-        /*
-         * A new category starts with clean filters.
-         */
         setFilters(DEFAULT_FILTERS);
 
         const segments = location.pathname.split("/").filter(Boolean);
@@ -141,13 +126,6 @@ function CategoryPage() {
           ? []
           : getDescendantCategoryIds(resolvedCategory);
 
-        /*
-         * Price range is independent from
-         * sorting and active filters.
-         *
-         * It is therefore fetched only once
-         * for this category.
-         */
         const [
           resolvedPriceRange,
           resolvedFilterOptions,
@@ -199,16 +177,7 @@ function CategoryPage() {
       isMounted = false;
     };
   }, [location.pathname]);
-  /*
-   * Product catalog query
-   *
-   * This runs when:
-   * - category changes
-   * - sort changes
-   * - an applied filter changes
-   *
-   * Draft filter changes do NOT reach this effect.
-   */
+
   useEffect(() => {
     if (!category || (!categoryIds.length && category.$id !== "all-products")) {
       return undefined;
@@ -273,10 +242,7 @@ function CategoryPage() {
     filters.color,
     filters.availability,
   ]);
-  /*
-   * Load the next page of products and append
-   * them to the existing product list.
-   */
+
   async function handleLoadMore() {
     if (
       isLoadingMore ||
@@ -434,32 +400,39 @@ function CategoryPage() {
             />
           </div>
         </div>
-        <div className="mb-8">
-          <ProductFilters
-            filters={filters}
-            filterOptions={filterOptions}
-            priceRange={priceRange}
-            isPriceRangeLoading={isPriceRangeLoading}
-            onApply={setFilters}
-            onClear={() => setFilters(DEFAULT_FILTERS)}
-          />
-        </div>
-        <ProductGrid products={products} isLoading={isProductsLoading} />
 
-        {/* Load More */}
-        {!isProductsLoading && products.length > 0 && page < totalPages && (
-          <div className="mt-14 flex justify-center">
-            <button
-              type="button"
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isLoadingMore ? "Loading..." : "Load More"}
-            </button>
+        <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
+          <aside className="lg:sticky lg:top-24">
+            <ProductFilters
+              filters={filters}
+              filterOptions={filterOptions}
+              priceRange={priceRange}
+              isPriceRangeLoading={isPriceRangeLoading}
+              onApply={setFilters}
+              onClear={() => setFilters(DEFAULT_FILTERS)}
+            />
+          </aside>
+
+          <div className="min-w-0">
+            <ProductGrid products={products} isLoading={isProductsLoading} />
+
+            {/* Load More */}
+            {!isProductsLoading && products.length > 0 && page < totalPages && (
+              <div className="mt-14 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="min-w-40 border border-black px-8 py-4 text-xs font-medium uppercase tracking-[0.14em] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {isLoadingMore ? "Loading..." : "Load More"}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </section>
+
     </main>
   );
 }
